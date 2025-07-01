@@ -32,13 +32,13 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace react-native-gesture-image-viewer-example",
+    "example": "yarn workspace react-native-gesture-image-viewer-example run",
     "test": "jest",
     "typecheck": "tsc",
-    "lint": "eslint \"**/*.{js,ts,tsx}\"",
+    "lint": "biome format --write",
     "clean": "del-cli lib",
-    "prepare": "bob build",
-    "release": "release-it --only-version"
+    "build": "bob build",
+    "changeset": "changeset"
   },
   "keywords": [
     "react-native",
@@ -59,27 +59,19 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.0.6",
+    "@changesets/cli": "^2.29.5",
     "@commitlint/config-conventional": "^19.6.0",
-    "@eslint/compat": "^1.2.7",
-    "@eslint/eslintrc": "^3.3.0",
-    "@eslint/js": "^9.22.0",
     "@evilmartians/lefthook": "^1.5.0",
     "@react-native/babel-preset": "0.78.2",
-    "@react-native/eslint-config": "^0.78.0",
-    "@release-it/conventional-changelog": "^9.0.2",
     "@types/jest": "^29.5.5",
     "@types/react": "^19.0.12",
     "commitlint": "^19.6.1",
     "del-cli": "^5.1.0",
-    "eslint": "^9.22.0",
-    "eslint-config-prettier": "^10.1.1",
-    "eslint-plugin-prettier": "^5.2.3",
     "jest": "^29.7.0",
-    "prettier": "^3.0.3",
     "react": "19.0.0",
     "react-native": "0.79.4",
     "react-native-builder-bob": "^0.40.12",
-    "release-it": "^17.10.0",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
@@ -87,6 +79,7 @@
     "react-native": "*"
   },
   "workspaces": [
+    ".",
     "example"
   ],
   "packageManager": "yarn@4.9.2",
@@ -101,32 +94,6 @@
     "extends": [
       "@commitlint/config-conventional"
     ]
-  },
-  "release-it": {
-    "git": {
-      "commitMessage": "chore: release ${version}",
-      "tagName": "v${version}"
-    },
-    "npm": {
-      "publish": true
-    },
-    "github": {
-      "release": true
-    },
-    "plugins": {
-      "@release-it/conventional-changelog": {
-        "preset": {
-          "name": "angular"
-        }
-      }
-    }
-  },
-  "prettier": {
-    "quoteProps": "consistent",
-    "singleQuote": true,
-    "tabWidth": 2,
-    "trailingComma": "es5",
-    "useTabs": false
   },
   "react-native-builder-bob": {
     "source": "src",
