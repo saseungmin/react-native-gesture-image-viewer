@@ -59,11 +59,13 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
+    "@babel/core": "^7.27.7",
     "@biomejs/biome": "^2.0.6",
     "@changesets/cli": "^2.29.5",
     "@commitlint/config-conventional": "^19.6.0",
     "@evilmartians/lefthook": "^1.5.0",
     "@react-native/babel-preset": "0.78.2",
+    "@types/babel__core": "^7",
     "@types/jest": "^29.5.5",
     "@types/react": "^19.0.12",
     "commitlint": "^19.6.1",
@@ -72,11 +74,15 @@
     "react": "19.0.0",
     "react-native": "0.79.4",
     "react-native-builder-bob": "^0.40.12",
+    "react-native-gesture-handler": "^2.24.0",
+    "react-native-reanimated": "^3.18.0",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
-    "react": "*",
-    "react-native": "*"
+    "react": ">=18.0.0",
+    "react-native": ">=0.75.0",
+    "react-native-gesture-handler": ">=2.24.0",
+    "react-native-reanimated": ">=3.0.0"
   },
   "workspaces": [
     ".",
