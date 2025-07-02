@@ -20,6 +20,10 @@ export interface GestureImageViewerProps<T = any> {
   backdropStyle?: StyleProp<ViewStyle>;
   containerStyle?: StyleProp<ViewStyle>;
   animateBackdrop?: boolean;
+  enableZoomPanGesture?: boolean;
+  enableZoomGesture?: boolean;
+  enableDoubleTapGesture?: boolean;
+  maxZoomScale?: number;
 }
 
 export interface GestureState {
