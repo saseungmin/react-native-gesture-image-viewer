@@ -1,3 +1,2 @@
-export function multiply(a: number, b: number): number {
-  return a * b;
-}
+export { GestureImageViewer } from './GestureImageViewer';
+export type { GestureImageViewerProps } from './types';

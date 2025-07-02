@@ -1,16 +1,36 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { multiply } from 'react-native-gesture-image-viewer';
+import { useState } from 'react';
+import { Button, FlatList, Image, Modal, SafeAreaView, StyleSheet, View } from 'react-native';
+import { GestureImageViewer } from 'react-native-gesture-image-viewer';
 
-const result = multiply(3, 7);
+function App() {
+  const [visible, setVisible] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-export default function App() {
+  const images = [
+    'https://picsum.photos/400/200',
+    'https://picsum.photos/300/200',
+    'https://picsum.photos/200/200',
+    'https://picsum.photos/200/300',
+    'https://picsum.photos/200/400',
+  ];
+
   return (
-    <GestureHandlerRootView>
-      <View style={styles.container}>
-        <Text>Result: {result}</Text>
-      </View>
-    </GestureHandlerRootView>
+    <SafeAreaView style={styles.container}>
+      <Button title="Open" onPress={() => setVisible(true)} />
+      <Modal visible={visible} onRequestClose={() => setVisible(false)}>
+        <GestureImageViewer
+          data={images}
+          initialIndex={currentIndex}
+          onIndexChange={setCurrentIndex}
+          onDismiss={() => setVisible(false)}
+          ListComponent={FlatList}
+          renderImage={(imageUrl) => (
+            <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+          )}
+          renderContainer={(children) => <View style={{ flex: 1 }}>{children}</View>}
+        />
+      </Modal>
+    </SafeAreaView>
   );
 }
 
@@ -21,3 +41,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+export default App;
