@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Button, FlatList, Image, Modal, SafeAreaView, StyleSheet, View } from 'react-native';
 import { GestureImageViewer } from 'react-native-gesture-image-viewer';
 
@@ -14,6 +14,10 @@ function App() {
     'https://picsum.photos/200/400',
   ];
 
+  const renderImage = useCallback((imageUrl: string) => {
+    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <Button title="Open" onPress={() => setVisible(true)} />
@@ -24,9 +28,7 @@ function App() {
           onIndexChange={setCurrentIndex}
           onDismiss={() => setVisible(false)}
           ListComponent={FlatList}
-          renderImage={(imageUrl) => (
-            <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
-          )}
+          renderImage={renderImage}
           renderContainer={(children) => <View style={{ flex: 1 }}>{children}</View>}
         />
       </Modal>

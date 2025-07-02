@@ -1,6 +1,6 @@
-import { useCallback } from 'react';
-import { FlatList, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useCallback, useMemo } from 'react';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { FlatList, Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import type { GestureImageViewerProps } from './types';
 import { useGestureImageViewer } from './useGestureImageViewer';
@@ -29,7 +29,16 @@ export function GestureImageViewer<T = any>({
 
   const width = customWidth || screenWidth;
 
-  const { flatListRef, panGesture, onMomentumScrollEnd, animatedStyle, backdropStyle } = useGestureImageViewer({
+  const {
+    currentIndex,
+    flatListRef,
+    isZoomed,
+    dismissGesture,
+    zoomGesture,
+    onMomentumScrollEnd,
+    animatedStyle,
+    backdropStyle,
+  } = useGestureImageViewer({
     data,
     width,
     initialIndex,
@@ -38,20 +47,25 @@ export function GestureImageViewer<T = any>({
 
   const renderItem = useCallback(
     ({ item, index }: { item: T; index: number }) => {
+      const isActive = index === currentIndex;
+
       return (
         <Animated.View
-          style={{
-            width,
-            height: '100%',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
+          style={[
+            {
+              width,
+              height: '100%',
+              justifyContent: 'center',
+              alignItems: 'center',
+            },
+            isActive && animatedStyle,
+          ]}
         >
           {renderImage(item, index)}
         </Animated.View>
       );
     },
-    [width, renderImage],
+    [width, renderImage, animatedStyle, currentIndex],
   );
 
   const getItemLayout = useCallback(
@@ -65,12 +79,16 @@ export function GestureImageViewer<T = any>({
 
   const keyExtractor = useCallback((item: T, index: number) => `image-${index}-${item}`, []);
 
+  const gesture = useMemo(() => {
+    return Gesture.Race(dismissGesture, zoomGesture);
+  }, [zoomGesture, dismissGesture]);
+
   const listComponent = (
     <GestureHandlerRootView>
-      <GestureDetector gesture={panGesture}>
+      <GestureDetector gesture={gesture}>
         <View style={[styles.container, containerStyle]}>
           <Animated.View style={[styles.background, backdropStyleProps, backdropStyle]} />
-          <Animated.View style={[styles.content, animatedStyle]}>
+          <View style={styles.content}>
             <ListComponent
               ref={flatListRef}
               data={data}
@@ -78,6 +96,7 @@ export function GestureImageViewer<T = any>({
               keyExtractor={keyExtractor}
               horizontal
               pagingEnabled
+              scrollEnabled={!isZoomed}
               showsHorizontalScrollIndicator={false}
               onMomentumScrollEnd={onMomentumScrollEnd}
               getItemLayout={getItemLayout}
@@ -89,7 +108,7 @@ export function GestureImageViewer<T = any>({
               {...(Platform.OS === 'web' && { dataSet: { 'paging-enabled-fix': true } })}
               {...listProps}
             />
-          </Animated.View>
+          </View>
           <WebPagingFix />
         </View>
       </GestureDetector>
