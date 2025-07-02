@@ -5,6 +5,14 @@ import Animated from 'react-native-reanimated';
 import type { GestureImageViewerProps } from './types';
 import { useGestureImageViewer } from './useGestureImageViewer';
 
+const WebPagingFix = () => {
+  if (Platform.OS !== 'web') {
+    return null;
+  }
+
+  return <style>{`[data-paging-enabled-fix] > div > div > div {height: 100%;}`}</style>;
+};
+
 export function GestureImageViewer<T = any>({
   data,
   renderImage,
@@ -14,6 +22,7 @@ export function GestureImageViewer<T = any>({
   listProps,
   backdropStyle: backdropStyleProps,
   containerStyle,
+  initialIndex = 0,
   ...props
 }: GestureImageViewerProps<T>) {
   const { width: screenWidth } = useWindowDimensions();
@@ -23,6 +32,7 @@ export function GestureImageViewer<T = any>({
   const { flatListRef, panGesture, onMomentumScrollEnd, animatedStyle, backdropStyle } = useGestureImageViewer({
     data,
     width,
+    initialIndex,
     ...props,
   });
 
@@ -71,16 +81,16 @@ export function GestureImageViewer<T = any>({
               showsHorizontalScrollIndicator={false}
               onMomentumScrollEnd={onMomentumScrollEnd}
               getItemLayout={getItemLayout}
-              initialScrollIndex={props.initialIndex || 0}
+              initialScrollIndex={initialIndex}
               windowSize={3}
               maxToRenderPerBatch={3}
               removeClippedSubviews={true}
               // NOTE - https://github.com/necolas/react-native-web/issues/1299
-              dataSet={{ 'paging-enabled-fix': true }}
+              {...(Platform.OS === 'web' && { dataSet: { 'paging-enabled-fix': true } })}
               {...listProps}
             />
           </Animated.View>
-          {Platform.OS === 'web' && <style>{`[data-paging-enabled-fix] > div > div > div {height: 100%;}`}</style>}
+          <WebPagingFix />
         </View>
       </GestureDetector>
     </GestureHandlerRootView>

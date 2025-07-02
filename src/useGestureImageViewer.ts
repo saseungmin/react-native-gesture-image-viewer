@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { type NativeScrollEvent, type NativeSyntheticEvent, useWindowDimensions } from 'react-native';
+import {
+  InteractionManager,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  useWindowDimensions,
+} from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import { interpolate, runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import type { GestureImageViewerProps } from './types';
@@ -41,15 +46,21 @@ export const useGestureImageViewer = <T = any>({
     translateY.value = 0;
     backdropOpacity.value = 1;
 
-    // FlatList 초기 위치 설정
-    if (flatListRef.current && initialIndex > 0) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToIndex({
-          index: initialIndex,
-          animated: false,
-        });
-      }, 100);
+    if (initialIndex <= 0 || !flatListRef.current) {
+      return;
     }
+
+    // FlatList 초기 위치 설정
+    const runAfterInteractions = InteractionManager.runAfterInteractions(() => {
+      flatListRef.current?.scrollToIndex({
+        index: initialIndex,
+        animated: false,
+      });
+    });
+
+    return () => {
+      runAfterInteractions?.cancel();
+    };
   }, [initialIndex, translateY, backdropOpacity]);
 
   // 인덱스 변경 알림
