@@ -47,6 +47,9 @@ export const useGestureImageViewer = <T = any>({
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isZoomed, setIsZoomed] = useState(false);
 
+  const initialTranslateY = useSharedValue(0);
+  const initialTranslateX = useSharedValue(0);
+
   const translateY = useSharedValue(0);
   const translateX = useSharedValue(0);
   const scale = useSharedValue(1);
@@ -107,10 +110,22 @@ export const useGestureImageViewer = <T = any>({
         setCurrentIndex(newIndex);
         translateX.value = withTiming(0);
         translateY.value = withTiming(0);
+        initialTranslateX.value = withTiming(0);
+        initialTranslateY.value = withTiming(0);
         scale.value = withTiming(1);
       }
     },
-    [currentIndex, dataLength, width, enableSwipeGesture, translateX, translateY, scale],
+    [
+      currentIndex,
+      dataLength,
+      width,
+      enableSwipeGesture,
+      translateX,
+      translateY,
+      scale,
+      initialTranslateX,
+      initialTranslateY,
+    ],
   );
 
   const goToIndex = useCallback(
@@ -178,8 +193,8 @@ export const useGestureImageViewer = <T = any>({
             duration: 300,
             easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
           });
-          translateX.value = 0;
-          translateY.value = 0;
+          translateX.value = withTiming(0);
+          translateY.value = withTiming(0);
         }
       });
   }, [scale, enableZoomGesture, maxZoomScale, translateX, translateY]);
@@ -187,13 +202,17 @@ export const useGestureImageViewer = <T = any>({
   const zoomPanGesture = useMemo(() => {
     return Gesture.Pan()
       .enabled(enableZoomPanGesture && isZoomed)
+      .onBegin(() => {
+        initialTranslateX.value = translateX.value;
+        initialTranslateY.value = translateY.value;
+      })
       .onUpdate((event) => {
         if (scale.value > 1) {
-          translateX.value = event.translationX;
-          translateY.value = event.translationY;
+          translateX.value = initialTranslateX.value + event.translationX;
+          translateY.value = initialTranslateY.value + event.translationY;
         }
       });
-  }, [translateX, translateY, enableZoomPanGesture, isZoomed, scale]);
+  }, [translateX, translateY, enableZoomPanGesture, isZoomed, scale, initialTranslateX, initialTranslateY]);
 
   const doubleTapGesture = useMemo(() => {
     return Gesture.Tap()
