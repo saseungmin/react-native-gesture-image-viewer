@@ -41,7 +41,7 @@ export const useGestureImageViewer = <T = any>({
   enableZoomPanGesture = true,
   maxZoomScale = 2,
 }: UseGestureImageViewerProps<T>) => {
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const width = customWidth || screenWidth;
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -167,6 +167,7 @@ export const useGestureImageViewer = <T = any>({
       })
       .onEnd((event) => {
         'worklet';
+
         if (event.translationY > dismissThreshold && enableDismissGesture && onDismiss) {
           runOnJS(onDismiss)();
           return;
@@ -183,11 +184,17 @@ export const useGestureImageViewer = <T = any>({
     return Gesture.Pinch()
       .enabled(enableZoomGesture)
       .onUpdate((event) => {
-        if (event.scale <= maxZoomScale) {
-          scale.value = event.scale;
-        }
+        scale.value = event.scale;
       })
       .onEnd(() => {
+        if (scale.value > maxZoomScale) {
+          scale.value = withTiming(maxZoomScale, {
+            duration: 300,
+            easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
+          });
+          return;
+        }
+
         if (scale.value < 1) {
           scale.value = withTiming(1, {
             duration: 300,
@@ -207,12 +214,33 @@ export const useGestureImageViewer = <T = any>({
         initialTranslateY.value = translateY.value;
       })
       .onUpdate((event) => {
+        'worklet';
+
         if (scale.value > 1) {
-          translateX.value = initialTranslateX.value + event.translationX;
-          translateY.value = initialTranslateY.value + event.translationY;
+          const maxTranslateX = (width * scale.value - width) / 2;
+          const maxTranslateY = (screenHeight * scale.value - screenHeight) / 2;
+
+          translateX.value = Math.max(
+            -maxTranslateX,
+            Math.min(maxTranslateX, initialTranslateX.value + event.translationX),
+          );
+          translateY.value = Math.max(
+            -maxTranslateY,
+            Math.min(maxTranslateY, initialTranslateY.value + event.translationY),
+          );
         }
       });
-  }, [translateX, translateY, enableZoomPanGesture, isZoomed, scale, initialTranslateX, initialTranslateY]);
+  }, [
+    translateX,
+    translateY,
+    enableZoomPanGesture,
+    isZoomed,
+    scale,
+    initialTranslateX,
+    initialTranslateY,
+    width,
+    screenHeight,
+  ]);
 
   const doubleTapGesture = useMemo(() => {
     return Gesture.Tap()
