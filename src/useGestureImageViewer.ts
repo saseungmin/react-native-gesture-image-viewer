@@ -49,6 +49,7 @@ export const useGestureImageViewer = <T = any>({
 
   const initialTranslateY = useSharedValue(0);
   const initialTranslateX = useSharedValue(0);
+  const startScale = useSharedValue(1);
 
   const translateY = useSharedValue(0);
   const translateX = useSharedValue(0);
@@ -73,6 +74,7 @@ export const useGestureImageViewer = <T = any>({
     translateX.value = 0;
     scale.value = 1;
     backdropOpacity.value = 1;
+    startScale.value = 1;
 
     if (initialIndex <= 0 || !flatListRef.current) {
       return;
@@ -89,7 +91,7 @@ export const useGestureImageViewer = <T = any>({
     return () => {
       runAfterInteractions?.cancel();
     };
-  }, [initialIndex, translateY, backdropOpacity, translateX, scale]);
+  }, [initialIndex, translateY, backdropOpacity, translateX, scale, startScale]);
 
   // 인덱스 변경 알림
   useEffect(() => {
@@ -112,6 +114,7 @@ export const useGestureImageViewer = <T = any>({
         translateY.value = withTiming(0);
         initialTranslateX.value = withTiming(0);
         initialTranslateY.value = withTiming(0);
+        startScale.value = withTiming(1);
         scale.value = withTiming(1);
       }
     },
@@ -125,6 +128,7 @@ export const useGestureImageViewer = <T = any>({
       scale,
       initialTranslateX,
       initialTranslateY,
+      startScale,
     ],
   );
 
@@ -183,8 +187,11 @@ export const useGestureImageViewer = <T = any>({
   const zoomPinchGesture = useMemo(() => {
     return Gesture.Pinch()
       .enabled(enableZoomGesture)
+      .onBegin(() => {
+        startScale.value = scale.value;
+      })
       .onUpdate((event) => {
-        scale.value = event.scale;
+        scale.value = startScale.value * event.scale;
       })
       .onEnd(() => {
         if (scale.value > maxZoomScale) {
@@ -204,7 +211,7 @@ export const useGestureImageViewer = <T = any>({
           translateY.value = withTiming(0);
         }
       });
-  }, [scale, enableZoomGesture, maxZoomScale, translateX, translateY]);
+  }, [scale, enableZoomGesture, maxZoomScale, translateX, translateY, startScale]);
 
   const zoomPanGesture = useMemo(() => {
     return Gesture.Pan()
