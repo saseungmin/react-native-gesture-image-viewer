@@ -1,3 +1,4 @@
+import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
 import { Button, FlatList, Image, Modal, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { GestureImageViewer, useImageViewerController } from 'react-native-gesture-image-viewer';
@@ -21,6 +22,7 @@ function App() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style="light" />
       <Button title="Open" onPress={() => setVisible(true)} />
       <Modal visible={visible} onRequestClose={() => setVisible(false)}>
         <View style={{ flex: 1 }}>
@@ -29,9 +31,10 @@ function App() {
             onDismiss={() => setVisible(false)}
             ListComponent={FlatList}
             renderImage={renderImage}
+            backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.90)' }}
             renderContainer={(children) => <View style={{ flex: 1 }}>{children}</View>}
           />
-          <View style={{ position: 'absolute', bottom: 20, left: 0, right: 0, gap: 10, flexDirection: 'column' }}>
+          <View style={{ position: 'absolute', bottom: 30, left: 0, right: 0, gap: 10, flexDirection: 'column' }}>
             <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'center' }}>
               <Button title="Go to previous" onPress={goToPrevious} />
               <Button title="Go to index 2" onPress={() => goToIndex(2)} />
