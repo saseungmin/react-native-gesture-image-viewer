@@ -1,7 +1,8 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { FlatList, Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
+import { registry } from './ImageViewerRegistry';
 import type { GestureImageViewerProps } from './types';
 import { useGestureImageViewer } from './useGestureImageViewer';
 
@@ -14,6 +15,7 @@ const WebPagingFix = () => {
 };
 
 export function GestureImageViewer<T = any>({
+  id = 'default',
   data,
   renderImage,
   renderContainer,
@@ -39,6 +41,7 @@ export function GestureImageViewer<T = any>({
     animatedStyle,
     backdropStyle,
   } = useGestureImageViewer({
+    id,
     data,
     width,
     initialIndex,
@@ -82,6 +85,12 @@ export function GestureImageViewer<T = any>({
   const gesture = useMemo(() => {
     return Gesture.Race(dismissGesture, zoomGesture);
   }, [zoomGesture, dismissGesture]);
+
+  useEffect(() => {
+    registry.createManager(id);
+
+    return () => registry.deleteManager(id);
+  }, [id]);
 
   const listComponent = (
     <GestureHandlerRootView>
