@@ -41,6 +41,7 @@ export function GestureImageViewer<T = any>({
     animatedStyle,
     backdropStyle,
   } = useGestureImageViewer({
+    id,
     data,
     width,
     initialIndex,

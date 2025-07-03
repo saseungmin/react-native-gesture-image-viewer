@@ -29,10 +29,6 @@ class ImageViewerManager {
     };
   }
 
-  unsubscribe(listener: (state: ImageViewerManagerState) => void) {
-    this.listeners.delete(listener);
-  }
-
   getState() {
     return {
       currentIndex: this.currentIndex,
