@@ -16,7 +16,7 @@ import {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import type { ImageViewerManagerState } from './ImageViewerManager';
+import type ImageViewerManager from './ImageViewerManager';
 import { registry } from './ImageViewerRegistry';
 import type { GestureImageViewerProps } from './types';
 
@@ -49,10 +49,10 @@ export const useGestureImageViewer = <T = any>({
 
   const [isZoomed, setIsZoomed] = useState(false);
 
-  const [managerState, setManagerState] = useState<ImageViewerManagerState>({
-    currentIndex: initialIndex,
-    dataLength: data?.length || 0,
-  });
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [manager, setManager] = useState<ImageViewerManager | null>(null);
+
+  const unsubscribeRef = useRef<(() => void) | null>(null);
 
   const initialTranslateY = useSharedValue(0);
   const initialTranslateX = useSharedValue(0);
@@ -75,20 +75,29 @@ export const useGestureImageViewer = <T = any>({
   );
 
   useEffect(() => {
-    const manager = registry.getManager(id);
+    const handleManagerChange = (manager: ImageViewerManager | null) => {
+      unsubscribeRef.current?.();
+      unsubscribeRef.current = null;
 
-    if (!manager) {
-      return;
-    }
+      setManager(manager);
 
-    setManagerState(manager.getState());
+      if (manager) {
+        setCurrentIndex(manager.getState().currentIndex);
+        return;
+      }
 
-    return manager.subscribe(setManagerState);
+      setCurrentIndex(0);
+    };
+
+    const unsubscribeFromRegistry = registry.subscribeToManager(id, handleManagerChange);
+
+    return () => {
+      unsubscribeFromRegistry();
+      unsubscribeRef.current?.();
+    };
   }, [id]);
 
   useEffect(() => {
-    const manager = registry.getManager(id);
-
     if (!manager) {
       return;
     }
@@ -97,21 +106,19 @@ export const useGestureImageViewer = <T = any>({
     manager.setEnableSwipeGesture(enableSwipeGesture);
     manager.setCurrentIndex(initialIndex);
     manager.notifyStateChange();
-  }, [dataLength, enableSwipeGesture, initialIndex, id]);
+  }, [dataLength, enableSwipeGesture, initialIndex, manager]);
 
   useEffect(() => {
-    const manager = registry.getManager(id);
-
     if (!manager || !flatListRef.current) {
       return;
     }
 
     manager.setFlatListRef(flatListRef.current);
-  }, [id]);
+  }, [manager]);
 
   useEffect(() => {
-    onIndexChange?.(managerState.currentIndex);
-  }, [managerState.currentIndex, onIndexChange]);
+    onIndexChange?.(currentIndex);
+  }, [currentIndex, onIndexChange]);
 
   useEffect(() => {
     translateY.value = 0;
@@ -145,11 +152,11 @@ export const useGestureImageViewer = <T = any>({
       const contentOffset = event.nativeEvent.contentOffset;
       const newIndex = Math.round(contentOffset.x / width);
 
-      if (newIndex !== managerState.currentIndex && newIndex >= 0 && newIndex < dataLength) {
-        const manager = registry.getManager(id);
-
+      if (newIndex !== currentIndex && newIndex >= 0 && newIndex < dataLength) {
         if (manager) {
           manager.setCurrentIndex(newIndex);
+          setCurrentIndex(newIndex);
+          manager.notifyStateChange();
         }
 
         translateX.value = withTiming(0);
@@ -161,8 +168,8 @@ export const useGestureImageViewer = <T = any>({
       }
     },
     [
-      id,
-      managerState.currentIndex,
+      manager,
+      currentIndex,
       dataLength,
       width,
       enableSwipeGesture,
@@ -309,7 +316,7 @@ export const useGestureImageViewer = <T = any>({
   }, [animateBackdrop]);
 
   return {
-    currentIndex: managerState.currentIndex,
+    currentIndex,
     dataLength,
     translateY,
     flatListRef,

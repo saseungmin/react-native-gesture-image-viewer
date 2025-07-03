@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type ImageViewerManager from './ImageViewerManager';
 import type { ImageViewerManagerState } from './ImageViewerManager';
 import { registry } from './ImageViewerRegistry';
 
@@ -8,19 +9,32 @@ export const useImageViewerController = (id = 'default') => {
     dataLength: 0,
   });
 
+  const [manager, setManager] = useState<ImageViewerManager | null>(null);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
-    const manager = registry.createManager(id);
+    const handleManagerChange = (newManager: ImageViewerManager | null) => {
+      unsubscribeRef.current?.();
+      unsubscribeRef.current = null;
 
-    if (!manager) {
-      return;
-    }
+      setManager(newManager);
 
-    setState(manager.getState());
+      if (newManager) {
+        setState(newManager.getState());
+        unsubscribeRef.current = newManager.subscribe(setState);
+        return;
+      }
 
-    return manager.subscribe(setState);
+      setState({ currentIndex: 0, dataLength: 0 });
+    };
+
+    const unsubscribeFromRegistry = registry.subscribeToManager(id, handleManagerChange);
+
+    return () => {
+      unsubscribeFromRegistry();
+      unsubscribeRef.current?.();
+    };
   }, [id]);
-
-  const manager = registry.getManager(id);
 
   const noopFunction = useMemo(() => () => {}, []);
 
