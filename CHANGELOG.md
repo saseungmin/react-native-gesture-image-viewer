@@ -1,5 +1,11 @@
 # react-native-gesture-image-viewer
 
+## 0.3.2
+
+### Patch Changes
+
+- 5f251a5: docs: initial documentation for React Native Gesture Image Viewer
+
 ## 0.3.1
 
 ### Patch Changes
