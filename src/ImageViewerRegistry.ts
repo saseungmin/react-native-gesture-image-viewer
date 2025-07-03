@@ -16,7 +16,13 @@ class ImageViewerRegistry {
     callback(manager);
 
     return () => {
-      this.subscribers.get(id)?.delete(callback);
+      const subscribers = this.subscribers.get(id);
+
+      subscribers?.delete(callback);
+
+      if (subscribers && subscribers.size === 0) {
+        this.subscribers.delete(id);
+      }
     };
   }
 
@@ -49,7 +55,11 @@ class ImageViewerRegistry {
   }
 
   notifySubscribers(id: string, manager: ImageViewerManager | null) {
-    this.subscribers.get(id)?.forEach((callback) => callback(manager));
+    const listeners = this.subscribers.get(id);
+
+    if (listeners) {
+      [...listeners].forEach((callback) => callback(manager));
+    }
   }
 }
 

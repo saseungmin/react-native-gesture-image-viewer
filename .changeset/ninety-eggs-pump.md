@@ -9,5 +9,4 @@ fix: resolve state sync issue when modal reopens
 - Add proper cleanup for manager instances on modal close
 - Ensure external controller syncs with internal viewer state
 
-Fixes issue where useImageViewerController would lose state
-when modal closes and reopens due to manager instance deletion
+Fixes issue where useImageViewerController would lose state when modal closes and reopens due to manager instance deletion

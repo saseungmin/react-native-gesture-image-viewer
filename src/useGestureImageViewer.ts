@@ -83,6 +83,9 @@ export const useGestureImageViewer = <T = any>({
 
       if (manager) {
         setCurrentIndex(manager.getState().currentIndex);
+        unsubscribeRef.current = manager.subscribe((state) => {
+          setCurrentIndex(state.currentIndex);
+        });
         return;
       }
 
