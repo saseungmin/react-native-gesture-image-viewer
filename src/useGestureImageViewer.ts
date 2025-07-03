@@ -16,6 +16,8 @@ import {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import type { ImageViewerManagerState } from './ImageViewerManager';
+import { registry } from './ImageViewerRegistry';
 import type { GestureImageViewerProps } from './types';
 
 type UseGestureImageViewerProps<T = any> = Omit<
@@ -40,12 +42,17 @@ export const useGestureImageViewer = <T = any>({
   enableDoubleTapGesture = true,
   enableZoomPanGesture = true,
   maxZoomScale = 2,
+  id = 'default',
 }: UseGestureImageViewerProps<T>) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const width = customWidth || screenWidth;
 
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isZoomed, setIsZoomed] = useState(false);
+
+  const [managerState, setManagerState] = useState<ImageViewerManagerState>({
+    currentIndex: initialIndex,
+    dataLength: data?.length || 0,
+  });
 
   const initialTranslateY = useSharedValue(0);
   const initialTranslateX = useSharedValue(0);
@@ -67,9 +74,46 @@ export const useGestureImageViewer = <T = any>({
     },
   );
 
-  // 초기 위치 설정
   useEffect(() => {
-    setCurrentIndex(initialIndex);
+    const manager = registry.getManager(id);
+
+    if (!manager) {
+      return;
+    }
+
+    setManagerState(manager.getState());
+
+    return manager.subscribe(setManagerState);
+  }, [id]);
+
+  useEffect(() => {
+    const manager = registry.getManager(id);
+
+    if (!manager) {
+      return;
+    }
+
+    manager.setDataLength(dataLength);
+    manager.setEnableSwipeGesture(enableSwipeGesture);
+    manager.setCurrentIndex(initialIndex);
+    manager.notifyStateChange();
+  }, [dataLength, enableSwipeGesture, initialIndex, id]);
+
+  useEffect(() => {
+    const manager = registry.getManager(id);
+
+    if (!manager || !flatListRef.current) {
+      return;
+    }
+
+    manager.setFlatListRef(flatListRef.current);
+  }, [id]);
+
+  useEffect(() => {
+    onIndexChange?.(managerState.currentIndex);
+  }, [managerState.currentIndex, onIndexChange]);
+
+  useEffect(() => {
     translateY.value = 0;
     translateX.value = 0;
     scale.value = 1;
@@ -80,7 +124,6 @@ export const useGestureImageViewer = <T = any>({
       return;
     }
 
-    // FlatList 초기 위치 설정
     const runAfterInteractions = InteractionManager.runAfterInteractions(() => {
       flatListRef.current?.scrollToIndex({
         index: initialIndex,
@@ -93,12 +136,6 @@ export const useGestureImageViewer = <T = any>({
     };
   }, [initialIndex, translateY, backdropOpacity, translateX, scale, startScale]);
 
-  // 인덱스 변경 알림
-  useEffect(() => {
-    onIndexChange?.(currentIndex);
-  }, [currentIndex, onIndexChange]);
-
-  // FlatList 스크롤 핸들러
   const onMomentumScrollEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       if (!enableSwipeGesture) {
@@ -108,8 +145,13 @@ export const useGestureImageViewer = <T = any>({
       const contentOffset = event.nativeEvent.contentOffset;
       const newIndex = Math.round(contentOffset.x / width);
 
-      if (newIndex !== currentIndex && newIndex >= 0 && newIndex < dataLength) {
-        setCurrentIndex(newIndex);
+      if (newIndex !== managerState.currentIndex && newIndex >= 0 && newIndex < dataLength) {
+        const manager = registry.getManager(id);
+
+        if (manager) {
+          manager.setCurrentIndex(newIndex);
+        }
+
         translateX.value = withTiming(0);
         translateY.value = withTiming(0);
         initialTranslateX.value = withTiming(0);
@@ -119,7 +161,8 @@ export const useGestureImageViewer = <T = any>({
       }
     },
     [
-      currentIndex,
+      id,
+      managerState.currentIndex,
       dataLength,
       width,
       enableSwipeGesture,
@@ -131,33 +174,6 @@ export const useGestureImageViewer = <T = any>({
       startScale,
     ],
   );
-
-  const goToIndex = useCallback(
-    (index: number) => {
-      if (index < 0 || index >= dataLength || !enableSwipeGesture) {
-        return;
-      }
-
-      setCurrentIndex(index);
-      flatListRef.current?.scrollToIndex({
-        index,
-        animated: true,
-      });
-    },
-    [dataLength, enableSwipeGesture],
-  );
-
-  const goToPrevious = useCallback(() => {
-    if (currentIndex > 0) {
-      goToIndex(currentIndex - 1);
-    }
-  }, [currentIndex, goToIndex]);
-
-  const goToNext = useCallback(() => {
-    if (currentIndex < dataLength - 1) {
-      goToIndex(currentIndex + 1);
-    }
-  }, [currentIndex, dataLength, goToIndex]);
 
   const dismissGesture = useMemo(() => {
     return Gesture.Pan()
@@ -293,26 +309,17 @@ export const useGestureImageViewer = <T = any>({
   }, [animateBackdrop]);
 
   return {
-    // State
-    currentIndex,
+    currentIndex: managerState.currentIndex,
     dataLength,
     translateY,
     flatListRef,
     isZoomed,
 
-    // Actions
-    goToPrevious,
-    goToNext,
-    goToIndex,
-
-    // Gesture
     dismissGesture,
     zoomGesture,
 
-    // FlatList handlers
     onMomentumScrollEnd,
 
-    // Animated styles
     animatedStyle,
     backdropStyle,
   };

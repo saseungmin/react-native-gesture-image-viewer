@@ -2,6 +2,7 @@ import type { StyleProp, ViewStyle } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 
 export interface GestureImageViewerProps<T = any> {
+  id?: string;
   data: T[];
   initialIndex?: number;
   onIndexChange?: (index: number) => void;
