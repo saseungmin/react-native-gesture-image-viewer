@@ -1,5 +1,15 @@
 # react-native-gesture-image-viewer
 
+## 0.4.0
+
+### Minor Changes
+
+- b7d85b6: feat: replace pagingEnabled with snapToInterval and add itemSpacing prop
+
+  - Replace pagingEnabled with snapToInterval for better control
+  - Add itemSpacing prop to customize spacing between items
+  - Improve paging flexibility and user experience
+
 ## 0.3.2
 
 ### Patch Changes
