@@ -42,6 +42,7 @@ export const useGestureImageViewer = <T = any>({
   enableDoubleTapGesture = true,
   enableZoomPanGesture = true,
   maxZoomScale = 2,
+  itemSpacing = 0,
   id = 'default',
 }: UseGestureImageViewerProps<T>) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
@@ -153,7 +154,7 @@ export const useGestureImageViewer = <T = any>({
       }
 
       const contentOffset = event.nativeEvent.contentOffset;
-      const newIndex = Math.round(contentOffset.x / width);
+      const newIndex = Math.round(contentOffset.x / (width + itemSpacing));
 
       if (newIndex !== currentIndex && newIndex >= 0 && newIndex < dataLength) {
         if (manager) {
@@ -175,6 +176,7 @@ export const useGestureImageViewer = <T = any>({
       currentIndex,
       dataLength,
       width,
+      itemSpacing,
       enableSwipeGesture,
       translateX,
       translateY,

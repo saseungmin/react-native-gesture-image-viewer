@@ -1,6 +1,8 @@
 import { Feather } from '@expo/vector-icons';
+import { FlashList } from '@shopify/flash-list';
+import { Image } from 'expo-image';
 import { useCallback, useState } from 'react';
-import { Button, FlatList, Image, Modal, StyleSheet, Text, View } from 'react-native';
+import { Button, Modal, StyleSheet, Text, View } from 'react-native';
 import { GestureImageViewer, useImageViewerController } from 'react-native-gesture-image-viewer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -20,7 +22,7 @@ function Example() {
   const insets = useSafeAreaInsets();
 
   const renderImage = useCallback((imageUrl: string) => {
-    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
+    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} contentFit="contain" />;
   }, []);
 
   return (
@@ -32,7 +34,7 @@ function Example() {
             data={images}
             initialIndex={0}
             onDismiss={() => setVisible(false)}
-            ListComponent={FlatList}
+            ListComponent={FlashList}
             renderImage={renderImage}
             backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.90)' }}
             renderContainer={(children) => <View style={{ flex: 1 }}>{children}</View>}

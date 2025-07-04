@@ -25,6 +25,7 @@ export interface GestureImageViewerProps<T = any> {
   enableZoomGesture?: boolean;
   enableDoubleTapGesture?: boolean;
   maxZoomScale?: number;
+  itemSpacing?: number;
 }
 
 export interface GestureState {
