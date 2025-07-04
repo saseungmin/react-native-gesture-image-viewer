@@ -168,7 +168,7 @@ function App() {
 
 #### List Components
 
-Support for `FlatList`, `FlashList`, `ScrollView` (⚠️ coming soon), and other list components through the `ListComponent` prop.   
+Support for `ScrollView`, `FlatList`, `FlashList`, and other list components through the `ListComponent` prop.   
 You can also customize the props of each supported list component through `listProps`.
 
 ```tsx

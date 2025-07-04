@@ -64,7 +64,7 @@ export const useGestureImageViewer = <T = any>({
   const scale = useSharedValue(1);
   const backdropOpacity = useSharedValue(1);
 
-  const flatListRef = useRef<any>(null);
+  const listRef = useRef<any>(null);
 
   const dataLength = data?.length || 0;
 
@@ -109,15 +109,16 @@ export const useGestureImageViewer = <T = any>({
     manager.setDataLength(dataLength);
     manager.setEnableSwipeGesture(enableSwipeGesture);
     manager.setCurrentIndex(initialIndex);
+    manager.setWidth(width + itemSpacing);
     manager.notifyStateChange();
-  }, [dataLength, enableSwipeGesture, initialIndex, manager]);
+  }, [dataLength, enableSwipeGesture, initialIndex, manager, width, itemSpacing]);
 
   useEffect(() => {
-    if (!manager || !flatListRef.current) {
+    if (!manager || !listRef.current) {
       return;
     }
 
-    manager.setFlatListRef(flatListRef.current);
+    manager.setListRef(listRef.current);
   }, [manager]);
 
   useEffect(() => {
@@ -131,21 +132,28 @@ export const useGestureImageViewer = <T = any>({
     backdropOpacity.value = 1;
     startScale.value = 1;
 
-    if (initialIndex <= 0 || !flatListRef.current) {
+    if (initialIndex <= 0 || !listRef.current) {
       return;
     }
 
     const runAfterInteractions = InteractionManager.runAfterInteractions(() => {
-      flatListRef.current?.scrollToIndex({
-        index: initialIndex,
-        animated: false,
-      });
+      if (listRef.current.scrollToIndex) {
+        listRef.current.scrollToIndex({
+          index: initialIndex,
+          animated: false,
+        });
+      } else if (listRef.current.scrollTo) {
+        listRef.current.scrollTo({
+          x: initialIndex * (width + itemSpacing),
+          animated: false,
+        });
+      }
     });
 
     return () => {
       runAfterInteractions?.cancel();
     };
-  }, [initialIndex, translateY, backdropOpacity, translateX, scale, startScale]);
+  }, [initialIndex, translateY, backdropOpacity, translateX, scale, startScale, width, itemSpacing]);
 
   const onMomentumScrollEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -324,7 +332,7 @@ export const useGestureImageViewer = <T = any>({
     currentIndex,
     dataLength,
     translateY,
-    flatListRef,
+    listRef,
     isZoomed,
 
     dismissGesture,

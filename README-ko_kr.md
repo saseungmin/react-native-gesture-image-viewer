@@ -168,7 +168,7 @@ function App() {
 
 #### 리스트 컴포넌트
 
-`ListComponent` props를 통해 `FlatList`, `FlashList`, `ScrollView`(⚠️ 지원 예정) 등 원하는 리스트를 지원합니다.   
+`ListComponent` props를 통해 `ScrollView`, `FlatList`, `FlashList` 등 원하는 리스트를 지원합니다.   
 또한, `listProps`를 통해 기본적으로 지원하는 각각의 리스트 컴포넌트의 props를 커스텀할 수 있습니다.
 
 ```tsx

@@ -6,7 +6,8 @@ export type ImageViewerManagerState = {
 class ImageViewerManager {
   private currentIndex = 0;
   private dataLength = 0;
-  private flatListRef: any = null;
+  private width = 0;
+  private listRef: any | null = null;
   private enableSwipeGesture = true;
   private listeners = new Set<(state: ImageViewerManagerState) => void>();
 
@@ -36,8 +37,12 @@ class ImageViewerManager {
     };
   }
 
-  setFlatListRef(ref: any) {
-    this.flatListRef = ref;
+  setWidth(width: number) {
+    this.width = width;
+  }
+
+  setListRef(ref: any) {
+    this.listRef = ref;
   }
 
   setDataLength(length: number) {
@@ -59,12 +64,18 @@ class ImageViewerManager {
   }
 
   goToIndex = (index: number) => {
-    if (index < 0 || index >= this.dataLength || !this.enableSwipeGesture || !this.flatListRef) {
+    if (index < 0 || index >= this.dataLength || !this.enableSwipeGesture || !this.listRef) {
       return;
     }
 
     this.currentIndex = index;
-    this.flatListRef.scrollToIndex({ index, animated: true });
+
+    if (this.listRef.scrollToIndex) {
+      this.listRef.scrollToIndex({ index, animated: true });
+    } else if (this.listRef.scrollTo) {
+      this.listRef.scrollTo({ x: index * this.width, animated: true });
+    }
+
     this.notifyListeners();
   };
 
@@ -82,7 +93,7 @@ class ImageViewerManager {
 
   cleanUp() {
     this.listeners.clear();
-    this.flatListRef = null;
+    this.listRef = null;
     this.enableSwipeGesture = true;
     this.currentIndex = 0;
     this.dataLength = 0;
