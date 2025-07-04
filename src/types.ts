@@ -1,7 +1,19 @@
-import type { StyleProp, ViewStyle } from 'react-native';
-import type { SharedValue } from 'react-native-reanimated';
+import type React from 'react';
+import type { FlatList as RNFlatList, ScrollView as RNScrollView, StyleProp, ViewStyle } from 'react-native';
+import type { FlatList as GHFlatList, ScrollView as GHScrollView } from 'react-native-gesture-handler';
 
-export interface GestureImageViewerProps<T = any> {
+export type FlatListComponent = typeof RNFlatList | typeof GHFlatList;
+export type ScrollViewComponent = typeof RNScrollView | typeof GHScrollView;
+
+type GetComponentProps<T> = T extends React.ComponentType<infer P> ? P : any;
+
+type ConditionalListProps<LC> = LC extends FlatListComponent
+  ? React.ComponentProps<FlatListComponent>
+  : LC extends ScrollViewComponent
+    ? React.ComponentProps<ScrollViewComponent>
+    : GetComponentProps<LC>;
+
+export interface GestureImageViewerProps<T = any, LC = typeof RNFlatList> {
   id?: string;
   data: T[];
   initialIndex?: number;
@@ -9,15 +21,15 @@ export interface GestureImageViewerProps<T = any> {
   onDismiss?: () => void;
   renderImage: (item: T, index: number) => React.ReactElement;
   renderContainer?: (children: React.ReactElement) => React.ReactElement;
-  ListComponent?: any; // FlatList, FlashList 등
+  ListComponent: LC;
   width?: number;
   dismissThreshold?: number;
-  swipeThreshold?: number;
-  velocityThreshold?: number;
+  // swipeThreshold?: number;
+  // velocityThreshold?: number;
   enableDismissGesture?: boolean;
   enableSwipeGesture?: boolean;
   resistance?: number;
-  listProps?: any; // FlatList, FlashList에 전달할 추가 props
+  listProps?: Partial<ConditionalListProps<LC>>;
   backdropStyle?: StyleProp<ViewStyle>;
   containerStyle?: StyleProp<ViewStyle>;
   animateBackdrop?: boolean;
@@ -26,11 +38,4 @@ export interface GestureImageViewerProps<T = any> {
   enableDoubleTapGesture?: boolean;
   maxZoomScale?: number;
   itemSpacing?: number;
-}
-
-export interface GestureState {
-  currentIndex: number;
-  translateY: SharedValue<number>;
-  isGestureActive: boolean;
-  lockDirection: 'horizontal' | 'vertical' | null;
 }
