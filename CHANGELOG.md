@@ -1,5 +1,11 @@
 # react-native-gesture-image-viewer
 
+## 0.5.2
+
+### Patch Changes
+
+- c4934c6: chore: exclude src files from npm package
+
 ## 0.5.1
 
 ### Patch Changes
