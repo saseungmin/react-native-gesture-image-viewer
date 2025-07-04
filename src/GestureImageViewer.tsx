@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, type ScrollViewProps, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { FlatList, Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { registry } from './ImageViewerRegistry';
 import type { GestureImageViewerProps } from './types';
 import { useGestureImageViewer } from './useGestureImageViewer';
+import { isFlatListLike, isScrollViewLike } from './utils';
 
 const WebPagingFix = () => {
   if (Platform.OS !== 'web') {
@@ -73,7 +74,10 @@ export function GestureImageViewer<T = any>({
     [width, itemSpacing],
   );
 
-  const keyExtractor = useCallback((item: T, index: number) => `image-${index}-${item}`, []);
+  const keyExtractor = useCallback(
+    (item: T, index: number) => (typeof item === 'string' ? item : `image-${index}`),
+    [],
+  );
 
   const gesture = useMemo(() => {
     return Gesture.Race(dismissGesture, zoomGesture);
@@ -85,39 +89,50 @@ export function GestureImageViewer<T = any>({
     return () => registry.deleteManager(id);
   }, [id]);
 
+  const commonProps: ScrollViewProps = useMemo(
+    () => ({
+      horizontal: true,
+      scrollEnabled: !isZoomed,
+      showsHorizontalScrollIndicator: false,
+      onMomentumScrollEnd: onMomentumScrollEnd,
+      snapToInterval: width + itemSpacing,
+      snapToAlignment: 'center',
+      decelerationRate: 'fast',
+      scrollEventThrottle: 16,
+      removeClippedSubviews: true,
+    }),
+    [width, itemSpacing, isZoomed, onMomentumScrollEnd],
+  );
+
   const listComponent = (
     <GestureHandlerRootView>
       <GestureDetector gesture={gesture}>
         <View style={[styles.container, containerStyle]}>
           <Animated.View style={[styles.background, backdropStyleProps, backdropStyle]} />
           <Animated.View style={[styles.content, animatedStyle]}>
-            <ListComponent
-              ref={listRef}
-              horizontal
-              scrollEnabled={!isZoomed}
-              showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={onMomentumScrollEnd}
-              initialScrollIndex={initialIndex}
-              snapToInterval={width + itemSpacing}
-              snapToAlignment="center"
-              decelerationRate="fast"
-              scrollEventThrottle={16}
-              // only flatlist or flashlist props
-              data={data}
-              renderItem={renderItem}
-              keyExtractor={keyExtractor}
-              estimatedItemSize={width + itemSpacing}
-              windowSize={3}
-              maxToRenderPerBatch={3}
-              removeClippedSubviews
-              getItemLayout={getItemLayout}
-              // NOTE - https://github.com/necolas/react-native-web/issues/1299
-              {...(Platform.OS === 'web' && { dataSet: { 'paging-enabled-fix': true } })}
-              {...listProps}
-            >
-              {/* scrollview props */}
-              {data.map((item, index) => renderItem({ item, index }))}
-            </ListComponent>
+            {isScrollViewLike(ListComponent) ? (
+              <ListComponent ref={listRef} {...commonProps} {...listProps}>
+                {data.map((item, index) => renderItem({ item, index }))}
+              </ListComponent>
+            ) : (
+              isFlatListLike(ListComponent) && (
+                <ListComponent
+                  ref={listRef}
+                  {...commonProps}
+                  data={data}
+                  renderItem={renderItem}
+                  initialScrollIndex={initialIndex}
+                  keyExtractor={keyExtractor}
+                  estimatedItemSize={width + itemSpacing}
+                  windowSize={3}
+                  maxToRenderPerBatch={3}
+                  getItemLayout={getItemLayout}
+                  // NOTE - https://github.com/necolas/react-native-web/issues/1299
+                  {...(Platform.OS === 'web' && { dataSet: { 'paging-enabled-fix': true } })}
+                  {...listProps}
+                />
+              )
+            )}
           </Animated.View>
           <WebPagingFix />
         </View>

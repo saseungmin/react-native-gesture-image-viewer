@@ -2,4 +2,4 @@
 "react-native-gesture-image-viewer": minor
 ---
 
-feat: scrollView support for ListComponent props
+feat: add support for using ScrollView as a list component
