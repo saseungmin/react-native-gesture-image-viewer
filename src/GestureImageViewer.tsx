@@ -25,59 +25,51 @@ export function GestureImageViewer<T = any>({
   backdropStyle: backdropStyleProps,
   containerStyle,
   initialIndex = 0,
+  itemSpacing = 0,
   ...props
 }: GestureImageViewerProps<T>) {
   const { width: screenWidth } = useWindowDimensions();
 
   const width = customWidth || screenWidth;
 
-  const {
-    currentIndex,
-    flatListRef,
-    isZoomed,
-    dismissGesture,
-    zoomGesture,
-    onMomentumScrollEnd,
-    animatedStyle,
-    backdropStyle,
-  } = useGestureImageViewer({
-    id,
-    data,
-    width,
-    initialIndex,
-    ...props,
-  });
+  const { flatListRef, isZoomed, dismissGesture, zoomGesture, onMomentumScrollEnd, animatedStyle, backdropStyle } =
+    useGestureImageViewer({
+      id,
+      data,
+      width,
+      initialIndex,
+      itemSpacing,
+      ...props,
+    });
 
   const renderItem = useCallback(
     ({ item, index }: { item: T; index: number }) => {
-      const isActive = index === currentIndex;
-
       return (
-        <Animated.View
+        <View
           style={[
             {
-              width,
+              width: width,
               height: '100%',
               justifyContent: 'center',
               alignItems: 'center',
+              marginHorizontal: itemSpacing / 2,
             },
-            isActive && animatedStyle,
           ]}
         >
           {renderImage(item, index)}
-        </Animated.View>
+        </View>
       );
     },
-    [width, renderImage, animatedStyle, currentIndex],
+    [width, itemSpacing, renderImage],
   );
 
   const getItemLayout = useCallback(
     (_: any, index: number) => ({
-      length: width,
-      offset: width * index,
+      length: width + itemSpacing,
+      offset: (width + itemSpacing) * index,
       index,
     }),
-    [width],
+    [width, itemSpacing],
   );
 
   const keyExtractor = useCallback((item: T, index: number) => `image-${index}-${item}`, []);
@@ -97,14 +89,13 @@ export function GestureImageViewer<T = any>({
       <GestureDetector gesture={gesture}>
         <View style={[styles.container, containerStyle]}>
           <Animated.View style={[styles.background, backdropStyleProps, backdropStyle]} />
-          <View style={styles.content}>
+          <Animated.View style={[styles.content, animatedStyle]}>
             <ListComponent
               ref={flatListRef}
               data={data}
               renderItem={renderItem}
               keyExtractor={keyExtractor}
               horizontal
-              pagingEnabled
               scrollEnabled={!isZoomed}
               showsHorizontalScrollIndicator={false}
               onMomentumScrollEnd={onMomentumScrollEnd}
@@ -112,12 +103,17 @@ export function GestureImageViewer<T = any>({
               initialScrollIndex={initialIndex}
               windowSize={3}
               maxToRenderPerBatch={3}
-              removeClippedSubviews={true}
+              removeClippedSubviews
+              snapToInterval={width + itemSpacing}
+              estimatedItemSize={width + itemSpacing}
+              snapToAlignment="center"
+              decelerationRate="fast"
+              scrollEventThrottle={16}
               // NOTE - https://github.com/necolas/react-native-web/issues/1299
               {...(Platform.OS === 'web' && { dataSet: { 'paging-enabled-fix': true } })}
               {...listProps}
             />
-          </View>
+          </Animated.View>
           <WebPagingFix />
         </View>
       </GestureDetector>

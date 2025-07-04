@@ -255,6 +255,7 @@ function App() {
     <GestureImageViewer
       animateBackdrop={false}
       width={400}
+      itemSpacing={20}
       containerStyle={{ /* ... */ }}
       backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.90)' }}
       renderContainer={(children) => <View style={{ flex: 1 }}>{children}</View>}
@@ -267,6 +268,7 @@ function App() {
 |:--:|:-----|:--:|
 |`animateBackdrop`|기본적으로 아래로 슬라이드 제스처 시 배경의 `opacity` 값이 1부터 0까지 서서히 감소합니다. `false` 시 이러한 애니메이션을 비활성화합니다.|`true`|
 |`width`|콘텐츠 아이템의 너비 값입니다. 기본값은 window 너비입니다.|`Dimensions width`|
+|`itemSpacing`|콘텐츠 아이템 사이의 값을 지정할 수 있습니다.|`0`|
 |`containerStyle`|리스트 컴포넌트를 감싸고 있는 컨테이너 스타일을 커스텀하게 수정할 수 있습니다.|`flex: 1`|
 |`backdropStyle`|뷰어 배경의 스타일을 커스터마이징할 수 있습니다.|`backgroundColor: black; StyleSheet.absoluteFill;`|
 |`renderContainer`|`<GestureImageViewer />`를 감싸는 래퍼 컴포넌트를 커스텀하여 적용할 수 있습니다.||
