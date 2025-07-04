@@ -1,5 +1,11 @@
 # react-native-gesture-image-viewer
 
+## 0.5.0
+
+### Minor Changes
+
+- 603d0bd: feat: add support for using ScrollView as a list component
+
 ## 0.4.0
 
 ### Minor Changes
