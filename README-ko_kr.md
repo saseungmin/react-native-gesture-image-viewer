@@ -16,7 +16,7 @@ React Native에서 이미지 갤러리나 콘텐츠 뷰어를 구현할 때, 복
 - ✅ **외부 제어 API** - 버튼이나 다른 컴포넌트에서 프로그래밍 방식으로 제어
 - ✅ **다중 인스턴스 관리** - ID 기반으로 여러 뷰어를 독립적으로 관리
 - ✅ **유연한 통합** - FlatList, FlashList, Expo Image, FastImage 등 원하는 컴포넌트 사용
-- ✅ **TypeScript 완전 지원** - 타입 안정성과 개발자 경험 향상
+- ✅ **완벽한 TypeScript 지원** - 스마트 타입 추론으로 향상된 개발 경험
 - ✅ **크로스 플랫폼** - iOS, Android, Web 모든 플랫폼 지원
 - ✅ **사용하기 쉬운 API** - 직관적이고 간단한 구현, 복잡한 설정 불필요
 - ✅ **다양한 환경 지원** - Expo Go, New Architecture 지원
@@ -169,16 +169,18 @@ function App() {
 #### 리스트 컴포넌트
 
 `ListComponent` props를 통해 `ScrollView`, `FlatList`, `FlashList` 등 원하는 리스트를 지원합니다.   
-또한, `listProps`를 통해 기본적으로 지원하는 각각의 리스트 컴포넌트의 props를 커스텀할 수 있습니다.
+`listProps`는 **선택한 리스트 컴포넌트에 맞는 타입 추론**을 제공하여, IDE에서 정확한 자동완성과 타입 안전성을 보장합니다.
 
 ```tsx
+import { FlashList } from '@shopify/flash-list';
+
 function App() {
   return (
     <GestureImageViewer
       data={images}
-      ListComponent={FlatList}
+      ListComponent={FlashList}
       listProps={{
-        // ....
+        // ✅ FlashList props 자동완성
       }}
     />
   );

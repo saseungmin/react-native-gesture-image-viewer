@@ -16,7 +16,7 @@ Existing libraries often have limited customization options or performance issue
 - ✅ **External Control API** - Programmatic control from buttons or other components
 - ✅ **Multi-Instance Management** - ID-based independent management of multiple viewers
 - ✅ **Flexible Integration** - Use with FlatList, FlashList, Expo Image, FastImage, and more
-- ✅ **Full TypeScript Support** - Type safety and enhanced developer experience
+- ✅ **Full TypeScript Support** - Enhanced developer experience with smart type inference
 - ✅ **Cross-Platform** - iOS, Android, and Web support
 - ✅ **Easy-to-Use API** - Intuitive and simple implementation without complex setup
 - ✅ **Various Environment Support** - Expo Go and New Architecture support
@@ -168,17 +168,19 @@ function App() {
 
 #### List Components
 
-Support for `ScrollView`, `FlatList`, `FlashList`, and other list components through the `ListComponent` prop.   
-You can also customize the props of each supported list component through `listProps`.
+Support for any list component like `ScrollView`, `FlatList`, `FlashList` through the `ListComponent` prop.   
+The `listProps` provides **type inference based on the selected list component**, ensuring accurate autocompletion and type safety in your IDE.
 
 ```tsx
+import { FlashList } from '@shopify/flash-list';
+
 function App() {
   return (
     <GestureImageViewer
       data={images}
-      ListComponent={FlatList}
+      ListComponent={FlashList}
       listProps={{
-        // ....
+        // ✅ FlashList props autocompletion
       }}
     />
   );

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo } from 'react';
-import { Platform, type ScrollViewProps, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { FlatList, Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { type FlatList, Platform, type ScrollViewProps, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { registry } from './ImageViewerRegistry';
 import type { GestureImageViewerProps } from './types';
 import { useGestureImageViewer } from './useGestureImageViewer';
-import { isFlatListLike, isScrollViewLike } from './utils';
+import { isFlashListLike, isFlatListLike, isScrollViewLike } from './utils';
 
 const WebPagingFix = () => {
   if (Platform.OS !== 'web') {
@@ -15,12 +15,12 @@ const WebPagingFix = () => {
   return <style>{`[data-paging-enabled-fix] > div > div > div {height: 100%;}`}</style>;
 };
 
-export function GestureImageViewer<T = any>({
+export function GestureImageViewer<T = any, LC = typeof FlatList>({
   id = 'default',
   data,
   renderImage,
   renderContainer,
-  ListComponent = FlatList,
+  ListComponent,
   width: customWidth,
   listProps,
   backdropStyle: backdropStyleProps,
@@ -28,7 +28,9 @@ export function GestureImageViewer<T = any>({
   initialIndex = 0,
   itemSpacing = 0,
   ...props
-}: GestureImageViewerProps<T>) {
+}: GestureImageViewerProps<T, LC>) {
+  const Component = ListComponent as React.ComponentType<any>;
+
   const { width: screenWidth } = useWindowDimensions();
 
   const width = customWidth || screenWidth;
@@ -66,7 +68,7 @@ export function GestureImageViewer<T = any>({
   );
 
   const getItemLayout = useCallback(
-    (_: any, index: number) => ({
+    (_: ArrayLike<T> | null | undefined, index: number) => ({
       length: width + itemSpacing,
       offset: (width + itemSpacing) * index,
       index,
@@ -110,23 +112,23 @@ export function GestureImageViewer<T = any>({
         <View style={[styles.container, containerStyle]}>
           <Animated.View style={[styles.background, backdropStyleProps, backdropStyle]} />
           <Animated.View style={[styles.content, animatedStyle]}>
-            {isScrollViewLike(ListComponent) ? (
-              <ListComponent ref={listRef} {...commonProps} {...listProps}>
+            {isScrollViewLike(Component) ? (
+              <Component ref={listRef} {...commonProps} {...listProps}>
                 {data.map((item, index) => renderItem({ item, index }))}
-              </ListComponent>
+              </Component>
             ) : (
-              isFlatListLike(ListComponent) && (
-                <ListComponent
+              isFlatListLike(Component) && (
+                <Component
                   ref={listRef}
                   {...commonProps}
                   data={data}
                   renderItem={renderItem}
                   initialScrollIndex={initialIndex}
                   keyExtractor={keyExtractor}
-                  estimatedItemSize={width + itemSpacing}
                   windowSize={3}
                   maxToRenderPerBatch={3}
                   getItemLayout={getItemLayout}
+                  {...(isFlashListLike(Component) && { estimatedItemSize: width + itemSpacing })}
                   // NOTE - https://github.com/necolas/react-native-web/issues/1299
                   {...(Platform.OS === 'web' && { dataSet: { 'paging-enabled-fix': true } })}
                   {...listProps}
