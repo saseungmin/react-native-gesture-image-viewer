@@ -9,7 +9,6 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@babel/runtime": "^7.27.6",
     "@expo/metro-runtime": "~5.0.4",
     "@expo/vector-icons": "^14.1.0",
     "@shopify/flash-list": "1.7.6",
@@ -28,6 +27,7 @@
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
+    "@babel/runtime": "^7.27.6",
     "react-native-builder-bob": "^0.40.12",
     "react-native-monorepo-config": "^0.1.9"
   },
