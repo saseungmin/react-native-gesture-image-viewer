@@ -5,12 +5,12 @@ import type { FlatList as GHFlatList, ScrollView as GHScrollView } from 'react-n
 export type FlatListComponent = typeof RNFlatList | typeof GHFlatList;
 export type ScrollViewComponent = typeof RNScrollView | typeof GHScrollView;
 
-type GetComponentProps<T> = T extends React.ComponentType<infer P> ? P : any;
+type GetComponentProps<T> = T extends React.ComponentType<infer P> ? P : never;
 
 type ConditionalListProps<LC> = LC extends FlatListComponent
-  ? React.ComponentProps<FlatListComponent>
+  ? React.ComponentProps<LC>
   : LC extends ScrollViewComponent
-    ? React.ComponentProps<ScrollViewComponent>
+    ? React.ComponentProps<LC>
     : GetComponentProps<LC>;
 
 export interface GestureImageViewerProps<T = any, LC = typeof RNFlatList> {
