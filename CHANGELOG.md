@@ -1,5 +1,37 @@
 # react-native-gesture-image-viewer
 
+## 1.0.0
+
+### Major Changes
+
+- 687ac58: refactor: rename GestureImageViewer to GestureViewer for broader use cases
+
+  #### Changed
+
+  - **BREAKING CHANGE**: Renamed `GestureImageViewer` to `GestureViewer` for broader use cases
+  - **BREAKING CHANGE**: Renamed `useImageViewerController` hook to `useGestureViewerController`
+  - **BREAKING CHANGE**: Renamed `renderImage` prop to `renderItem` in `GestureViewer`
+
+  #### Migration Guide
+
+  ```tsx
+  // Before
+  import {
+    GestureImageViewer,
+    useImageViewerController,
+  } from "react-native-gesture-image-viewer";
+
+  <GestureImageViewer renderImage={(item) => <Image source={item} />} />;
+
+  // After
+  import {
+    GestureViewer,
+    useGestureViewerController,
+  } from "react-native-gesture-image-viewer";
+
+  <GestureViewer renderItem={(item) => <Image source={item} />} />;
+  ```
+
 ## 0.5.4
 
 ### Patch Changes
