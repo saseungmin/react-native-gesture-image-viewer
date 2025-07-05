@@ -27,6 +27,10 @@ React Native에서 이미지 갤러리나 콘텐츠 뷰어를 구현할 때, 복
 - [📁 예제 프로젝트](/example/) - 실제 구현 코드와 다양한 사용 사례
 - [🤖 Expo Go](https://snack.expo.dev/@harang/react-native-gesture-image-viewer) - Snack Expo에서 바로 체험
 
+<p align="center">
+  <img src="./assets/example.gif" width="600" />
+</p>
+
 ### 사전 준비
 
 > [!IMPORTANT]
