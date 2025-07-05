@@ -135,7 +135,7 @@ export function GestureImageViewer<T = any, LC = typeof FlatList>({
               )
             )}
           </Animated.View>
-          {Platform.OS === 'web' && <WebPagingFixStyle Component={Component} />}
+          <WebPagingFixStyle Component={Component} />
         </View>
       </GestureDetector>
     </GestureHandlerRootView>

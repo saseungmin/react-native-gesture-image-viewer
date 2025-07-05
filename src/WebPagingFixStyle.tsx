@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { Platform } from 'react-native';
 import { isFlashListLike, isFlatListLike } from './utils';
 
 type WebPagingFixStyleProps = {
@@ -6,19 +6,19 @@ type WebPagingFixStyleProps = {
 };
 
 function WebPagingFixStyle({ Component }: WebPagingFixStyleProps) {
-  const styleElement = useMemo(() => {
-    if (isFlatListLike(Component)) {
-      return <style>{`[data-flat-list-paging-enabled-fix] > div > div > div {height: 100%;}`}</style>;
-    }
-
-    if (isFlashListLike(Component)) {
-      return <style>{`[data-flash-list-paging-enabled-fix] > div {height: 100%;}`}</style>;
-    }
-
+  if (Platform.OS !== 'web') {
     return null;
-  }, [Component]);
+  }
 
-  return styleElement;
+  if (isFlashListLike(Component)) {
+    return <style>{`[data-flash-list-paging-enabled-fix] > div {height: 100%;}`}</style>;
+  }
+
+  if (isFlatListLike(Component)) {
+    return <style>{`[data-flat-list-paging-enabled-fix] > div > div > div {height: 100%;}`}</style>;
+  }
+
+  return null;
 }
 
 export default WebPagingFixStyle;
