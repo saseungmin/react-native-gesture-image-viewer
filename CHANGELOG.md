@@ -1,5 +1,11 @@
 # react-native-gesture-image-viewer
 
+## 0.5.4
+
+### Patch Changes
+
+- be6a46f: docs(readme): add example.gif in example section
+
 ## 0.5.3
 
 ### Patch Changes
