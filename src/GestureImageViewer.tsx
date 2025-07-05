@@ -6,14 +6,7 @@ import { registry } from './ImageViewerRegistry';
 import type { GestureImageViewerProps } from './types';
 import { useGestureImageViewer } from './useGestureImageViewer';
 import { isFlashListLike, isFlatListLike, isScrollViewLike } from './utils';
-
-const WebPagingFix = () => {
-  if (Platform.OS !== 'web') {
-    return null;
-  }
-
-  return <style>{`[data-paging-enabled-fix] > div > div > div {height: 100%;}`}</style>;
-};
+import WebPagingFixStyle from './WebPagingFixStyle';
 
 export function GestureImageViewer<T = any, LC = typeof FlatList>({
   id = 'default',
@@ -111,7 +104,11 @@ export function GestureImageViewer<T = any, LC = typeof FlatList>({
       <GestureDetector gesture={gesture}>
         <View style={[styles.container, containerStyle]}>
           <Animated.View style={[styles.background, backdropStyleProps, backdropStyle]} />
-          <Animated.View style={[styles.content, animatedStyle]}>
+          <Animated.View
+            style={[styles.content, animatedStyle]}
+            {...(Platform.OS === 'web' &&
+              isFlashListLike(Component) && { dataSet: { 'flash-list-paging-enabled-fix': true } })}
+          >
             {isScrollViewLike(Component) ? (
               <Component ref={listRef} {...commonProps} {...listProps}>
                 {data.map((item, index) => renderItem({ item, index }))}
@@ -124,19 +121,21 @@ export function GestureImageViewer<T = any, LC = typeof FlatList>({
                   data={data}
                   renderItem={renderItem}
                   initialScrollIndex={initialIndex}
+                  style={{ height: '100%' }}
                   keyExtractor={keyExtractor}
                   windowSize={3}
                   maxToRenderPerBatch={3}
                   getItemLayout={getItemLayout}
                   {...(isFlashListLike(Component) && { estimatedItemSize: width + itemSpacing })}
                   // NOTE - https://github.com/necolas/react-native-web/issues/1299
-                  {...(Platform.OS === 'web' && { dataSet: { 'paging-enabled-fix': true } })}
+                  {...(Platform.OS === 'web' &&
+                    isFlatListLike(Component) && { dataSet: { 'flat-list-paging-enabled-fix': true } })}
                   {...listProps}
                 />
               )
             )}
           </Animated.View>
-          <WebPagingFix />
+          <WebPagingFixStyle Component={Component} />
         </View>
       </GestureDetector>
     </GestureHandlerRootView>
