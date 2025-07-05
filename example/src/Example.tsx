@@ -3,7 +3,7 @@ import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { useCallback, useState } from 'react';
 import { Button, Modal, StyleSheet, Text, View } from 'react-native';
-import { GestureImageViewer, useImageViewerController } from 'react-native-gesture-image-viewer';
+import { GestureViewer, useGestureViewerController } from 'react-native-gesture-image-viewer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const images = [
@@ -17,7 +17,7 @@ const images = [
 function Example() {
   const [visible, setVisible] = useState(false);
 
-  const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount } = useImageViewerController();
+  const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount } = useGestureViewerController();
 
   const insets = useSafeAreaInsets();
 
@@ -30,12 +30,12 @@ function Example() {
       <Button title="Open" onPress={() => setVisible(true)} />
       <Modal visible={visible} onRequestClose={() => setVisible(false)}>
         <View style={{ flex: 1 }}>
-          <GestureImageViewer
+          <GestureViewer
             data={images}
             initialIndex={0}
             onDismiss={() => setVisible(false)}
             ListComponent={FlashList}
-            renderImage={renderImage}
+            renderItem={renderImage}
             backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.90)' }}
             renderContainer={(children) => <View style={{ flex: 1 }}>{children}</View>}
           />

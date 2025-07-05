@@ -1,3 +1,3 @@
-export { GestureImageViewer } from './GestureImageViewer';
-export type { GestureImageViewerProps } from './types';
-export { useImageViewerController } from './useImageViewerController';
+export { GestureViewer } from './GestureViewer';
+export type { GestureViewerProps } from './types';
+export { useGestureViewerController } from './useGestureViewerController';

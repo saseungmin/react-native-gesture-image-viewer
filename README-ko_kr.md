@@ -15,7 +15,7 @@ React Native에서 이미지 갤러리나 콘텐츠 뷰어를 구현할 때, 복
 - ✅ **완전한 커스터마이징** - 컴포넌트, 스타일, 동작 모든 것을 사용자 정의 가능
 - ✅ **외부 제어 API** - 버튼이나 다른 컴포넌트에서 프로그래밍 방식으로 제어
 - ✅ **다중 인스턴스 관리** - ID 기반으로 여러 뷰어를 독립적으로 관리
-- ✅ **유연한 통합** - FlatList, FlashList, Expo Image, FastImage 등 원하는 컴포넌트 사용
+- ✅ **유연한 통합** - Modal, [React Native Modal](https://www.npmjs.com/package/react-native-modal), ScrollView, FlatList, [FlashList](https://www.npmjs.com/package/@shopify/flash-list), [Expo Image](https://www.npmjs.com/package/expo-image), [FastImage](https://github.com/DylanVann/react-native-fast-image) 등 원하는 컴포넌트 사용
 - ✅ **완벽한 TypeScript 지원** - 스마트 타입 추론으로 향상된 개발 경험
 - ✅ **크로스 플랫폼** - iOS, Android, Web 모든 플랫폼 지원
 - ✅ **사용하기 쉬운 API** - 직관적이고 간단한 구현, 복잡한 설정 불필요
@@ -115,7 +115,7 @@ bun add react-native-gesture-image-viewer
 
 ```tsx
 import { Image, Modal } from 'react-native';
-import { GestureImageViewer } from 'react-native-gesture-image-viewer';
+import { GestureViewer } from 'react-native-gesture-image-viewer';
 
 function App() {
   const images = [...];
@@ -128,9 +128,9 @@ function App() {
 
   return (
     <Modal visible={visible} onRequestClose={() => setVisible(false)}>
-      <GestureImageViewer
+      <GestureViewer
         data={images}
-        renderImage={renderImage}
+        renderItem={renderImage}
         onDismiss={() => setVisible(false)}
       />
     </Modal>
@@ -145,9 +145,9 @@ function App() {
 ```tsx
 function App() {
   return (
-    <GestureImageViewer
+    <GestureViewer
       data={images}
-      renderImage={renderImage}
+      renderItem={renderImage}
       enableDismissGesture
       enableSwipeGesture
       enableZoomGesture
@@ -180,7 +180,7 @@ import { FlashList } from '@shopify/flash-list';
 
 function App() {
   return (
-    <GestureImageViewer
+    <GestureViewer
       data={images}
       ListComponent={FlashList}
       listProps={{
@@ -193,10 +193,10 @@ function App() {
 
 #### 콘텐츠 컴포넌트
 
-`renderImage` props를 통해 `expo-image`, `FastImage` 등 다양한 종류의 콘텐츠 컴포넌트를 주입하여 제스처를 사용할 수 있습니다.
+`renderItem` props를 통해 `expo-image`, `FastImage` 등 다양한 종류의 콘텐츠 컴포넌트를 주입하여 제스처를 사용할 수 있습니다.
 
 ```tsx
-import { GestureImageViewer } from 'react-native-gesture-image-viewer';
+import { GestureViewer } from 'react-native-gesture-image-viewer';
 import { Image } from 'expo-image';
 
 function App() {
@@ -205,9 +205,9 @@ function App() {
   }, []);
 
   return (
-    <GestureImageViewer
+    <GestureViewer
       data={images}
-      renderImage={renderImage}
+      renderItem={renderImage}
     />
   );
 }
@@ -218,16 +218,16 @@ function App() {
 `react-native-gesture-image-viewer`는 강력한 기능으로 버튼이나 다른 컴포넌트에서 프로그래밍 방식으로 제어할 수 있는 hook을 지원합니다.
 
 ```tsx
-import { GestureImageViewer, useImageViewerController } from 'react-native-gesture-image-viewer';
+import { GestureViewer, useGestureViewerController } from 'react-native-gesture-image-viewer';
 
 function App() {
-  const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount } = useImageViewerController();
+  const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount } = useGestureViewerController();
 
   return (
     <View>
-      <GestureImageViewer
+      <GestureViewer
         data={images}
-        renderImage={renderImage}
+        renderItem={renderImage}
       />
       <View
         style={{
@@ -251,14 +251,14 @@ function App() {
 
 ### 스타일 커스터마이징
 
-`GestureImageViewer`의 스타일을 커스터마이징할 수 있습니다.
+`GestureViewer`의 스타일을 커스터마이징할 수 있습니다.
 
 ```tsx
-import { GestureImageViewer } from 'react-native-gesture-image-viewer';
+import { GestureViewer } from 'react-native-gesture-image-viewer';
 
 function App() {
   return (
-    <GestureImageViewer
+    <GestureViewer
       animateBackdrop={false}
       width={400}
       itemSpacing={20}
@@ -277,36 +277,36 @@ function App() {
 |`itemSpacing`|콘텐츠 아이템 사이의 값을 지정할 수 있습니다.|`0`|
 |`containerStyle`|리스트 컴포넌트를 감싸고 있는 컨테이너 스타일을 커스텀하게 수정할 수 있습니다.|`flex: 1`|
 |`backdropStyle`|뷰어 배경의 스타일을 커스터마이징할 수 있습니다.|`backgroundColor: black; StyleSheet.absoluteFill;`|
-|`renderContainer`|`<GestureImageViewer />`를 감싸는 래퍼 컴포넌트를 커스텀하여 적용할 수 있습니다.||
+|`renderContainer`|`<GestureViewer />`를 감싸는 래퍼 컴포넌트를 커스텀하여 적용할 수 있습니다.||
 
 ### 다중 인스턴스 관리
 
-여러 개의 `GestureImageViewer` 인스턴스를 효율적으로 관리하고 싶은 경우 `id` 값을 적용하면 여러 개의 `GestureImageViewer`를 사용할 수 있습니다.   
-`GestureImageViewer`는 컴포넌트가 언마운트되면 메모리에서 자동으로 인스턴스가 제거되어 메모리 관리를 수동으로 할 필요가 없습니다.   
+여러 개의 `GestureViewer` 인스턴스를 효율적으로 관리하고 싶은 경우 `id` 값을 적용하면 여러 개의 `GestureViewer`를 사용할 수 있습니다.   
+`GestureViewer`는 컴포넌트가 언마운트되면 메모리에서 자동으로 인스턴스가 제거되어 메모리 관리를 수동으로 할 필요가 없습니다.   
 
 > `id` 기본값은 `default`입니다.
 
 ```tsx
-import { GestureImageViewer, useImageViewerController } from 'react-native-gesture-image-viewer';
+import { GestureViewer, useGestureViewerController } from 'react-native-gesture-image-viewer';
 
 const firstViewerId = 'firstViewerId';
 const secondViewerId = 'secondViewerId';
 
 function App() {
-  const { currentIndex: firstCurrentIndex, totalCount: firstTotalCount } = useImageViewerController(firstViewerId);
-  const { currentIndex: secondCurrentIndex, totalCount: secondTotalCount } = useImageViewerController(secondViewerId);
+  const { currentIndex: firstCurrentIndex, totalCount: firstTotalCount } = useGestureViewerController(firstViewerId);
+  const { currentIndex: secondCurrentIndex, totalCount: secondTotalCount } = useGestureViewerController(secondViewerId);
 
   return (
     <View>
-      <GestureImageViewer
+      <GestureViewer
         id={firstViewerId}
         data={images}
-        renderImage={renderImage}
+        renderItem={renderImage}
       />
-      <GestureImageViewer
+      <GestureViewer
         id={secondViewerId}
         data={images}
-        renderImage={renderImage}
+        renderItem={renderImage}
       />
     </View>
   );
@@ -319,13 +319,13 @@ function App() {
 `index` 값이 변경될 때 `onIndexChange` 콜백함수가 호출됩니다.
 
 ```tsx
-import { GestureImageViewer } from 'react-native-gesture-image-viewer';
+import { GestureViewer } from 'react-native-gesture-image-viewer';
 
 function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   return (
-    <GestureImageViewer
+    <GestureViewer
       onIndexChange={setCurrentIndex}
     />
   );
@@ -346,7 +346,7 @@ function App() {
 
 ## 성능 최적화 팁
 
-- `renderImage` 함수는 `useCallback`으로 감싸서 불필요한 리렌더링을 방지하세요.
+- `renderItem` 함수는 `useCallback`으로 감싸서 불필요한 리렌더링을 방지하세요.
 - 대용량 이미지의 경우 `FastImage`나 `expo-image` 사용을 권장합니다.
 - 많은 수의 이미지를 다룰 때는 `FlashList` 사용을 권장합니다.
 - 디바이스에서 테스트하세요. (시뮬레이터에서는 성능이 제한될 수 있습니다.)

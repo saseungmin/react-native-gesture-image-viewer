@@ -13,13 +13,13 @@ type ConditionalListProps<LC> = LC extends FlatListComponent
     ? React.ComponentProps<LC>
     : GetComponentProps<LC>;
 
-export interface GestureImageViewerProps<T = any, LC = typeof RNFlatList> {
+export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
   id?: string;
   data: T[];
   initialIndex?: number;
   onIndexChange?: (index: number) => void;
   onDismiss?: () => void;
-  renderImage: (item: T, index: number) => React.ReactElement;
+  renderItem: (item: T, index: number) => React.ReactElement;
   renderContainer?: (children: React.ReactElement) => React.ReactElement;
   ListComponent: LC;
   width?: number;

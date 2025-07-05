@@ -16,16 +16,16 @@ import {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import type ImageViewerManager from './ImageViewerManager';
-import { registry } from './ImageViewerRegistry';
-import type { GestureImageViewerProps } from './types';
+import type GestureViewerManager from './GestureViewerManager';
+import { registry } from './GestureViewerRegistry';
+import type { GestureViewerProps } from './types';
 
-type UseGestureImageViewerProps<T = any> = Omit<
-  GestureImageViewerProps<T>,
-  'renderImage' | 'renderContainer' | 'ListComponent' | 'listProps' | 'containerStyle' | 'backdropStyle'
+type UseGestureViewerProps<T = any> = Omit<
+  GestureViewerProps<T>,
+  'renderItem' | 'renderContainer' | 'ListComponent' | 'listProps' | 'containerStyle' | 'backdropStyle'
 >;
 
-export const useGestureImageViewer = <T = any>({
+export const useGestureViewer = <T = any>({
   data,
   initialIndex = 0,
   onIndexChange,
@@ -44,14 +44,14 @@ export const useGestureImageViewer = <T = any>({
   maxZoomScale = 2,
   itemSpacing = 0,
   id = 'default',
-}: UseGestureImageViewerProps<T>) => {
+}: UseGestureViewerProps<T>) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const width = customWidth || screenWidth;
 
   const [isZoomed, setIsZoomed] = useState(false);
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const [manager, setManager] = useState<ImageViewerManager | null>(null);
+  const [manager, setManager] = useState<GestureViewerManager | null>(null);
 
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
@@ -76,7 +76,7 @@ export const useGestureImageViewer = <T = any>({
   );
 
   useEffect(() => {
-    const handleManagerChange = (manager: ImageViewerManager | null) => {
+    const handleManagerChange = (manager: GestureViewerManager | null) => {
       unsubscribeRef.current?.();
       unsubscribeRef.current = null;
 

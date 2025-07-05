@@ -1,15 +1,15 @@
-export type ImageViewerManagerState = {
+export type GestureViewerManagerState = {
   currentIndex: number;
   dataLength: number;
 };
 
-class ImageViewerManager {
+class GestureViewerManager {
   private currentIndex = 0;
   private dataLength = 0;
   private width = 0;
   private listRef: any | null = null;
   private enableSwipeGesture = true;
-  private listeners = new Set<(state: ImageViewerManagerState) => void>();
+  private listeners = new Set<(state: GestureViewerManagerState) => void>();
 
   // private updateState(newState: Partial<any>) {
   //   Object.assign(this, newState);
@@ -22,7 +22,7 @@ class ImageViewerManager {
     this.listeners.forEach((listener) => listener(state));
   }
 
-  subscribe(listener: (state: ImageViewerManagerState) => void) {
+  subscribe(listener: (state: GestureViewerManagerState) => void) {
     this.listeners.add(listener);
 
     return () => {
@@ -100,4 +100,4 @@ class ImageViewerManager {
   }
 }
 
-export default ImageViewerManager;
+export default GestureViewerManager;
