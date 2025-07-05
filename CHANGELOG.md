@@ -1,5 +1,11 @@
 # react-native-gesture-image-viewer
 
+## 0.5.3
+
+### Patch Changes
+
+- 0c4126f: fix(web): resolve FlashList visibility issue due to missing height style
+
 ## 0.5.2
 
 ### Patch Changes
