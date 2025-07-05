@@ -27,6 +27,10 @@ Existing libraries often have limited customization options or performance issue
 - [📁 Example Project](/example/) - Real implementation code with various use cases
 - [🤖 Expo Go](https://snack.expo.dev/@harang/react-native-gesture-image-viewer) - Try it instantly on Snack Expo
 
+<p align="center">
+  <img src="./assets/example.gif" width="600" />
+</p>
+
 ### Prerequisites
 
 > [!IMPORTANT]
