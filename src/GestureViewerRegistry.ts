@@ -1,10 +1,10 @@
-import ImageViewerManager from './ImageViewerManager';
+import GestureViewerManager from './GestureViewerManager';
 
-class ImageViewerRegistry {
-  private managers = new Map<string, ImageViewerManager>();
-  private subscribers = new Map<string, Set<(manager: ImageViewerManager | null) => void>>();
+class GestureViewerRegistry {
+  private managers = new Map<string, GestureViewerManager>();
+  private subscribers = new Map<string, Set<(manager: GestureViewerManager | null) => void>>();
 
-  subscribeToManager(id: string, callback: (manager: ImageViewerManager | null) => void) {
+  subscribeToManager(id: string, callback: (manager: GestureViewerManager | null) => void) {
     if (!this.subscribers.has(id)) {
       this.subscribers.set(id, new Set());
     }
@@ -26,12 +26,12 @@ class ImageViewerRegistry {
     };
   }
 
-  createManager(id: string): ImageViewerManager | null {
+  createManager(id: string): GestureViewerManager | null {
     if (this.managers.has(id)) {
       return this.managers.get(id) || null;
     }
 
-    const manager = new ImageViewerManager();
+    const manager = new GestureViewerManager();
     this.managers.set(id, manager);
 
     this.notifySubscribers(id, manager);
@@ -39,7 +39,7 @@ class ImageViewerRegistry {
     return manager;
   }
 
-  getManager(id: string): ImageViewerManager | null {
+  getManager(id: string): GestureViewerManager | null {
     return this.managers.get(id) || null;
   }
 
@@ -54,7 +54,7 @@ class ImageViewerRegistry {
     }
   }
 
-  notifySubscribers(id: string, manager: ImageViewerManager | null) {
+  notifySubscribers(id: string, manager: GestureViewerManager | null) {
     const listeners = this.subscribers.get(id);
 
     if (listeners) {
@@ -63,4 +63,4 @@ class ImageViewerRegistry {
   }
 }
 
-export const registry = new ImageViewerRegistry();
+export const registry = new GestureViewerRegistry();

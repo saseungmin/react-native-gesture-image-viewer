@@ -1,19 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type ImageViewerManager from './ImageViewerManager';
-import type { ImageViewerManagerState } from './ImageViewerManager';
-import { registry } from './ImageViewerRegistry';
+import type GestureViewerManager from './GestureViewerManager';
+import type { GestureViewerManagerState } from './GestureViewerManager';
+import { registry } from './GestureViewerRegistry';
 
-export const useImageViewerController = (id = 'default') => {
-  const [state, setState] = useState<ImageViewerManagerState>({
+export const useGestureViewerController = (id = 'default') => {
+  const [state, setState] = useState<GestureViewerManagerState>({
     currentIndex: 0,
     dataLength: 0,
   });
 
-  const [manager, setManager] = useState<ImageViewerManager | null>(null);
+  const [manager, setManager] = useState<GestureViewerManager | null>(null);
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    const handleManagerChange = (newManager: ImageViewerManager | null) => {
+    const handleManagerChange = (newManager: GestureViewerManager | null) => {
       unsubscribeRef.current?.();
       unsubscribeRef.current = null;
 

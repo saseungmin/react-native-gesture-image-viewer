@@ -15,7 +15,7 @@ Existing libraries often have limited customization options or performance issue
 - ✅ **Full Customization** - Complete control over components, styles, and behaviors
 - ✅ **External Control API** - Programmatic control from buttons or other components
 - ✅ **Multi-Instance Management** - ID-based independent management of multiple viewers
-- ✅ **Flexible Integration** - Use with FlatList, FlashList, Expo Image, FastImage, and more
+- ✅ **Flexible Integration** - Use with Modal, [React Native Modal](https://www.npmjs.com/package/react-native-modal), ScrollView, FlatList, [FlashList](https://www.npmjs.com/package/@shopify/flash-list), [Expo Image](https://www.npmjs.com/package/expo-image), [FastImage](https://github.com/DylanVann/react-native-fast-image), and more
 - ✅ **Full TypeScript Support** - Enhanced developer experience with smart type inference
 - ✅ **Cross-Platform** - iOS, Android, and Web support
 - ✅ **Easy-to-Use API** - Intuitive and simple implementation without complex setup
@@ -115,7 +115,7 @@ You can create a viewer using any `Modal` of your choice as shown below:
 
 ```tsx
 import { Image, Modal } from 'react-native';
-import { GestureImageViewer } from 'react-native-gesture-image-viewer';
+import { GestureViewer } from 'react-native-gesture-image-viewer';
 
 function App() {
   const images = [...];
@@ -128,9 +128,9 @@ function App() {
 
   return (
     <Modal visible={visible} onRequestClose={() => setVisible(false)}>
-      <GestureImageViewer
+      <GestureViewer
         data={images}
-        renderImage={renderImage}
+        renderItem={renderImage}
         onDismiss={() => setVisible(false)}
       />
     </Modal>
@@ -145,9 +145,9 @@ function App() {
 ```tsx
 function App() {
   return (
-    <GestureImageViewer
+    <GestureViewer
       data={images}
-      renderImage={renderImage}
+      renderItem={renderImage}
       enableDismissGesture
       enableSwipeGesture
       enableZoomGesture
@@ -180,7 +180,7 @@ import { FlashList } from '@shopify/flash-list';
 
 function App() {
   return (
-    <GestureImageViewer
+    <GestureViewer
       data={images}
       ListComponent={FlashList}
       listProps={{
@@ -196,7 +196,7 @@ function App() {
 You can inject various types of content components like `expo-image`, `FastImage`, etc., through the `renderImage` prop to use gestures.
 
 ```tsx
-import { GestureImageViewer } from 'react-native-gesture-image-viewer';
+import { GestureViewer } from 'react-native-gesture-image-viewer';
 import { Image } from 'expo-image';
 
 function App() {
@@ -205,9 +205,9 @@ function App() {
   }, []);
 
   return (
-    <GestureImageViewer
+    <GestureViewer
       data={images}
-      renderImage={renderImage}
+      renderItem={renderImage}
     />
   );
 }
@@ -218,16 +218,16 @@ function App() {
 `react-native-gesture-image-viewer` provides powerful hooks for programmatic control from buttons or other components.
 
 ```tsx
-import { GestureImageViewer, useImageViewerController } from 'react-native-gesture-image-viewer';
+import { GestureViewer, useGestureViewerController } from 'react-native-gesture-image-viewer';
 
 function App() {
-  const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount } = useImageViewerController();
+  const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount } = useGestureViewerController();
 
   return (
     <View>
-      <GestureImageViewer
+      <GestureViewer
         data={images}
-        renderImage={renderImage}
+        renderItem={renderImage}
       />
       <View
         style={{
@@ -251,14 +251,14 @@ function App() {
 
 ### Style Customization
 
-You can customize the styling of `GestureImageViewer`.
+You can customize the styling of `GestureViewer`.
 
 ```tsx
-import { GestureImageViewer } from 'react-native-gesture-image-viewer';
+import { GestureViewer } from 'react-native-gesture-image-viewer';
 
 function App() {
   return (
-    <GestureImageViewer
+    <GestureViewer
       animateBackdrop={false}
       width={400}
       itemSpacing={20}
@@ -277,36 +277,36 @@ function App() {
 |`itemSpacing`|Specifies the spacing between list items.|`0`|
 |`containerStyle`|Allows custom styling of the container that wraps the list component.|`flex: 1`|
 |`backdropStyle`|Allows customization of the viewer's background style.|`backgroundColor: black; StyleSheet.absoluteFill;`|
-|`renderContainer`|Allows custom wrapper component around `<GestureImageViewer />`.||
+|`renderContainer`|Allows custom wrapper component around `<GestureViewer />`.||
 
 ### Multi-Instance Management
 
-When you want to efficiently manage multiple `GestureImageViewer` instances, you can use the `id` prop to use multiple `GestureImageViewer` components.   
-`GestureImageViewer` automatically removes instances from memory when components are unmounted, so no manual memory management is required.   
+When you want to efficiently manage multiple `GestureViewer` instances, you can use the `id` prop to use multiple `GestureViewer` components.   
+`GestureViewer` automatically removes instances from memory when components are unmounted, so no manual memory management is required.   
 
 > The default `id` value is `default`.
 
 ```tsx
-import { GestureImageViewer, useImageViewerController } from 'react-native-gesture-image-viewer';
+import { GestureViewer, useGestureViewerController } from 'react-native-gesture-image-viewer';
 
 const firstViewerId = 'firstViewerId';
 const secondViewerId = 'secondViewerId';
 
 function App() {
-  const { currentIndex: firstCurrentIndex, totalCount: firstTotalCount } = useImageViewerController(firstViewerId);
-  const { currentIndex: secondCurrentIndex, totalCount: secondTotalCount } = useImageViewerController(secondViewerId);
+  const { currentIndex: firstCurrentIndex, totalCount: firstTotalCount } = useGestureViewerController(firstViewerId);
+  const { currentIndex: secondCurrentIndex, totalCount: secondTotalCount } = useGestureViewerController(secondViewerId);
 
   return (
     <View>
-      <GestureImageViewer
+      <GestureViewer
         id={firstViewerId}
         data={images}
-        renderImage={renderImage}
+        renderItem={renderImage}
       />
-      <GestureImageViewer
+      <GestureViewer
         id={secondViewerId}
         data={images}
-        renderImage={renderImage}
+        renderItem={renderImage}
       />
     </View>
   );
@@ -319,13 +319,13 @@ function App() {
 The `onIndexChange` callback function is called when the `index` value changes.
 
 ```tsx
-import { GestureImageViewer } from 'react-native-gesture-image-viewer';
+import { GestureViewer } from 'react-native-gesture-image-viewer';
 
 function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   return (
-    <GestureImageViewer
+    <GestureViewer
       onIndexChange={setCurrentIndex}
     />
   );
@@ -346,7 +346,7 @@ Controls the maximum zoom scale multiplier.
 
 ## Performance Optimization Tips
 
-- Wrap the `renderImage` function with `useCallback` to prevent unnecessary re-renders.
+- Wrap the `renderItem` function with `useCallback` to prevent unnecessary re-renders.
 - For large images, we recommend using `FastImage` or `expo-image`.
 - For handling many images, we recommend using `FlashList`.
 - Test on actual devices (performance may be limited in simulators).

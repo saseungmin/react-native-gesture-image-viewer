@@ -2,16 +2,16 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { type FlatList, Platform, type ScrollViewProps, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
-import { registry } from './ImageViewerRegistry';
-import type { GestureImageViewerProps } from './types';
-import { useGestureImageViewer } from './useGestureImageViewer';
+import { registry } from './GestureViewerRegistry';
+import type { GestureViewerProps } from './types';
+import { useGestureViewer } from './useGestureViewer';
 import { isFlashListLike, isFlatListLike, isScrollViewLike } from './utils';
 import WebPagingFixStyle from './WebPagingFixStyle';
 
-export function GestureImageViewer<T = any, LC = typeof FlatList>({
+export function GestureViewer<T = any, LC = typeof FlatList>({
   id = 'default',
   data,
-  renderImage,
+  renderItem: renderItemProp,
   renderContainer,
   ListComponent,
   width: customWidth,
@@ -21,7 +21,7 @@ export function GestureImageViewer<T = any, LC = typeof FlatList>({
   initialIndex = 0,
   itemSpacing = 0,
   ...props
-}: GestureImageViewerProps<T, LC>) {
+}: GestureViewerProps<T, LC>) {
   const Component = ListComponent as React.ComponentType<any>;
 
   const { width: screenWidth } = useWindowDimensions();
@@ -29,7 +29,7 @@ export function GestureImageViewer<T = any, LC = typeof FlatList>({
   const width = customWidth || screenWidth;
 
   const { listRef, isZoomed, dismissGesture, zoomGesture, onMomentumScrollEnd, animatedStyle, backdropStyle } =
-    useGestureImageViewer({
+    useGestureViewer({
       id,
       data,
       width,
@@ -53,11 +53,11 @@ export function GestureImageViewer<T = any, LC = typeof FlatList>({
             },
           ]}
         >
-          {renderImage(item, index)}
+          {renderItemProp(item, index)}
         </View>
       );
     },
-    [width, itemSpacing, renderImage],
+    [width, itemSpacing, renderItemProp],
   );
 
   const getItemLayout = useCallback(
