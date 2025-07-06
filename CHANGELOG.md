@@ -1,5 +1,15 @@
 # react-native-gesture-image-viewer
 
+## 1.0.1
+
+### Patch Changes
+
+- 60c6e7f: docs: add comprehensive TSDoc comments to GestureViewerProps interface
+
+  - Add detailed descriptions for all props with usage examples
+  - Include default values and parameter information
+  - Improve developer experience with better IDE autocompletion
+
 ## 1.0.0
 
 ### Major Changes
