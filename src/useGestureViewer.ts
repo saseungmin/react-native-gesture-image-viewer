@@ -72,6 +72,13 @@ export const useGestureViewer = <T = any>({
   const constrainToBounds = useCallback(
     (translateX: number, translateY: number, scale: number) => {
       'worklet';
+      if (scale <= 1) {
+        return {
+          x: translateX,
+          y: translateY,
+        };
+      }
+
       const maxTranslateX = (width * scale - width) / 2;
       const maxTranslateY = (screenHeight * scale - screenHeight) / 2;
 
@@ -255,6 +262,12 @@ export const useGestureViewer = <T = any>({
 
         const constrained = constrainToBounds(newTranslateX, newTranslateY, newScale);
 
+        if (newScale <= 1) {
+          translateX.value = withTiming(0);
+          translateY.value = withTiming(0);
+          return;
+        }
+
         translateX.value = constrained.x;
         translateY.value = constrained.y;
       })
@@ -280,7 +293,14 @@ export const useGestureViewer = <T = any>({
           });
           translateX.value = withTiming(0);
           translateY.value = withTiming(0);
+          initialTranslateX.value = withTiming(0);
+          initialTranslateY.value = withTiming(0);
+          return;
         }
+
+        const finalConstrained = constrainToBounds(translateX.value, translateY.value, scale.value);
+        translateX.value = withTiming(finalConstrained.x);
+        translateY.value = withTiming(finalConstrained.y);
       });
   }, [
     scale,
@@ -299,6 +319,7 @@ export const useGestureViewer = <T = any>({
   const zoomPanGesture = useMemo(() => {
     return Gesture.Pan()
       .enabled(enableZoomPanGesture && isZoomed)
+      .averageTouches(true)
       .onBegin(() => {
         initialTranslateX.value = translateX.value;
         initialTranslateY.value = translateY.value;
@@ -364,7 +385,7 @@ export const useGestureViewer = <T = any>({
   }, [scale, enableDoubleTapGesture, maxZoomScale, translateX, translateY, width, screenHeight]);
 
   const zoomGesture = useMemo(() => {
-    return Gesture.Simultaneous(zoomPinchGesture, zoomPanGesture, doubleTapGesture);
+    return Gesture.Race(zoomPinchGesture, Gesture.Exclusive(zoomPanGesture, doubleTapGesture));
   }, [zoomPinchGesture, zoomPanGesture, doubleTapGesture]);
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -374,7 +395,7 @@ export const useGestureViewer = <T = any>({
   });
 
   const backdropStyle = useAnimatedStyle(() => {
-    if (!animateBackdrop || scale.value > 1) {
+    if (!animateBackdrop || scale.value !== 1) {
       return { opacity: 1 };
     }
 
