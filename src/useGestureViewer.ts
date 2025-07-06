@@ -43,10 +43,11 @@ export const useGestureViewer = <T = any>({
   enableZoomPanGesture = true,
   maxZoomScale = 2,
   itemSpacing = 0,
+  useSnap = false,
   id = 'default',
 }: UseGestureViewerProps<T>) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const width = customWidth || screenWidth;
+  const width = useSnap ? customWidth || screenWidth : screenWidth;
 
   const [isZoomed, setIsZoomed] = useState(false);
 

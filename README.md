@@ -261,7 +261,6 @@ function App() {
     <GestureViewer
       animateBackdrop={false}
       width={400}
-      itemSpacing={20}
       containerStyle={{ /* ... */ }}
       backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.90)' }}
       renderContainer={(children) => <View style={{ flex: 1 }}>{children}</View>}
@@ -274,7 +273,6 @@ function App() {
 |:--:|:-----|:--:|
 |`animateBackdrop`|By default, the background `opacity` gradually decreases from 1 to 0 during downward swipe gestures. When `false`, this animation is disabled.|`true`|
 |`width`|The width of content items. Default is window width.|`Dimensions width`|
-|`itemSpacing`|Specifies the spacing between list items.|`0`|
 |`containerStyle`|Allows custom styling of the container that wraps the list component.|`flex: 1`|
 |`backdropStyle`|Allows customization of the viewer's background style.|`backgroundColor: black; StyleSheet.absoluteFill;`|
 |`renderContainer`|Allows custom wrapper component around `<GestureViewer />`.||
@@ -327,6 +325,41 @@ function App() {
   return (
     <GestureViewer
       onIndexChange={setCurrentIndex}
+    />
+  );
+}
+```
+
+#### `useSnap`
+Sets the scroll behavior mode. `false` (default) uses paging mode, `true` uses snap mode.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  return (
+    <GestureViewer
+      data={data}
+      renderItem={renderItem}
+      useSnap={true}
+    />
+  );
+}
+```
+
+#### `itemSpacing`
+Sets the spacing between items in pixels. Only applied when `useSnap` is `true`.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  return (
+    <GestureViewer
+      data={data}
+      renderItem={renderItem}
+      useSnap={true}
+      itemSpacing={16} // 16px spacing between items
     />
   );
 }

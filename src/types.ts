@@ -56,6 +56,20 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
    */
   width?: number;
   /**
+   * Enables snap scrolling mode.
+   *
+   * @remark
+   * **`false` (default)**: Paging mode (`pagingEnabled: true`)
+   * - Scrolls by full screen size increments
+   *
+   * **`true`**: Snap mode (`snapToInterval` auto-calculated)
+   * - `snapToInterval` is automatically calculated based on `width` and `itemSpacing` values
+   * - Use this option when you need item spacing
+   * @default false
+   *
+   */
+  useSnap?: boolean;
+  /**
    * `dismissThreshold` controls when `onDismiss` is called by applying a threshold value during vertical gestures.
    * @default 80
    */
@@ -122,7 +136,8 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
    */
   maxZoomScale?: number;
   /**
-   * The spacing between items.
+   * The spacing between items in pixels.
+   * @remark Only applied when `useSnap` is `true`.
    * @default 0
    */
   itemSpacing?: number;

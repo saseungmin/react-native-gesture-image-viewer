@@ -20,13 +20,14 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
   containerStyle,
   initialIndex = 0,
   itemSpacing = 0,
+  useSnap = false,
   ...props
 }: GestureViewerProps<T, LC>) {
   const Component = ListComponent as React.ComponentType<any>;
 
   const { width: screenWidth } = useWindowDimensions();
 
-  const width = customWidth || screenWidth;
+  const width = useSnap ? customWidth || screenWidth : screenWidth;
 
   const { listRef, isZoomed, dismissGesture, zoomGesture, onMomentumScrollEnd, animatedStyle, backdropStyle } =
     useGestureViewer({
@@ -35,6 +36,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
       width,
       initialIndex,
       itemSpacing,
+      useSnap,
       ...props,
     });
 
@@ -45,7 +47,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
           key={typeof item === 'string' ? item : index}
           style={[
             {
-              width: width,
+              width,
               height: '100%',
               justifyContent: 'center',
               alignItems: 'center',
@@ -90,13 +92,19 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
       scrollEnabled: !isZoomed,
       showsHorizontalScrollIndicator: false,
       onMomentumScrollEnd: onMomentumScrollEnd,
-      snapToInterval: width + itemSpacing,
-      snapToAlignment: 'center',
-      decelerationRate: 'fast',
+      ...(useSnap
+        ? {
+            snapToInterval: width + itemSpacing,
+            snapToAlignment: 'center',
+            decelerationRate: 'fast',
+          }
+        : {
+            pagingEnabled: true,
+          }),
       scrollEventThrottle: 16,
       removeClippedSubviews: true,
     }),
-    [width, itemSpacing, isZoomed, onMomentumScrollEnd],
+    [width, itemSpacing, isZoomed, onMomentumScrollEnd, useSnap],
   );
 
   const listComponent = (
@@ -121,7 +129,6 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
                   data={data}
                   renderItem={renderItem}
                   initialScrollIndex={initialIndex}
-                  style={{ height: '100%' }}
                   keyExtractor={keyExtractor}
                   windowSize={3}
                   maxToRenderPerBatch={3}
