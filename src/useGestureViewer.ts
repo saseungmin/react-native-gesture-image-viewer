@@ -221,6 +221,7 @@ export const useGestureViewer = <T = any>({
     return Gesture.Pan()
       .minDistance(10)
       .averageTouches(true)
+      .activeCursor('grabbing')
       .activeOffsetY([-10, 10])
       .failOffsetX([-10, 10])
       .enabled(!isZoomed)
@@ -319,6 +320,7 @@ export const useGestureViewer = <T = any>({
   const zoomPanGesture = useMemo(() => {
     return Gesture.Pan()
       .enabled(enableZoomPanGesture && isZoomed)
+      .activeCursor('grabbing')
       .averageTouches(true)
       .onBegin(() => {
         initialTranslateX.value = translateX.value;

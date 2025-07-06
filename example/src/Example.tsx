@@ -22,7 +22,14 @@ function Example() {
   const insets = useSafeAreaInsets();
 
   const renderImage = useCallback((imageUrl: string) => {
-    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} contentFit="contain" />;
+    return (
+      <Image
+        source={{ uri: imageUrl }}
+        style={{ width: '100%', height: '100%' }}
+        pointerEvents="none"
+        contentFit="contain"
+      />
+    );
   }, []);
 
   return (
