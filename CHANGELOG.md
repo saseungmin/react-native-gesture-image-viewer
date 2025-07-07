@@ -1,5 +1,16 @@
 # react-native-gesture-image-viewer
 
+## 1.2.3
+
+### Patch Changes
+
+- 2ddbf5b: docs(readme): fix typo `renderImage` to `renderItem` props
+- c56b740: chore: include src folder in package.json files
+
+  - Add src to files array for better debugging experience
+  - Enables accurate source maps and stack traces for library users
+  - Follows React Native library best practices
+
 ## 1.2.2
 
 ### Patch Changes
