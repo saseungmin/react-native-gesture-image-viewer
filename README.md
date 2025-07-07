@@ -193,7 +193,7 @@ function App() {
 
 #### Content Components
 
-You can inject various types of content components like `expo-image`, `FastImage`, etc., through the `renderImage` prop to use gestures.
+You can inject various types of content components like `expo-image`, `FastImage`, etc., through the `renderItem` prop to use gestures.
 
 ```tsx
 import { GestureViewer } from 'react-native-gesture-image-viewer';
