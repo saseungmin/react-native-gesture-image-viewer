@@ -14,6 +14,7 @@
   },
   "files": [
     "lib",
+    "src",
     "android",
     "ios",
     "cpp",
