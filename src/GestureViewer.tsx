@@ -29,16 +29,24 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
 
   const width = useSnap ? customWidth || screenWidth : screenWidth;
 
-  const { listRef, isZoomed, dismissGesture, zoomGesture, onMomentumScrollEnd, animatedStyle, backdropStyle } =
-    useGestureViewer({
-      id,
-      data,
-      width,
-      initialIndex,
-      itemSpacing,
-      useSnap,
-      ...props,
-    });
+  const {
+    listRef,
+    isZoomed,
+    isRotated,
+    dismissGesture,
+    zoomGesture,
+    onMomentumScrollEnd,
+    animatedStyle,
+    backdropStyle,
+  } = useGestureViewer({
+    id,
+    data,
+    width,
+    initialIndex,
+    itemSpacing,
+    useSnap,
+    ...props,
+  });
 
   const renderItem = useCallback(
     ({ item, index }: { item: T; index: number }) => {
@@ -89,7 +97,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
   const commonProps: ScrollViewProps = useMemo(
     () => ({
       horizontal: true,
-      scrollEnabled: !isZoomed,
+      scrollEnabled: !isZoomed && !isRotated,
       showsHorizontalScrollIndicator: false,
       onMomentumScrollEnd: onMomentumScrollEnd,
       ...(useSnap
@@ -104,7 +112,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
       scrollEventThrottle: 16,
       removeClippedSubviews: true,
     }),
-    [width, itemSpacing, isZoomed, onMomentumScrollEnd, useSnap],
+    [width, itemSpacing, isZoomed, isRotated, onMomentumScrollEnd, useSnap],
   );
 
   const listComponent = (

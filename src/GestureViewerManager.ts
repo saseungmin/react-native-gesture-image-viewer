@@ -18,6 +18,7 @@ class GestureViewerManager {
   private listRef: any | null = null;
   private enableSwipeGesture = true;
   private listeners = new Set<(state: GestureViewerManagerState) => void>();
+  private rotation: SharedValue<number> | null = null;
 
   private notifyListeners() {
     const state = this.getState();
@@ -81,6 +82,53 @@ class GestureViewerManager {
   notifyStateChange() {
     this.notifyListeners();
   }
+
+  setRotation(rotation: SharedValue<number>) {
+    this.rotation = rotation;
+  }
+
+  /**
+   * @param angle - The angle to rotate.
+   * @default 90 (0, 90, 180, 270, 360)
+   * @param clockwise - The direction to rotate.
+   * @default true (clockwise)
+   *
+   * @example
+   * rotate(0) // reset rotation
+   * rotate(number, false) // rotate {number} degrees counter-clockwise
+   * rotate(90) // rotate 90 degrees clockwise
+   * rotate(180) // rotate 180 degrees clockwise
+   * rotate(270) // rotate 270 degrees clockwise
+   * rotate(360) // rotate 360 degrees clockwise
+   */
+  rotate = (angle: 0 | 90 | 180 | 270 | 360 = 90, clockwise = true) => {
+    const MAX_ANGLE = 360;
+
+    if (
+      !this.rotation ||
+      angle < 0 ||
+      angle > MAX_ANGLE ||
+      (angle !== 0 && this.rotation.value % angle !== 0 && angle !== 360)
+    ) {
+      return;
+    }
+
+    if (angle === 0) {
+      const nextAngle = Math.floor(this.rotation.value / MAX_ANGLE) * MAX_ANGLE;
+
+      this.rotation.value = withTiming(clockwise ? nextAngle : nextAngle - MAX_ANGLE);
+      return;
+    }
+
+    if (angle === 360) {
+      this.rotation.value = withTiming(clockwise ? this.rotation.value + MAX_ANGLE : this.rotation.value - MAX_ANGLE);
+      return;
+    }
+
+    const nextAngle = clockwise ? this.rotation.value + angle : this.rotation.value - angle;
+
+    this.rotation.value = withTiming(nextAngle);
+  };
 
   /**
    * @param multiplier - The multiplier to zoom in.
@@ -195,6 +243,7 @@ class GestureViewerManager {
     this.scale = null;
     this.translateX = null;
     this.translateY = null;
+    this.rotation = null;
   }
 }
 

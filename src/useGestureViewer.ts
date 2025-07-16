@@ -51,7 +51,7 @@ export const useGestureViewer = <T = any>({
   const width = useSnap ? customWidth || screenWidth : screenWidth;
 
   const [isZoomed, setIsZoomed] = useState(false);
-
+  const [isRotated, setIsRotated] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [manager, setManager] = useState<GestureViewerManager | null>(null);
 
@@ -65,6 +65,7 @@ export const useGestureViewer = <T = any>({
   const translateX = useSharedValue(0);
   const scale = useSharedValue(1);
   const backdropOpacity = useSharedValue(1);
+  const rotation = useSharedValue(0);
 
   const listRef = useRef<any>(null);
 
@@ -79,6 +80,13 @@ export const useGestureViewer = <T = any>({
     () => scale.value,
     (currentScale) => {
       runOnJS(setIsZoomed)(currentScale > 1);
+    },
+  );
+
+  useAnimatedReaction(
+    () => rotation.value,
+    (currentRotation) => {
+      runOnJS(setIsRotated)(currentRotation % 360 !== 0);
     },
   );
 
@@ -119,6 +127,7 @@ export const useGestureViewer = <T = any>({
     manager.setWidth(width + itemSpacing);
     manager.setHeight(screenHeight);
     manager.setZoomSharedValues(scale, translateX, translateY, maxZoomScale);
+    manager.setRotation(rotation);
     manager.notifyStateChange();
   }, [
     dataLength,
@@ -132,6 +141,7 @@ export const useGestureViewer = <T = any>({
     screenHeight,
     translateX,
     translateY,
+    rotation,
   ]);
 
   useEffect(() => {
@@ -152,6 +162,7 @@ export const useGestureViewer = <T = any>({
     scale.value = 1;
     backdropOpacity.value = 1;
     startScale.value = 1;
+    rotation.value = 0;
 
     if (initialIndex <= 0 || !listRef.current) {
       return;
@@ -174,7 +185,7 @@ export const useGestureViewer = <T = any>({
     return () => {
       runAfterInteractions?.cancel();
     };
-  }, [initialIndex, translateY, backdropOpacity, translateX, scale, startScale, width, itemSpacing]);
+  }, [initialIndex, translateY, backdropOpacity, translateX, scale, startScale, width, itemSpacing, rotation]);
 
   const onMomentumScrollEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -198,6 +209,7 @@ export const useGestureViewer = <T = any>({
         initialTranslateY.value = withTiming(0);
         startScale.value = withTiming(1);
         scale.value = withTiming(1);
+        rotation.value = 0;
       }
     },
     [
@@ -213,6 +225,7 @@ export const useGestureViewer = <T = any>({
       initialTranslateX,
       initialTranslateY,
       startScale,
+      rotation,
     ],
   );
 
@@ -409,7 +422,12 @@ export const useGestureViewer = <T = any>({
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ translateY: translateY.value }, { translateX: translateX.value }, { scale: scale.value }],
+      transform: [
+        { translateY: translateY.value },
+        { translateX: translateX.value },
+        { scale: scale.value },
+        { rotate: `${rotation.value}deg` },
+      ],
     };
   });
 
@@ -429,7 +447,7 @@ export const useGestureViewer = <T = any>({
     translateY,
     listRef,
     isZoomed,
-
+    isRotated,
     dismissGesture,
     zoomGesture,
 
