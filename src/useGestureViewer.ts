@@ -19,6 +19,7 @@ import {
 import type GestureViewerManager from './GestureViewerManager';
 import { registry } from './GestureViewerRegistry';
 import type { GestureViewerProps } from './types';
+import { createBoundsConstraint } from './utils';
 
 type UseGestureViewerProps<T = any> = Omit<
   GestureViewerProps<T>,
@@ -69,24 +70,8 @@ export const useGestureViewer = <T = any>({
 
   const dataLength = data?.length || 0;
 
-  const constrainToBounds = useCallback(
-    (translateX: number, translateY: number, scale: number) => {
-      'worklet';
-      if (scale <= 1) {
-        return {
-          x: translateX,
-          y: translateY,
-        };
-      }
-
-      const maxTranslateX = (width * scale - width) / 2;
-      const maxTranslateY = (screenHeight * scale - screenHeight) / 2;
-
-      return {
-        x: Math.max(-maxTranslateX, Math.min(maxTranslateX, translateX)),
-        y: Math.max(-maxTranslateY, Math.min(maxTranslateY, translateY)),
-      };
-    },
+  const constrainTranslation = useMemo(
+    () => createBoundsConstraint({ width, height: screenHeight }),
     [width, screenHeight],
   );
 
@@ -132,8 +117,22 @@ export const useGestureViewer = <T = any>({
     manager.setEnableSwipeGesture(enableSwipeGesture);
     manager.setCurrentIndex(initialIndex);
     manager.setWidth(width + itemSpacing);
+    manager.setHeight(screenHeight);
+    manager.setZoomSharedValues(scale, translateX, translateY, maxZoomScale);
     manager.notifyStateChange();
-  }, [dataLength, enableSwipeGesture, initialIndex, manager, width, itemSpacing]);
+  }, [
+    dataLength,
+    enableSwipeGesture,
+    initialIndex,
+    manager,
+    width,
+    itemSpacing,
+    maxZoomScale,
+    scale,
+    screenHeight,
+    translateX,
+    translateY,
+  ]);
 
   useEffect(() => {
     if (!manager || !listRef.current) {
@@ -252,16 +251,7 @@ export const useGestureViewer = <T = any>({
       .onUpdate((event) => {
         const newScale = startScale.value * event.scale;
 
-        const deltaScale = newScale - startScale.value;
-        const centerX = event.focalX - width / 2;
-        const centerY = event.focalY - screenHeight / 2;
-
         scale.value = newScale;
-        // NOTE 새로운 이동값 = 기존 이동값 - (중심점 거리 × 스케일 변화량) / 원래 스케일 (중심점이 화면 중심에서 멀수록, 확대 배율이 클수록 더 많이 이동)
-        const newTranslateX = initialTranslateX.value - (centerX * deltaScale) / startScale.value;
-        const newTranslateY = initialTranslateY.value - (centerY * deltaScale) / startScale.value;
-
-        const constrained = constrainToBounds(newTranslateX, newTranslateY, newScale);
 
         if (newScale <= 1) {
           translateX.value = withTiming(0);
@@ -269,8 +259,22 @@ export const useGestureViewer = <T = any>({
           return;
         }
 
-        translateX.value = constrained.x;
-        translateY.value = constrained.y;
+        const deltaScale = newScale - startScale.value;
+        const centerX = event.focalX - width / 2;
+        const centerY = event.focalY - screenHeight / 2;
+
+        // NOTE 새로운 이동값 = 기존 이동값 - (중심점 거리 × 스케일 변화량) / 원래 스케일 (중심점이 화면 중심에서 멀수록, 확대 배율이 클수록 더 많이 이동)
+        const newTranslateX = initialTranslateX.value - (centerX * deltaScale) / startScale.value;
+        const newTranslateY = initialTranslateY.value - (centerY * deltaScale) / startScale.value;
+
+        const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } = constrainTranslation({
+          translateX: newTranslateX,
+          translateY: newTranslateY,
+          scale: newScale,
+        });
+
+        translateX.value = constrainedTranslateX;
+        translateY.value = constrainedTranslateY;
       })
       .onEnd(() => {
         if (scale.value > maxZoomScale) {
@@ -279,10 +283,14 @@ export const useGestureViewer = <T = any>({
             easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
           });
 
-          const constrained = constrainToBounds(translateX.value, translateY.value, maxZoomScale);
+          const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } = constrainTranslation({
+            translateX: translateX.value,
+            translateY: translateY.value,
+            scale: maxZoomScale,
+          });
 
-          translateX.value = withTiming(constrained.x);
-          translateY.value = withTiming(constrained.y);
+          translateX.value = withTiming(constrainedTranslateX);
+          translateY.value = withTiming(constrainedTranslateY);
 
           return;
         }
@@ -299,9 +307,14 @@ export const useGestureViewer = <T = any>({
           return;
         }
 
-        const finalConstrained = constrainToBounds(translateX.value, translateY.value, scale.value);
-        translateX.value = withTiming(finalConstrained.x);
-        translateY.value = withTiming(finalConstrained.y);
+        const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } = constrainTranslation({
+          translateX: translateX.value,
+          translateY: translateY.value,
+          scale: scale.value,
+        });
+
+        translateX.value = withTiming(constrainedTranslateX);
+        translateY.value = withTiming(constrainedTranslateY);
       });
   }, [
     scale,
@@ -314,7 +327,7 @@ export const useGestureViewer = <T = any>({
     initialTranslateY,
     width,
     screenHeight,
-    constrainToBounds,
+    constrainTranslation,
   ]);
 
   const zoomPanGesture = useMemo(() => {
@@ -331,10 +344,14 @@ export const useGestureViewer = <T = any>({
           const newTranslateX = initialTranslateX.value + event.translationX;
           const newTranslateY = initialTranslateY.value + event.translationY;
 
-          const constrained = constrainToBounds(newTranslateX, newTranslateY, scale.value);
+          const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } = constrainTranslation({
+            translateX: newTranslateX,
+            translateY: newTranslateY,
+            scale: scale.value,
+          });
 
-          translateX.value = constrained.x;
-          translateY.value = constrained.y;
+          translateX.value = constrainedTranslateX;
+          translateY.value = constrainedTranslateY;
         }
       });
   }, [
@@ -345,7 +362,7 @@ export const useGestureViewer = <T = any>({
     scale,
     initialTranslateX,
     initialTranslateY,
-    constrainToBounds,
+    constrainTranslation,
   ]);
 
   const doubleTapGesture = useMemo(() => {

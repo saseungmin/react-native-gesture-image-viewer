@@ -42,6 +42,9 @@ export const useGestureViewerController = (id = 'default') => {
     goToIndex: manager?.goToIndex || noopFunction,
     goToPrevious: manager?.goToPrevious || noopFunction,
     goToNext: manager?.goToNext || noopFunction,
+    zoomIn: manager?.zoomIn || noopFunction,
+    zoomOut: manager?.zoomOut || noopFunction,
+    resetZoom: manager?.resetZoom || noopFunction,
     currentIndex: state.currentIndex,
     totalCount: state.dataLength,
   };
