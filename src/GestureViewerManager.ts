@@ -88,7 +88,7 @@ class GestureViewerManager {
    * @default 0.25
    */
   zoomIn = (multiplier = 0.25) => {
-    if (!this.scale || !this.translateX || !this.translateY || multiplier <= 0 || multiplier > 1) {
+    if (!this.scale || !this.translateX || !this.translateY || multiplier < 0.01 || multiplier > 1) {
       return;
     }
 
@@ -115,7 +115,7 @@ class GestureViewerManager {
    * @default 0.25
    */
   zoomOut = (multiplier = 0.25) => {
-    if (!this.scale || !this.translateX || !this.translateY || multiplier <= 0 || multiplier > 1) {
+    if (!this.scale || !this.translateX || !this.translateY || multiplier < 0.01 || multiplier > 1) {
       return;
     }
 
@@ -147,7 +147,7 @@ class GestureViewerManager {
    * @default 1
    */
   resetZoom = (scale = 1) => {
-    if (!this.scale || !this.translateX || !this.translateY) {
+    if (!this.scale || !this.translateX || !this.translateY || scale <= 0 || scale > this.maxZoomScale) {
       return;
     }
 
