@@ -213,15 +213,24 @@ function App() {
 }
 ```
 
-### External Control API
+### useGestureViewerController
 
-`react-native-gesture-image-viewer` provides powerful hooks for programmatic control from buttons or other components.
+You can programmatically control the `GestureViewer` using the `useGestureViewerController` hook.
 
 ```tsx
 import { GestureViewer, useGestureViewerController } from 'react-native-gesture-image-viewer';
 
 function App() {
-  const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount } = useGestureViewerController();
+  const {
+    goToIndex,
+    goToPrevious,
+    goToNext,
+    currentIndex,
+    totalCount,
+    zoomIn,
+    zoomOut,
+    resetZoom
+  } = useGestureViewerController();
 
   return (
     <View>
@@ -229,16 +238,14 @@ function App() {
         data={images}
         renderItem={renderImage}
       />
-      <View
-        style={{
-          position: 'absolute',
-          bottom: 40,
-          left: 0,
-          right: 0,
-          gap: 10,
-          flexDirection: 'column',
-        }}
-      >
+      {/* Zoom Controls */}
+      <View>
+        <Feather.Button name="zoom-in" onPress={() => zoomIn(0.25)} />
+        <Feather.Button name="zoom-out" onPress={() => zoomOut(0.25)} />
+        <Feather.Button name="refresh-cw" onPress={() => resetZoom()} />
+      </View>
+      {/* Navigation Controls */}
+      <View>
         <Feather.Button name="chevron-left" onPress={goToPrevious} />
         <Button title="Jump to index 2" onPress={() => goToIndex(2)} />
         <Feather.Button name="chevron-right" onPress={goToNext} />
@@ -248,6 +255,33 @@ function App() {
   );
 }
 ```
+
+### API Reference
+
+| Property | Description | Type | Default |
+|:---------|:------------|:-----|:-------:|
+| `goToIndex` | Navigate to a specific index. | `(index: number) => void` | - |
+| `goToPrevious` | Navigate to the previous item. | `() => void` | - |
+| `goToNext` | Navigate to the next item. | `() => void` | - |
+| `currentIndex` | The index of the currently displayed item. | `number` | `0` |
+| `totalCount` | The total number of items. | `number` | `0` |
+| `zoomIn` | Zoom in by the specified multiplier. | `(multiplier?: number) => void` | `0.25` |
+| `zoomOut` | Zoom out by the specified multiplier. | `(multiplier?: number) => void` | `0.25` |
+| `resetZoom` | Reset zoom to the specified scale. | `(scale?: number) => void` | `1` |
+
+### Parameters
+
+#### `zoomIn(multiplier?)`
+- **multiplier**: The multiplier for zooming in (range: `0.01 ~ 1`)
+- Example: `zoomIn(0.5)` → Zoom in by an additional 50% of the current scale
+
+#### `zoomOut(multiplier?)`
+- **multiplier**: The multiplier for zooming out (range: `0.01 ~ 1`) 
+- Example: `zoomOut(0.3)` → Zoom out by dividing the current scale by 1.3
+
+#### `resetZoom(scale?)`
+- **scale**: The scale value to reset to
+- Example: `resetZoom(1.5)` → Reset to 1.5x scale
 
 ### Style Customization
 

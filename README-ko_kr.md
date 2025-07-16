@@ -213,15 +213,24 @@ function App() {
 }
 ```
 
-### 외부 제어 API
+### useGestureViewerController
 
-`react-native-gesture-image-viewer`는 강력한 기능으로 버튼이나 다른 컴포넌트에서 프로그래밍 방식으로 제어할 수 있는 hook을 지원합니다.
+`useGestureViewerController` 훅을 사용하여 `GestureViewer`를 프로그래밍 방식으로 제어할 수 있습니다.
 
 ```tsx
 import { GestureViewer, useGestureViewerController } from 'react-native-gesture-image-viewer';
 
 function App() {
-  const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount } = useGestureViewerController();
+  const {
+    goToIndex,
+    goToPrevious,
+    goToNext,
+    currentIndex,
+    totalCount,
+    zoomIn,
+    zoomOut,
+    resetZoom
+  } = useGestureViewerController();
 
   return (
     <View>
@@ -229,16 +238,14 @@ function App() {
         data={images}
         renderItem={renderImage}
       />
-      <View
-        style={{
-          position: 'absolute',
-          bottom: 40,
-          left: 0,
-          right: 0,
-          gap: 10,
-          flexDirection: 'column',
-        }}
-      >
+      {/* Zoom Controls */}
+      <View>
+        <Feather.Button name="zoom-in" onPress={() => zoomIn(0.25)} />
+        <Feather.Button name="zoom-out" onPress={() => zoomOut(0.25)} />
+        <Feather.Button name="refresh-cw" onPress={() => resetZoom()} />
+      </View>
+      {/* Navigation Controls */}
+      <View>
         <Feather.Button name="chevron-left" onPress={goToPrevious} />
         <Button title="Jump to index 2" onPress={() => goToIndex(2)} />
         <Feather.Button name="chevron-right" onPress={goToNext} />
@@ -249,33 +256,32 @@ function App() {
 }
 ```
 
-### 스타일 커스터마이징
+### API Reference
 
-`GestureViewer`의 스타일을 커스터마이징할 수 있습니다.
+| 속성 | 설명 | 타입 | 기본값 |
+|:-----|:-----|:-----|:-----:|
+| `goToIndex` | 특정 인덱스로 이동합니다. | `(index: number) => void` | - |
+| `goToPrevious` | 이전 아이템으로 이동합니다. | `() => void` | - |
+| `goToNext` | 다음 아이템으로 이동합니다. | `() => void` | - |
+| `currentIndex` | 현재 표시 중인 아이템의 인덱스입니다. | `number` | `0` |
+| `totalCount` | 전체 아이템의 개수입니다. | `number` | `0` |
+| `zoomIn` | 지정된 배수만큼 확대합니다. | `(multiplier?: number) => void` | `0.25` |
+| `zoomOut` | 지정된 배수만큼 축소합니다. | `(multiplier?: number) => void` | `0.25` |
+| `resetZoom` | 지정된 스케일로 줌을 초기화합니다. | `(scale?: number) => void` | `1` |
 
-```tsx
-import { GestureViewer } from 'react-native-gesture-image-viewer';
+### Parameters
 
-function App() {
-  return (
-    <GestureViewer
-      animateBackdrop={false}
-      width={400}
-      containerStyle={{ /* ... */ }}
-      backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.90)' }}
-      renderContainer={(children) => <View style={{ flex: 1 }}>{children}</View>}
-    />
-  );
-}
-```
+#### `zoomIn(multiplier?)`
+- **multiplier**: 확대할 배수 (범위: `0.01 ~ 1`)
+- 예: `zoomIn(0.5)` → 현재 스케일의 50% 만큼 추가 확대
 
-|속성|설명|기본값|
-|:--:|:-----|:--:|
-|`animateBackdrop`|기본적으로 아래로 슬라이드 제스처 시 배경의 `opacity` 값이 1부터 0까지 서서히 감소합니다. `false` 시 이러한 애니메이션을 비활성화합니다.|`true`|
-|`width`|콘텐츠 아이템의 너비 값입니다. 기본값은 window 너비입니다.|`Dimensions width`|
-|`containerStyle`|리스트 컴포넌트를 감싸고 있는 컨테이너 스타일을 커스텀하게 수정할 수 있습니다.|`flex: 1`|
-|`backdropStyle`|뷰어 배경의 스타일을 커스터마이징할 수 있습니다.|`backgroundColor: black; StyleSheet.absoluteFill;`|
-|`renderContainer`|`<GestureViewer />`를 감싸는 래퍼 컴포넌트를 커스텀하여 적용할 수 있습니다.||
+#### `zoomOut(multiplier?)`
+- **multiplier**: 축소할 배수 (범위: `0.01 ~ 1`) 
+- 예: `zoomOut(0.3)` → 현재 스케일을 1.3으로 나누어 축소
+
+#### `resetZoom(scale?)`
+- **scale**: 초기화할 스케일 값
+- 예: `resetZoom(1.5)` → 1.5배 스케일로 초기화
 
 ### 다중 인스턴스 관리
 

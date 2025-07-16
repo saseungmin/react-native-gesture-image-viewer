@@ -17,7 +17,8 @@ const images = [
 function Example() {
   const [visible, setVisible] = useState(false);
 
-  const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount } = useGestureViewerController();
+  const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount, zoomIn, zoomOut, resetZoom } =
+    useGestureViewerController();
 
   const insets = useSafeAreaInsets();
 
@@ -46,6 +47,45 @@ function Example() {
             backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.90)' }}
             renderContainer={(children) => <View style={{ flex: 1 }}>{children}</View>}
           />
+          <View
+            style={{
+              position: 'absolute',
+              top: insets.top + 10,
+              left: 10,
+              zIndex: 1000,
+              flexDirection: 'row',
+              gap: 10,
+            }}
+          >
+            <View style={{ flexDirection: 'column' }}>
+              <Feather.Button
+                name="zoom-in"
+                size={30}
+                iconStyle={{ marginRight: 0 }}
+                backgroundColor="transparent"
+                color="white"
+                onPress={() => zoomIn(0.25)}
+              />
+              <Feather.Button
+                name="zoom-out"
+                size={30}
+                iconStyle={{ marginRight: 0 }}
+                backgroundColor="transparent"
+                color="white"
+                onPress={() => zoomOut(0.25)}
+              />
+            </View>
+            <View style={{ flexDirection: 'column' }}>
+              <Feather.Button
+                name="refresh-cw"
+                size={25}
+                iconStyle={{ marginRight: 0 }}
+                backgroundColor="transparent"
+                color="white"
+                onPress={() => resetZoom()}
+              />
+            </View>
+          </View>
           <View
             style={{
               position: 'absolute',
