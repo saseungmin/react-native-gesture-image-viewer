@@ -17,7 +17,7 @@ const images = [
 function Example() {
   const [visible, setVisible] = useState(false);
 
-  const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount, zoomIn, zoomOut, resetZoom } =
+  const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount, zoomIn, zoomOut, resetZoom, rotate } =
     useGestureViewerController();
 
   const insets = useSafeAreaInsets();
@@ -74,15 +74,34 @@ function Example() {
                 color="white"
                 onPress={() => zoomOut(0.25)}
               />
-            </View>
-            <View style={{ flexDirection: 'column' }}>
               <Feather.Button
                 name="refresh-cw"
-                size={25}
+                size={30}
                 iconStyle={{ marginRight: 0 }}
                 backgroundColor="transparent"
                 color="white"
-                onPress={() => resetZoom()}
+                onPress={() => {
+                  rotate(0);
+                  resetZoom();
+                }}
+              />
+            </View>
+            <View style={{ flexDirection: 'column' }}>
+              <Feather.Button
+                name="rotate-cw"
+                size={30}
+                iconStyle={{ marginRight: 0 }}
+                backgroundColor="transparent"
+                color="white"
+                onPress={() => rotate()}
+              />
+              <Feather.Button
+                name="rotate-ccw"
+                size={30}
+                iconStyle={{ marginRight: 0 }}
+                backgroundColor="transparent"
+                color="white"
+                onPress={() => rotate(90, false)}
               />
             </View>
           </View>

@@ -229,7 +229,8 @@ function App() {
     totalCount,
     zoomIn,
     zoomOut,
-    resetZoom
+    resetZoom,
+    rotate
   } = useGestureViewerController();
 
   return (
@@ -242,7 +243,15 @@ function App() {
       <View>
         <Feather.Button name="zoom-in" onPress={() => zoomIn(0.25)} />
         <Feather.Button name="zoom-out" onPress={() => zoomOut(0.25)} />
-        <Feather.Button name="refresh-cw" onPress={() => resetZoom()} />
+        <Feather.Button
+          name="refresh-cw"
+          onPress={() => {
+            rotate(0);
+            resetZoom();
+          }}
+        />
+        <Feather.Button name="rotate-cw" onPress={() => rotate(90)} />
+        <Feather.Button name="rotate-ccw" onPress={() => rotate(90, false)} />
       </View>
       {/* Navigation Controls */}
       <View>
@@ -268,6 +277,7 @@ function App() {
 | `zoomIn` | 지정된 배수만큼 확대합니다. | `(multiplier?: number) => void` | `0.25` |
 | `zoomOut` | 지정된 배수만큼 축소합니다. | `(multiplier?: number) => void` | `0.25` |
 | `resetZoom` | 지정된 스케일로 줌을 초기화합니다. | `(scale?: number) => void` | `1` |
+| `rotate` | 지정된 각도만큼 회전합니다. | `(angle?: number, clockwise?: boolean) => void` | `90, true` |
 
 ### Parameters
 
@@ -282,6 +292,13 @@ function App() {
 #### `resetZoom(scale?)`
 - **scale**: 초기화할 스케일 값
 - 예: `resetZoom(1.5)` → 1.5배 스케일로 초기화
+
+#### `rotate(angle?, clockwise?)`
+- **angle**: 회전할 각도 (0, 90, 180, 270, 360)
+- **clockwise**: 회전 방향 (true: 시계방향, false: 반시계방향)
+- 예: `rotate(90)` → 90도 시계방향 회전
+- 예: `rotate(90, false)` → 90도 반시계방향 회전
+- 예: `rotate(0)` → 회전 초기화
 
 ### 다중 인스턴스 관리
 

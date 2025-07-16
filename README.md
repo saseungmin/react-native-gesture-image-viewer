@@ -229,7 +229,8 @@ function App() {
     totalCount,
     zoomIn,
     zoomOut,
-    resetZoom
+    resetZoom,
+    rotate
   } = useGestureViewerController();
 
   return (
@@ -242,7 +243,15 @@ function App() {
       <View>
         <Feather.Button name="zoom-in" onPress={() => zoomIn(0.25)} />
         <Feather.Button name="zoom-out" onPress={() => zoomOut(0.25)} />
-        <Feather.Button name="refresh-cw" onPress={() => resetZoom()} />
+        <Feather.Button
+          name="refresh-cw"
+          onPress={() => {
+            rotate(0);
+            resetZoom();
+          }}
+        />
+        <Feather.Button name="rotate-cw" onPress={() => rotate(90)} />
+        <Feather.Button name="rotate-ccw" onPress={() => rotate(90, false)} />
       </View>
       {/* Navigation Controls */}
       <View>
@@ -268,6 +277,7 @@ function App() {
 | `zoomIn` | Zoom in by the specified multiplier. | `(multiplier?: number) => void` | `0.25` |
 | `zoomOut` | Zoom out by the specified multiplier. | `(multiplier?: number) => void` | `0.25` |
 | `resetZoom` | Reset zoom to the specified scale. | `(scale?: number) => void` | `1` |
+| `rotate` | Rotate by the specified angle. | `(angle?: number, clockwise?: boolean) => void` | `90, true` |
 
 ### Parameters
 
@@ -282,6 +292,13 @@ function App() {
 #### `resetZoom(scale?)`
 - **scale**: The scale value to reset to
 - Example: `resetZoom(1.5)` → Reset to 1.5x scale
+
+#### `rotate(angle?, clockwise?)`
+- **angle**: The angle to rotate (0, 90, 180, 270, 360)
+- **clockwise**: The direction to rotate (true: clockwise, false: counter-clockwise)
+- Example: `rotate(90)` → Rotate 90 degrees clockwise
+- Example: `rotate(90, false)` → Rotate 90 degrees counter-clockwise
+- Example: `rotate(0)` → Reset rotation
 
 ### Style Customization
 
