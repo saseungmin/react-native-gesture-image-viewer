@@ -1,5 +1,16 @@
 # react-native-gesture-image-viewer
 
+## 1.4.1
+
+### Patch Changes
+
+- dc9270f: feat: add GestureViewerController types and enhance TSDoc documentation
+
+  - Add GestureViewerController type definition
+  - Mark state properties as readonly for immutability
+  - Enhance TSDoc with comprehensive parameter descriptions and examples
+  - Improve useGestureViewerController hook docs for destructuring usage
+
 ## 1.4.0
 
 ### Minor Changes
