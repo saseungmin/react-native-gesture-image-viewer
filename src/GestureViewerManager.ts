@@ -1,10 +1,6 @@
 import { type SharedValue, withTiming } from 'react-native-reanimated';
+import type { GestureViewerControllerState } from './types';
 import { createBoundsConstraint } from './utils';
-
-export type GestureViewerManagerState = {
-  currentIndex: number;
-  dataLength: number;
-};
 
 class GestureViewerManager {
   private currentIndex = 0;
@@ -17,7 +13,7 @@ class GestureViewerManager {
   private maxZoomScale = 2;
   private listRef: any | null = null;
   private enableSwipeGesture = true;
-  private listeners = new Set<(state: GestureViewerManagerState) => void>();
+  private listeners = new Set<(state: GestureViewerControllerState) => void>();
   private rotation: SharedValue<number> | null = null;
 
   private notifyListeners() {
@@ -26,7 +22,7 @@ class GestureViewerManager {
     this.listeners.forEach((listener) => listener(state));
   }
 
-  subscribe(listener: (state: GestureViewerManagerState) => void) {
+  subscribe(listener: (state: GestureViewerControllerState) => void) {
     this.listeners.add(listener);
 
     return () => {
@@ -37,7 +33,7 @@ class GestureViewerManager {
   getState() {
     return {
       currentIndex: this.currentIndex,
-      dataLength: this.dataLength,
+      totalCount: this.dataLength,
     };
   }
 
@@ -87,20 +83,6 @@ class GestureViewerManager {
     this.rotation = rotation;
   }
 
-  /**
-   * @param angle - The angle to rotate.
-   * @default 90 (0, 90, 180, 270, 360)
-   * @param clockwise - The direction to rotate.
-   * @default true (clockwise)
-   *
-   * @example
-   * rotate(0) // reset rotation
-   * rotate(number, false) // rotate {number} degrees counter-clockwise
-   * rotate(90) // rotate 90 degrees clockwise
-   * rotate(180) // rotate 180 degrees clockwise
-   * rotate(270) // rotate 270 degrees clockwise
-   * rotate(360) // rotate 360 degrees clockwise
-   */
   rotate = (angle: 0 | 90 | 180 | 270 | 360 = 90, clockwise = true) => {
     const MAX_ANGLE = 360;
 
@@ -130,11 +112,6 @@ class GestureViewerManager {
     this.rotation.value = withTiming(nextAngle);
   };
 
-  /**
-   * @param multiplier - The multiplier to zoom in.
-   * @range 0.01 - 1
-   * @default 0.25
-   */
   zoomIn = (multiplier = 0.25) => {
     if (!this.scale || !this.translateX || !this.translateY || multiplier < 0.01 || multiplier > 1) {
       return;
@@ -157,11 +134,6 @@ class GestureViewerManager {
     this.translateY.value = withTiming(translateY);
   };
 
-  /**
-   * @param multiplier - The multiplier to zoom out.
-   * @range 0.01 - 1
-   * @default 0.25
-   */
   zoomOut = (multiplier = 0.25) => {
     if (!this.scale || !this.translateX || !this.translateY || multiplier < 0.01 || multiplier > 1) {
       return;
@@ -190,10 +162,6 @@ class GestureViewerManager {
     this.translateY.value = withTiming(translateY);
   };
 
-  /**
-   * @param scale - The scale to reset to.
-   * @default 1
-   */
   resetZoom = (scale = 1) => {
     if (!this.scale || !this.translateX || !this.translateY || scale <= 0 || scale > this.maxZoomScale) {
       return;

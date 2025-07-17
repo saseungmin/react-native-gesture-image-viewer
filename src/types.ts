@@ -142,3 +142,142 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
    */
   itemSpacing?: number;
 }
+
+/**
+ * Supported rotation angles in degrees.
+ */
+export type RotationAngle = 0 | 90 | 180 | 270 | 360;
+
+/**
+ * Controller for managing gesture-based image/content viewer interactions.
+ * Provides navigation, zoom, and rotation capabilities with state management.
+ */
+export type GestureViewerController = {
+  /**
+   * Navigates to the specified index in the viewer.
+   * Updates the currentIndex in the controller state.
+   *
+   * @param index - The target index (must be between 0 and totalCount - 1)
+   * @throws Will throw an error if index is out of bounds
+   *
+   * @example
+   * ```typescript
+   * controller.goToIndex(0); // Go to first item
+   * controller.goToIndex(controller.totalCount - 1); // Go to last item
+   * ```
+   */
+  goToIndex: (index: number) => void;
+
+  /**
+   * Navigates to the previous item in the sequence.
+   * If already at the first item, behavior depends on implementation (may wrap or do nothing).
+   * Updates currentIndex in the controller state.
+   */
+  goToPrevious: () => void;
+
+  /**
+   * Navigates to the next item in the sequence.
+   * If already at the last item, behavior depends on implementation (may wrap or do nothing).
+   * Updates currentIndex in the controller state.
+   */
+  goToNext: () => void;
+
+  /**
+   * Zooms in by the specified multiplier.
+   *
+   * @param multiplier - The zoom multiplier (0.01 - 1.0). Higher values zoom in more.
+   * @defaultValue 0.25
+   *
+   * @example
+   * ```typescript
+   * controller.zoomIn(); // Zoom in by 25%
+   * controller.zoomIn(0.5); // Zoom in by 50%
+   * ```
+   */
+  zoomIn: (multiplier?: number) => void;
+
+  /**
+   * Zooms out by the specified multiplier.
+   *
+   * @param multiplier - The zoom multiplier (0.01 - 1.0). Higher values zoom out more.
+   * @defaultValue 0.25
+   *
+   * @example
+   * ```typescript
+   * controller.zoomOut(); // Zoom out by 25%
+   * controller.zoomOut(0.1); // Zoom out by 10%
+   * ```
+   */
+  zoomOut: (multiplier?: number) => void;
+
+  /**
+   * Resets the zoom level to the specified scale.
+   *
+   * @param scale - The scale to reset to (1.0 = original size)
+   * @defaultValue 1.0
+   *
+   * @example
+   * ```typescript
+   * controller.resetZoom(); // Reset to original size
+   * controller.resetZoom(0.5); // Reset to 50% of original size
+   * ```
+   */
+  resetZoom: (scale?: number) => void;
+
+  /**
+   * Rotates the content by the specified angle.
+   *
+   * @param angle - Rotation angle in degrees. Must be one of: 0, 90, 180, 270, 360
+   * @param clockwise - Direction of rotation when angle is not 0 or 360
+   * @defaultValue angle: `90`, clockwise: `true`
+   *
+   * @remarks
+   * - Angle 0 or 360 resets rotation regardless of clockwise parameter
+   * - The clockwise parameter only affects rotation when angle is 90, 180, or 270
+   * - Rotation is cumulative and affects the current orientation
+   *
+   * @example
+   * ```typescript
+   * controller.rotate(); // Rotate 90 degrees clockwise
+   * controller.rotate(0); // Reset rotation
+   * controller.rotate(90, false); // Rotate 90 degrees counter-clockwise
+   * controller.rotate(180); // Rotate 180 degrees (clockwise by default)
+   * controller.rotate(270, false); // Rotate 270 degrees counter-clockwise
+   * controller.rotate(360); // Reset rotation (same as 0)
+   * ```
+   */
+  rotate: (angle?: RotationAngle, clockwise?: boolean) => void;
+} & GestureViewerControllerState;
+
+/**
+ * State information for the gesture viewer controller.
+ * Contains read-only properties that reflect the current state.
+ */
+export type GestureViewerControllerState = {
+  /**
+   * The current index of the active item in the viewer.
+   *
+   * @remarks
+   * This value is automatically updated when navigation methods are called.
+   *
+   * @example
+   * ```typescript
+   * console.log(`Currently viewing item ${controller.currentIndex + 1} of ${controller.totalCount}`);
+   * ```
+   */
+  readonly currentIndex: number;
+
+  /**
+   * The total number of items available in the viewer.
+   *
+   * @remarks
+   * This value determines the valid range for currentIndex (0 to totalCount - 1).
+   *
+   * @example
+   * ```typescript
+   * const hasNext = controller.currentIndex < controller.totalCount - 1;
+   * const hasPrevious = controller.currentIndex > 0;
+   * ```
+   */
+  readonly totalCount: number;
+};
