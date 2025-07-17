@@ -17,7 +17,7 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
   /**
    * When you want to efficiently manage multiple `GestureViewer` instances, you can use the `id` prop to use multiple `GestureViewer` components.
    * @remark `GestureViewer` automatically removes instances from memory when components are unmounted, so no manual memory management is required.
-   * @default 'default'
+   * @defaultValue 'default'
    */
   id?: string;
   /**
@@ -26,7 +26,7 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
   data: T[];
   /**
    * The index of the item to display in the `GestureViewer` when the component is mounted.
-   * @default 0
+   * @defaultValue 0
    */
   initialIndex?: number;
   /**
@@ -52,7 +52,7 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
   /**
    * The width of the `GestureViewer`.
    * @remark If you don't set this prop, the width of the `GestureViewer` will be the same as the width of the screen.
-   * @default screen width
+   * @defaultValue screen width
    */
   width?: number;
   /**
@@ -65,13 +65,13 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
    * **`true`**: Snap mode (`snapToInterval` auto-calculated)
    * - `snapToInterval` is automatically calculated based on `width` and `itemSpacing` values
    * - Use this option when you need item spacing
-   * @default false
+   * @defaultValue false
    *
    */
   useSnap?: boolean;
   /**
    * `dismissThreshold` controls when `onDismiss` is called by applying a threshold value during vertical gestures.
-   * @default 80
+   * @defaultValue 80
    */
   dismissThreshold?: number;
   // swipeThreshold?: number;
@@ -79,18 +79,18 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
   /**
    * Calls `onDismiss` function when swiping down.
    * @remark Useful for closing modals with downward swipe gestures.
-   * @default true
+   * @defaultValue true
    */
   enableDismissGesture?: boolean;
   /**
    * Controls left/right swipe gestures.
    * @remark When `false`, horizontal gestures are disabled.
-   * @default true
+   * @defaultValue true
    */
   enableSwipeGesture?: boolean;
   /**
    * `resistance` controls the range of vertical movement by applying resistance during vertical gestures.
-   * @default 2
+   * @defaultValue 2
    */
   resistance?: number;
   /**
@@ -109,36 +109,36 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
   /**
    * By default, the background `opacity` gradually decreases from 1 to 0 during downward swipe gestures.
    * @remark When `false`, this animation is disabled.
-   * @default true
+   * @defaultValue true
    */
   animateBackdrop?: boolean;
   /**
    * Only works when zoom is active, allows moving item position when zoomed.
    * @remark When `false`, gesture movement is disabled during zoom.
-   * @default true
+   * @defaultValue true
    */
   enableZoomPanGesture?: boolean;
   /**
    * Controls two-finger pinch gestures.
    * @remark When `false`, two-finger zoom gestures are disabled.
-   * @default true
+   * @defaultValue true
    */
   enableZoomGesture?: boolean;
   /**
    * Controls double-tap zoom gestures.
    * @remark When `false`, double-tap zoom gestures are disabled.
-   * @default true
+   * @defaultValue true
    */
   enableDoubleTapGesture?: boolean;
   /**
    * The maximum zoom scale.
-   * @default 2
+   * @defaultValue 2
    */
   maxZoomScale?: number;
   /**
    * The spacing between items in pixels.
    * @remark Only applied when `useSnap` is `true`.
-   * @default 0
+   * @defaultValue 0
    */
   itemSpacing?: number;
 }
