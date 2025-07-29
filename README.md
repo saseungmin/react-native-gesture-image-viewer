@@ -114,7 +114,7 @@ bun add react-native-gesture-image-viewer
 You can create a viewer using any `Modal` of your choice as shown below:   
 
 ```tsx
-import { Image, Modal } from 'react-native';
+import { FlatList, Image, Modal } from 'react-native';
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 
 function App() {
@@ -131,6 +131,7 @@ function App() {
       <GestureViewer
         data={images}
         renderItem={renderImage}
+        ListComponent={FlatList}
         onDismiss={() => setVisible(false)}
       />
     </Modal>

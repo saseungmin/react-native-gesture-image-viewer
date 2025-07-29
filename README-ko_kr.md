@@ -114,7 +114,7 @@ bun add react-native-gesture-image-viewer
 따라서 다음과 같이 원하는 `Modal`을 사용하여 뷰어를 만들 수 있습니다.   
 
 ```tsx
-import { Image, Modal } from 'react-native';
+import { FlatList, Image, Modal } from 'react-native';
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 
 function App() {
@@ -131,6 +131,7 @@ function App() {
       <GestureViewer
         data={images}
         renderItem={renderImage}
+        ListComponent={FlatList}
         onDismiss={() => setVisible(false)}
       />
     </Modal>
@@ -334,6 +335,35 @@ function App() {
 |:-----|:-----|:-----|
 | `zoomChange` | 핀치 제스처 중 줌 스케일이 변경될 때 발생 | `{ scale: number, previousScale: number }` |
 | `rotationChange` | 회전 제스처 중 회전 각도가 변경될 때 발생 | `{ rotation: number, previousRotation: number }` |
+
+
+### 스타일 커스터마이징
+
+`GestureViewer`의 스타일을 커스터마이징할 수 있습니다.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+ return (
+   <GestureViewer
+     animateBackdrop={false}
+     width={400}
+     containerStyle={{ /* ... */ }}
+     backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.90)' }}
+     renderContainer={(children) => <View style={{ flex: 1 }}>{children}</View>}
+   />
+ );
+}
+```
+
+|속성|설명|기본값|
+|:--:|:-----|:--:|
+|`animateBackdrop`|기본적으로 아래로 스와이프할 때 배경의 `opacity`가 1에서 0으로 점진적으로 감소합니다. `false`일 때 이 애니메이션이 비활성화됩니다.|`true`|
+|`width`|콘텐츠 아이템의 너비입니다. 기본값은 화면 너비입니다.|`Dimensions width`|
+|`containerStyle`|리스트 컴포넌트를 감싸는 컨테이너의 커스텀 스타일을 지정할 수 있습니다.|`flex: 1`|
+|`backdropStyle`|뷰어의 배경 스타일을 커스터마이징할 수 있습니다.|`backgroundColor: black; StyleSheet.absoluteFill;`|
+|`renderContainer`|`<GestureViewer />` 주변에 커스텀 래퍼 컴포넌트를 지정할 수 있습니다.||
 
 ### 다중 인스턴스 관리
 
