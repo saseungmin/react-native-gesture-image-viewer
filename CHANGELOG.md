@@ -1,5 +1,11 @@
 # react-native-gesture-image-viewer
 
+## 1.5.1
+
+### Patch Changes
+
+- 4c49b1c: docs: update style customization section in kr md
+
 ## 1.5.0
 
 ### Minor Changes
