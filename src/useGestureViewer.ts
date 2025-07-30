@@ -228,6 +228,12 @@ export const useGestureViewer = <T = any>({
       const contentOffset = event.nativeEvent.contentOffset;
       const scrollIndex = Math.round(contentOffset.x / (width + itemSpacing));
 
+      const isLoopHandled = manager?.handleMomentumScrollEnd(scrollIndex);
+
+      if (isLoopHandled) {
+        return;
+      }
+
       const { realIndex, needsJump, jumpToIndex } = getLoopAdjustedIndex(scrollIndex, dataLength, enableLoop);
 
       if (needsJump && jumpToIndex !== undefined) {
@@ -482,7 +488,7 @@ export const useGestureViewer = <T = any>({
   }, [animateBackdrop]);
 
   const onScrollBeginDrag = useCallback(() => {
-    manager?.cancelAnimation();
+    manager?.handleScrollBeginDrag();
   }, [manager]);
 
   return {
