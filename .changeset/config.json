@@ -7,5 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["react-native-gesture-image-viewer-example"]
+  "ignore": ["react-native-gesture-image-viewer-example", "docs"]
 }

@@ -106,7 +106,8 @@
   },
   "workspaces": [
     ".",
-    "example"
+    "example",
+    "docs"
   ],
   "packageManager": "yarn@4.9.2",
   "jest": {
