@@ -48,3 +48,56 @@ export const createBoundsConstraint =
       translateY: Math.max(-maxTranslateY, Math.min(maxTranslateY, translateY)),
     };
   };
+
+export const createLoopData = <T>(dataRef: React.RefObject<T[]>, enableLoop: boolean): T[] => {
+  const data = dataRef.current;
+
+  if (!enableLoop || !data?.length || data.length <= 1) {
+    return data;
+  }
+
+  const lastItem = data[data.length - 1];
+  const firstItem = data[0];
+
+  if (lastItem === undefined || firstItem === undefined) {
+    return data;
+  }
+
+  return [lastItem, ...data, firstItem];
+};
+
+export const getLoopAdjustedIndex = (
+  scrollIndex: number,
+  originalDataLength: number,
+  enableLoop: boolean,
+): { realIndex: number; needsJump: boolean; jumpToIndex?: number } => {
+  if (!enableLoop || originalDataLength <= 1) {
+    return { realIndex: scrollIndex, needsJump: false };
+  }
+
+  if (scrollIndex === 0) {
+    return {
+      realIndex: originalDataLength - 1,
+      needsJump: true,
+      jumpToIndex: originalDataLength,
+    };
+  } else if (scrollIndex === originalDataLength + 1) {
+    return {
+      realIndex: 0,
+      needsJump: true,
+      jumpToIndex: 1,
+    };
+  }
+
+  return { realIndex: scrollIndex - 1, needsJump: false };
+};
+
+export const createScrollAction = (listRef: any, width: number) => ({
+  scrollTo: (index: number, animated: boolean) => {
+    if (listRef?.scrollToIndex) {
+      listRef.scrollToIndex({ index, animated });
+    } else if (listRef?.scrollTo) {
+      listRef.scrollTo({ x: index * width, animated });
+    }
+  },
+});

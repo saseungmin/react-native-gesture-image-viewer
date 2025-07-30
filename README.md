@@ -149,6 +149,7 @@ function App() {
     <GestureViewer
       data={images}
       renderItem={renderImage}
+      enableLoop={false}
       enableDismissGesture
       enableSwipeGesture
       enableZoomGesture
@@ -161,6 +162,7 @@ function App() {
 
 |Property|Description|Default|
 |:--:|:-----|:--:|
+|`enableLoop`|Enables loop mode. When `true`, navigating next from the last item goes to the first item, and navigating previous from the first item goes to the last item.|`false`|
 |`enableDismissGesture`|Calls `onDismiss` function when swiping down. Useful for closing modals with downward swipe gestures.|`true`|
 |`enableSwipeGesture`|Controls left/right swipe gestures. When `false`, horizontal gestures are disabled.|`true`|
 |`enableZoomGesture`|Controls two-finger pinch gestures with focal point zooming. When `false`, pinch zoom is disabled. Zoom centers on the point between your two fingers for intuitive scaling.|`true`|

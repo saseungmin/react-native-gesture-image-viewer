@@ -16,6 +16,7 @@ const images = [
 
 function Example() {
   const [visible, setVisible] = useState(false);
+  const [enableLoop, setEnableLoop] = useState(false);
 
   const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount, zoomIn, zoomOut, resetZoom, rotate } =
     useGestureViewerController();
@@ -42,13 +43,15 @@ function Example() {
 
   return (
     <View style={styles.container}>
-      <Button title="Open" onPress={() => setVisible(true)} />
+      <Button title={`Loop: ${enableLoop ? 'ON' : 'OFF'}`} onPress={() => setEnableLoop(!enableLoop)} />
+      <Button title="Open Gallery" onPress={() => setVisible(true)} />
       <Modal visible={visible} onRequestClose={() => setVisible(false)}>
         <View style={{ flex: 1 }}>
           <GestureViewer
             data={images}
             initialIndex={0}
             onDismiss={() => setVisible(false)}
+            enableLoop={enableLoop}
             ListComponent={FlashList}
             renderItem={renderImage}
             backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.90)' }}

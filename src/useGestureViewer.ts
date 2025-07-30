@@ -19,7 +19,7 @@ import {
 import type GestureViewerManager from './GestureViewerManager';
 import { registry } from './GestureViewerRegistry';
 import type { GestureViewerProps } from './types';
-import { createBoundsConstraint } from './utils';
+import { createBoundsConstraint, createScrollAction, getLoopAdjustedIndex } from './utils';
 
 type UseGestureViewerProps<T = any> = Omit<
   GestureViewerProps<T>,
@@ -42,6 +42,7 @@ export const useGestureViewer = <T = any>({
   enableZoomGesture = true,
   enableDoubleTapGesture = true,
   enableZoomPanGesture = true,
+  enableLoop = false,
   maxZoomScale = 2,
   itemSpacing = 0,
   useSnap = false,
@@ -71,9 +72,26 @@ export const useGestureViewer = <T = any>({
 
   const dataLength = data?.length || 0;
 
+  const adjustedInitialIndex = useMemo(() => {
+    if (enableLoop && data.length > 1) {
+      return initialIndex + 1;
+    }
+
+    return initialIndex;
+  }, [enableLoop, data.length, initialIndex]);
+
   const constrainTranslation = useMemo(
     () => createBoundsConstraint({ width, height: screenHeight }),
     [width, screenHeight],
+  );
+
+  const scrollTo = useCallback(
+    (index: number, animated: boolean) => {
+      const scrollAction = createScrollAction(listRef.current, width + itemSpacing);
+
+      return scrollAction.scrollTo(index, animated);
+    },
+    [width, itemSpacing],
   );
 
   const emitZoomChange = useCallback(
@@ -150,6 +168,7 @@ export const useGestureViewer = <T = any>({
     manager.setHeight(screenHeight);
     manager.setZoomSharedValues(scale, translateX, translateY, maxZoomScale);
     manager.setRotation(rotation);
+    manager.setEnableLoop(enableLoop);
     manager.notifyStateChange();
   }, [
     dataLength,
@@ -159,6 +178,7 @@ export const useGestureViewer = <T = any>({
     width,
     itemSpacing,
     maxZoomScale,
+    enableLoop,
     scale,
     screenHeight,
     translateX,
@@ -186,28 +206,18 @@ export const useGestureViewer = <T = any>({
     startScale.value = 1;
     rotation.value = 0;
 
-    if (initialIndex <= 0 || !listRef.current) {
+    if (adjustedInitialIndex <= 0 || !listRef.current) {
       return;
     }
 
     const runAfterInteractions = InteractionManager.runAfterInteractions(() => {
-      if (listRef.current.scrollToIndex) {
-        listRef.current.scrollToIndex({
-          index: initialIndex,
-          animated: false,
-        });
-      } else if (listRef.current.scrollTo) {
-        listRef.current.scrollTo({
-          x: initialIndex * (width + itemSpacing),
-          animated: false,
-        });
-      }
+      scrollTo(adjustedInitialIndex, false);
     });
 
     return () => {
       runAfterInteractions?.cancel();
     };
-  }, [initialIndex, translateY, backdropOpacity, translateX, scale, startScale, width, itemSpacing, rotation]);
+  }, [adjustedInitialIndex, translateY, backdropOpacity, translateX, scale, startScale, rotation, scrollTo]);
 
   const onMomentumScrollEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -216,12 +226,18 @@ export const useGestureViewer = <T = any>({
       }
 
       const contentOffset = event.nativeEvent.contentOffset;
-      const newIndex = Math.round(contentOffset.x / (width + itemSpacing));
+      const scrollIndex = Math.round(contentOffset.x / (width + itemSpacing));
 
-      if (newIndex !== currentIndex && newIndex >= 0 && newIndex < dataLength) {
+      const { realIndex, needsJump, jumpToIndex } = getLoopAdjustedIndex(scrollIndex, dataLength, enableLoop);
+
+      if (needsJump && jumpToIndex !== undefined) {
+        scrollTo(jumpToIndex, false);
+      }
+
+      if (realIndex !== currentIndex && realIndex >= 0 && realIndex < dataLength) {
         if (manager) {
-          manager.setCurrentIndex(newIndex);
-          setCurrentIndex(newIndex);
+          manager.setCurrentIndex(realIndex);
+          setCurrentIndex(realIndex);
           manager.notifyStateChange();
         }
 
@@ -235,12 +251,14 @@ export const useGestureViewer = <T = any>({
       }
     },
     [
+      scrollTo,
       manager,
       currentIndex,
       dataLength,
       width,
       itemSpacing,
       enableSwipeGesture,
+      enableLoop,
       translateX,
       translateY,
       scale,
@@ -463,6 +481,10 @@ export const useGestureViewer = <T = any>({
     return { opacity };
   }, [animateBackdrop]);
 
+  const onScrollBeginDrag = useCallback(() => {
+    manager?.cancelAnimation();
+  }, [manager]);
+
   return {
     currentIndex,
     dataLength,
@@ -474,6 +496,7 @@ export const useGestureViewer = <T = any>({
     zoomGesture,
 
     onMomentumScrollEnd,
+    onScrollBeginDrag,
 
     animatedStyle,
     backdropStyle,

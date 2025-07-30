@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { type FlatList, Platform, type ScrollViewProps, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { registry } from './GestureViewerRegistry';
 import type { GestureViewerProps } from './types';
 import { useGestureViewer } from './useGestureViewer';
-import { isFlashListLike, isFlatListLike, isScrollViewLike } from './utils';
+import { createLoopData, isFlashListLike, isFlatListLike, isScrollViewLike } from './utils';
 import WebPagingFixStyle from './WebPagingFixStyle';
 
 export function GestureViewer<T = any, LC = typeof FlatList>({
@@ -21,13 +21,19 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
   initialIndex = 0,
   itemSpacing = 0,
   useSnap = false,
+  enableLoop = false,
   ...props
 }: GestureViewerProps<T, LC>) {
   const Component = ListComponent as React.ComponentType<any>;
 
+  const dataRef = useRef(data);
+  dataRef.current = data;
+
   const { width: screenWidth } = useWindowDimensions();
 
   const width = useSnap ? customWidth || screenWidth : screenWidth;
+
+  const loopData = useMemo(() => createLoopData(dataRef, enableLoop), [enableLoop]);
 
   const {
     listRef,
@@ -36,6 +42,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
     dismissGesture,
     zoomGesture,
     onMomentumScrollEnd,
+    onScrollBeginDrag,
     animatedStyle,
     backdropStyle,
   } = useGestureViewer({
@@ -45,14 +52,26 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
     initialIndex,
     itemSpacing,
     useSnap,
+    enableLoop,
     ...props,
   });
+
+  const keyExtractor = useCallback(
+    (item: T, index: number) => {
+      if (enableLoop) {
+        return typeof item === 'string' ? `${item}-${index}` : `item-${index}`;
+      }
+
+      return typeof item === 'string' ? item : `image-${index}`;
+    },
+    [enableLoop],
+  );
 
   const renderItem = useCallback(
     ({ item, index }: { item: T; index: number }) => {
       return (
         <View
-          key={typeof item === 'string' ? item : index}
+          key={keyExtractor(item, index)}
           style={[
             {
               width,
@@ -67,7 +86,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
         </View>
       );
     },
-    [width, itemSpacing, renderItemProp],
+    [width, itemSpacing, renderItemProp, keyExtractor],
   );
 
   const getItemLayout = useCallback(
@@ -77,11 +96,6 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
       index,
     }),
     [width, itemSpacing],
-  );
-
-  const keyExtractor = useCallback(
-    (item: T, index: number) => (typeof item === 'string' ? item : `image-${index}`),
-    [],
   );
 
   const gesture = useMemo(() => {
@@ -94,25 +108,27 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
     return () => registry.deleteManager(id);
   }, [id]);
 
-  const commonProps: ScrollViewProps = useMemo(
-    () => ({
-      horizontal: true,
-      scrollEnabled: !isZoomed && !isRotated,
-      showsHorizontalScrollIndicator: false,
-      onMomentumScrollEnd: onMomentumScrollEnd,
-      ...(useSnap
-        ? {
-            snapToInterval: width + itemSpacing,
-            snapToAlignment: 'center',
-            decelerationRate: 'fast',
-          }
-        : {
-            pagingEnabled: true,
-          }),
-      scrollEventThrottle: 16,
-      removeClippedSubviews: true,
-    }),
-    [width, itemSpacing, isZoomed, isRotated, onMomentumScrollEnd, useSnap],
+  const commonProps = useMemo(
+    () =>
+      ({
+        horizontal: true,
+        scrollEnabled: !isZoomed && !isRotated,
+        showsHorizontalScrollIndicator: false,
+        onMomentumScrollEnd: onMomentumScrollEnd,
+        onScrollBeginDrag,
+        ...(useSnap
+          ? {
+              snapToInterval: width + itemSpacing,
+              snapToAlignment: 'center',
+              decelerationRate: 'fast',
+            }
+          : {
+              pagingEnabled: true,
+            }),
+        scrollEventThrottle: 16,
+        removeClippedSubviews: true,
+      }) satisfies ScrollViewProps,
+    [width, itemSpacing, isZoomed, isRotated, onMomentumScrollEnd, onScrollBeginDrag, useSnap],
   );
 
   const listComponent = (
@@ -127,16 +143,16 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
           >
             {isScrollViewLike(Component) ? (
               <Component ref={listRef} {...commonProps} {...listProps}>
-                {data.map((item, index) => renderItem({ item, index }))}
+                {loopData.map((item, index) => renderItem({ item, index }))}
               </Component>
             ) : (
               isFlatListLike(Component) && (
                 <Component
                   ref={listRef}
                   {...commonProps}
-                  data={data}
+                  data={loopData}
                   renderItem={renderItem}
-                  initialScrollIndex={initialIndex}
+                  initialScrollIndex={enableLoop && data.length > 1 ? initialIndex + 1 : initialIndex}
                   keyExtractor={keyExtractor}
                   windowSize={3}
                   maxToRenderPerBatch={3}

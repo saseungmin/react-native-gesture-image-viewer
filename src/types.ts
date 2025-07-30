@@ -131,6 +131,11 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
    */
   enableDoubleTapGesture?: boolean;
   /**
+   * Enables infinite loop navigation.
+   * @defaultValue false
+   */
+  enableLoop?: boolean;
+  /**
    * The maximum zoom scale.
    * @defaultValue 2
    */

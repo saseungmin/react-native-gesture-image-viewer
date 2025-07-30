@@ -149,6 +149,7 @@ function App() {
     <GestureViewer
       data={images}
       renderItem={renderImage}
+      enableLoop={false}
       enableDismissGesture
       enableSwipeGesture
       enableZoomGesture
@@ -161,6 +162,7 @@ function App() {
 
 |속성|설명|기본값|
 |:--:|:-----|:--:|
+|`enableLoop`|루프 모드를 활성화합니다. `true`일 때 마지막 아이템에서 다음으로 가면 첫 번째로, 첫 번째에서 이전으로 가면 마지막으로 돌아갑니다.|`false`|
 |`enableDismissGesture`|아래로 스와이프할 때 `onDismiss` 함수를 호출합니다. 모달을 아래로 스와이프해서 닫는 제스처에 유용합니다.|`true`|
 |`enableSwipeGesture`|좌우 스와이프 제스처를 제어합니다. `false`일 때 가로 제스처가 비활성화됩니다.|`true`|
 |`enableZoomGesture`|두 손가락 핀치 제스처를 제어합니다. `false`일 때 핀치 줌 제스처가 비활성화됩니다. 핀치 줌은 두 손가락 사이의 중심점을 기준으로 확대됩니다.|`true`|

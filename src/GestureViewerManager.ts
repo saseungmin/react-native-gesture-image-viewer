@@ -5,7 +5,7 @@ import type {
   GestureViewerEventData,
   GestureViewerEventType,
 } from './types';
-import { createBoundsConstraint } from './utils';
+import { createBoundsConstraint, createScrollAction } from './utils';
 
 class GestureViewerManager {
   private currentIndex = 0;
@@ -18,9 +18,11 @@ class GestureViewerManager {
   private maxZoomScale = 2;
   private listRef: any | null = null;
   private enableSwipeGesture = true;
+  private enableLoop = false;
   private listeners = new Set<(state: GestureViewerControllerState) => void>();
   private rotation: SharedValue<number> | null = null;
   private eventListeners = new Map<GestureViewerEventType, Set<(data: any) => void>>();
+  private animationTimeout: NodeJS.Timeout | null = null;
 
   private notifyListeners() {
     const state = this.getState();
@@ -77,6 +79,10 @@ class GestureViewerManager {
       currentIndex: this.currentIndex,
       totalCount: this.dataLength,
     };
+  }
+
+  setEnableLoop(enabled: boolean) {
+    this.enableLoop = enabled;
   }
 
   setWidth(width: number) {
@@ -215,31 +221,64 @@ class GestureViewerManager {
   };
 
   goToIndex = (index: number) => {
-    if (index < 0 || index >= this.dataLength || !this.enableSwipeGesture || !this.listRef) {
+    if (!this.enableSwipeGesture || !this.listRef) {
       return;
     }
 
-    this.currentIndex = index;
+    this.cancelAnimation();
 
-    if (this.listRef.scrollToIndex) {
-      this.listRef.scrollToIndex({ index, animated: true });
-    } else if (this.listRef.scrollTo) {
-      this.listRef.scrollTo({ x: index * this.width, animated: true });
+    const { scrollTo } = createScrollAction(this.listRef, this.width);
+
+    if (this.enableLoop && this.dataLength > 1) {
+      if (index < 0) {
+        scrollTo(0, true);
+
+        this.animationTimeout = setTimeout(() => {
+          scrollTo(this.dataLength, false);
+          this.updateCurrentIndex(this.dataLength - 1);
+        }, 300);
+        return;
+      }
+
+      if (index >= this.dataLength) {
+        scrollTo(this.dataLength + 1, true);
+
+        this.animationTimeout = setTimeout(() => {
+          scrollTo(1, false);
+          this.updateCurrentIndex(0);
+        }, 300);
+        return;
+      }
+
+      const scrollIndex = index + 1;
+
+      scrollTo(scrollIndex, true);
+      this.updateCurrentIndex(index);
+
+      return;
     }
 
-    this.notifyListeners();
+    if (index < 0 || index >= this.dataLength) {
+      return;
+    }
+
+    scrollTo(index, true);
+    this.updateCurrentIndex(index);
+  };
+
+  cancelAnimation = () => {
+    if (this.animationTimeout) {
+      clearTimeout(this.animationTimeout);
+      this.animationTimeout = null;
+    }
   };
 
   goToPrevious = () => {
-    if (this.currentIndex > 0) {
-      this.goToIndex(this.currentIndex - 1);
-    }
+    this.goToIndex(this.currentIndex - 1);
   };
 
   goToNext = () => {
-    if (this.currentIndex < this.dataLength - 1) {
-      this.goToIndex(this.currentIndex + 1);
-    }
+    this.goToIndex(this.currentIndex + 1);
   };
 
   cleanUp() {
@@ -256,6 +295,11 @@ class GestureViewerManager {
     this.rotation = null;
     this.eventListeners.clear();
   }
+
+  private updateCurrentIndex = (targetIndex: number) => {
+    this.currentIndex = targetIndex;
+    this.notifyListeners();
+  };
 }
 
 export default GestureViewerManager;
