@@ -24,6 +24,8 @@ class GestureViewerManager {
   private eventListeners = new Map<GestureViewerEventType, Set<(data: any) => void>>();
   private animationTimeout: NodeJS.Timeout | null = null;
 
+  private static readonly LOOP_ANIMATION_DURATION = 300;
+
   private notifyListeners() {
     const state = this.getState();
 
@@ -236,7 +238,7 @@ class GestureViewerManager {
         this.animationTimeout = setTimeout(() => {
           scrollTo(this.dataLength, false);
           this.updateCurrentIndex(this.dataLength - 1);
-        }, 300);
+        }, GestureViewerManager.LOOP_ANIMATION_DURATION);
         return;
       }
 
@@ -246,7 +248,7 @@ class GestureViewerManager {
         this.animationTimeout = setTimeout(() => {
           scrollTo(1, false);
           this.updateCurrentIndex(0);
-        }, 300);
+        }, GestureViewerManager.LOOP_ANIMATION_DURATION);
         return;
       }
 
@@ -282,12 +284,12 @@ class GestureViewerManager {
   };
 
   cleanUp() {
+    this.cancelAnimation();
     this.listeners.clear();
     this.listRef = null;
     this.enableSwipeGesture = true;
     this.currentIndex = 0;
     this.dataLength = 0;
-
     this.maxZoomScale = 2;
     this.scale = null;
     this.translateX = null;
