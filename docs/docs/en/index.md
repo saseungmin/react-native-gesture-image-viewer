@@ -8,7 +8,7 @@ hero:
   actions:
     - theme: brand
       text: Quick Start
-      link: /guide/
+      link: /guide/getting-started/overview/
     - theme: alt
       text: GitHub
       link: https://github.com/saseungmin/react-native-gesture-image-viewer

@@ -1,0 +1,71 @@
+import { Steps, PackageManagerTabs } from '@theme';
+
+# 설치
+
+:::info Important
+`react-native-gesture-image-viewer`는 고성능 뷰어 라이브러리로 [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated)와 [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler)를 기반으로 합니다.   
+따라서 사용하기 전에 React Native Reanimated와 Gesture Handler를 **필수적으로 설치**해야 합니다. 자세한 가이드는 해당 라이브러리 공식 문서를 참고해주세요.
+:::
+
+#### 필수 요구사항
+
+|라이브러리|최소 버전|
+|:--|:--:|
+|`react`|`>=18.0.0`|
+|`react-native`|`>=0.75.0`|
+|`react-native-gesture-handler`|`>=2.24.0`|
+|`react-native-reanimated`|`>=3.0.0`|
+
+## [React Native Reanimated 설정](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/)
+
+<PackageManagerTabs command="install react-native-reanimated" />
+
+<Steps>
+
+### `babel.config.js`에 다음과 같이 plugin을 추가해주세요.
+
+```js title="babel.config.js"
+module.exports = {
+  presets: [
+    ... // don't add it here :)
+  ],
+  plugins: [
+    ...
+    // for web
+    '@babel/plugin-proposal-export-namespace-from', // [!code highlight]
+    // react-native-reanimated/plugin has to be listed last.
+    'react-native-reanimated/plugin', // [!code highlight]
+  ],
+};
+```
+
+### `metro.config.js`에 기본 구성 함수를 `wrapWithReanimatedMetroConfig`로 래핑해주세요.
+
+```js title="metro.config.js"
+// [!code highlight:3]
+const {
+  wrapWithReanimatedMetroConfig,
+} = require('react-native-reanimated/metro-config');
+
+const config = {
+  // Your existing Metro configuration options
+};
+
+module.exports = wrapWithReanimatedMetroConfig(config); // [!code highlight]
+```
+
+</Steps>
+
+## [React Native Gesture Handler 설정](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation)
+
+<PackageManagerTabs command="install react-native-gesture-handler" />
+
+- `react-native-gesture-handler`는 기본적으로 추가할 설정은 없지만, 공식 문서를 참고하여 환경에 맞게 설치해주세요.
+- [안드로이드 환경의 모달에서 제스처를 사용](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation#android)하려면 모달의 콘텐츠를 `GestureHandlerRootView`로 래핑해야 정상적으로 동작하지만, **라이브러리 내부에 이미 `GestureHandlerRootView`가 래핑되어 있어 모달 사용 시 추가로 래핑할 필요가 없습니다.**
+
+## React Native Gesture Image Viewer 설치
+
+모든 설정이 끝났습니다! 🎉   
+이제 `react-native-gesture-image-viewer`를 설치해주세요.
+
+<PackageManagerTabs command="install react-native-gesture-image-viewer" />

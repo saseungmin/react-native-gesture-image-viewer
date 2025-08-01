@@ -1,1 +1,7 @@
-["index"]
+[
+  {
+    "type": "dir",
+    "name": "getting-started",
+    "label": "Getting Started"
+  }
+]

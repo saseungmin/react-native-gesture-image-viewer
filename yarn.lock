@@ -3612,6 +3612,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@shikijs/core@npm:3.9.1":
+  version: 3.9.1
+  resolution: "@shikijs/core@npm:3.9.1"
+  dependencies:
+    "@shikijs/types": "npm:3.9.1"
+    "@shikijs/vscode-textmate": "npm:^10.0.2"
+    "@types/hast": "npm:^3.0.4"
+    hast-util-to-html: "npm:^9.0.5"
+  checksum: 10/7cb0b6c1798021ed19a57a50f3f2639d822dc34470efaa5fdf5939af6ff76ee4d9cfe6ea45d2c4b4e4f0b9e91f2df341276d8ff1e76eeaf73472ba061950e0fa
+  languageName: node
+  linkType: hard
+
 "@shikijs/engine-javascript@npm:3.8.1":
   version: 3.8.1
   resolution: "@shikijs/engine-javascript@npm:3.8.1"
@@ -3665,6 +3677,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@shikijs/transformers@npm:^3.9.1":
+  version: 3.9.1
+  resolution: "@shikijs/transformers@npm:3.9.1"
+  dependencies:
+    "@shikijs/core": "npm:3.9.1"
+    "@shikijs/types": "npm:3.9.1"
+  checksum: 10/c4c148d99c6c336c9b019d7787b5aea78418fadfa2133605cdc5a70ff7055439377a7fa4228d1f9003d3d2a8fc3f0ac78ba939bdc8526910a3546422ad61ad69
+  languageName: node
+  linkType: hard
+
 "@shikijs/types@npm:3.8.1":
   version: 3.8.1
   resolution: "@shikijs/types@npm:3.8.1"
@@ -3672,6 +3694,16 @@ __metadata:
     "@shikijs/vscode-textmate": "npm:^10.0.2"
     "@types/hast": "npm:^3.0.4"
   checksum: 10/22287e9e6574e306be63bbaccd8f7718cde0cdd2dd9fb3a3f29e57794c4dd27a4ce2a2a78524407175361b421d92b6a96d2af467912bace6d91f79bf7acaeb66
+  languageName: node
+  linkType: hard
+
+"@shikijs/types@npm:3.9.1":
+  version: 3.9.1
+  resolution: "@shikijs/types@npm:3.9.1"
+  dependencies:
+    "@shikijs/vscode-textmate": "npm:^10.0.2"
+    "@types/hast": "npm:^3.0.4"
+  checksum: 10/3113b1b8585c192d2e0f1e473eb054447163cba7e305861bf54a9e5321240ff0c44b5e183535966b5c33af83eca5b69733e30368589127fefe4445c0e4463916
   languageName: node
   linkType: hard
 
@@ -5490,7 +5522,9 @@ __metadata:
   resolution: "docs@workspace:docs"
   dependencies:
     "@rspress/core": "npm:^2.0.0-beta.23"
+    "@shikijs/transformers": "npm:^3.9.1"
     "@types/node": "npm:^22.16.0"
+    typescript: "npm:^5.8.3"
   languageName: unknown
   linkType: soft
 

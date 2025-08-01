@@ -1,0 +1,71 @@
+import { Steps, PackageManagerTabs } from '@theme';
+
+# Installation
+
+:::info Important
+`react-native-gesture-image-viewer` is a high-performance viewer library built on [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated) and [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler).   
+Therefore, you **must install** React Native Reanimated and Gesture Handler before using this library. Please refer to the official documentation of these libraries for detailed setup guides.
+:::
+
+#### Minimum Requirements
+
+|Library|Minimum Version|
+|:--|:--:|
+|`react`|`>=18.0.0`|
+|`react-native`|`>=0.75.0`|
+|`react-native-gesture-handler`|`>=2.24.0`|
+|`react-native-reanimated`|`>=3.0.0`|
+
+## [React Native Reanimated Setup](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/)
+
+<PackageManagerTabs command="install react-native-reanimated" />
+
+<Steps>
+
+### Add the plugin to your `babel.config.js`:
+
+```js title="babel.config.js"
+module.exports = {
+  presets: [
+    ... // don't add it here :)
+  ],
+  plugins: [
+    ...
+    // for web
+    '@babel/plugin-proposal-export-namespace-from', // [!code highlight]
+    // react-native-reanimated/plugin has to be listed last.
+    'react-native-reanimated/plugin', // [!code highlight]
+  ],
+};
+```
+
+### Wrap your Metro config with `wrapWithReanimatedMetroConfig` in `metro.config.js`:
+
+```js title="metro.config.js"
+// [!code highlight:3]
+const {
+  wrapWithReanimatedMetroConfig,
+} = require('react-native-reanimated/metro-config');
+
+const config = {
+  // Your existing Metro configuration options
+};
+
+module.exports = wrapWithReanimatedMetroConfig(config); // [!code highlight]
+```
+
+</Steps>
+
+## [React Native Gesture Handler Setup](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation)
+
+<PackageManagerTabs command="install react-native-gesture-handler" />
+
+- `react-native-gesture-handler` generally doesn't require additional setup, but please refer to the official documentation for your specific environment.
+- For [using gestures in Android modals](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation#android), you would normally need to wrap modal content with `GestureHandlerRootView`. However, **this library already includes `GestureHandlerRootView` internally, so no additional wrapping is needed when using modals.**
+
+## Install React Native Gesture Image Viewer
+
+You’re all set! 🎉   
+Start install `react-native-gesture-image-viewer`
+
+<PackageManagerTabs command="install react-native-gesture-image-viewer" />

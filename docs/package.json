@@ -7,10 +7,10 @@
     "dev": "rspress dev",
     "preview": "rspress preview"
   },
-  "dependencies": {
-    "@rspress/core": "^2.0.0-beta.23"
-  },
   "devDependencies": {
-    "@types/node": "^22.16.0"
+    "@rspress/core": "^2.0.0-beta.23",
+    "@shikijs/transformers": "^3.9.1",
+    "@types/node": "^22.16.0",
+    "typescript": "^5.8.3"
   }
 }

@@ -1,5 +1,6 @@
 import * as path from 'node:path';
 import { defineConfig } from '@rspress/core';
+import { transformerNotationDiff, transformerNotationHighlight } from '@shikijs/transformers';
 
 export default defineConfig({
   root: path.join(__dirname, 'docs'),
@@ -10,6 +11,13 @@ export default defineConfig({
   logoText: 'React Native Gesture Image Viewer',
   ssg: {
     experimentalWorker: true,
+  },
+  markdown: {
+    showLineNumbers: true,
+    defaultWrapCode: true,
+    shiki: {
+      transformers: [transformerNotationDiff(), transformerNotationHighlight()],
+    },
   },
   themeConfig: {
     lastUpdated: true,
