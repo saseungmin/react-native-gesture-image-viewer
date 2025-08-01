@@ -1,11 +1,11 @@
-# Rspress website
+# React Native Gesture Image Viewer website
 
 ## Setup
 
 Install the dependencies:
 
 ```bash
-npm install
+yarn install
 ```
 
 ## Get started
@@ -13,17 +13,17 @@ npm install
 Start the dev server:
 
 ```bash
-npm run dev
+yarn run dev
 ```
 
 Build the website for production:
 
 ```bash
-npm run build
+yarn run build
 ```
 
 Preview the production build locally:
 
 ```bash
-npm run preview
+yarn run preview
 ```
