@@ -1,0 +1,39 @@
+# 빠른 시작
+
+## 예제 및 데모
+- [📁 예제 프로젝트](https://github.com/saseungmin/react-native-gesture-image-viewer/tree/main/example) - 실제 구현 코드와 다양한 사용 사례
+- [🤖 Expo Go](https://snack.expo.dev/@harang/react-native-gesture-image-viewer) - Snack Expo에서 바로 체험
+
+<div style={{ width: '100%', alignItems: 'center', display: 'flex', justifyContent: 'center' }}>
+  <img src="https://raw.githubusercontent.com/saseungmin/react-native-gesture-image-viewer/main/assets/example.gif" width="600" alt="Demo of react-native-gesture-image-viewer gestures" />
+</div>
+
+## 기본 사용법
+
+`react-native-gesture-image-viewer`는 완전한 커스터마이징을 위해 제스처 동작에만 집중한 라이브러리입니다.   
+따라서 다음과 같이 원하는 `Modal`을 사용하여 뷰어를 만들 수 있습니다.   
+
+```tsx
+import { ScrollView, Image, Modal } from 'react-native';
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const images = [...];
+  const [visible, setVisible] = useState(false);
+
+  const renderImage = useCallback((imageUrl: string) => {
+    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
+  }, []);
+
+  return (
+    <Modal visible={visible} onRequestClose={() => setVisible(false)}>
+      <GestureViewer
+        data={images}
+        renderItem={renderImage}
+        ListComponent={ScrollView}
+        onDismiss={() => setVisible(false)}
+      />
+    </Modal>
+  );
+}
+```
