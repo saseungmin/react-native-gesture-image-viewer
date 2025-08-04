@@ -1,0 +1,38 @@
+# Handling Viewer Events
+
+You can subscribe to specific events from `GestureViewer` using the `useGestureViewerEvent` hook. This allows you to respond to real-time gesture changes like zoom and rotation.
+
+```tsx
+import { GestureViewer, useGestureViewerEvent } from 'react-native-gesture-image-viewer';
+
+function App() {
+  // Listen to zoom changes on the default instance (ID: 'default')
+  useGestureViewerEvent('zoomChange', (data) => {
+    console.log(`Zoom changed from ${data.previousScale} to ${data.scale}`);
+  });
+
+  // Listen to rotation changes on the default instance (ID: 'default')
+  useGestureViewerEvent('rotationChange', (data) => {
+    console.log(`Rotation changed from ${data.previousRotation}° to ${data.rotation}°`);
+  });
+
+  // Listen to events on a specific instance
+  useGestureViewerEvent('gallery', 'zoomChange', (data) => {
+    console.log(`Gallery zoom: ${data.scale}x`);
+  });
+
+  return (
+    <GestureViewer
+      data={images}
+      renderItem={renderImage}
+    />
+  );
+}
+```
+
+#### Event Types
+
+| Event | Description | Data |
+|:-----|:-----|:-----|
+| `zoomChange` | Fired when the zoom scale changes during pinch gestures | `{ scale: number, previousScale: number }` |
+| `rotationChange` | Fired when the rotation angle changes during rotation gestures | `{ rotation: number, previousRotation: number }` |

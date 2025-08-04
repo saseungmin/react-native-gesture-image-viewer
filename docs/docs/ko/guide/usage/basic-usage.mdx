@@ -1,0 +1,91 @@
+# 기본 사용법
+
+## GestureViewer
+
+```tsx
+import { FlatList, Image, Modal } from 'react-native';
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const images = [...];
+  const [visible, setVisible] = useState(false);
+
+  const renderImage = useCallback((imageUrl: string) => {
+    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
+  }, []);
+
+  return (
+    <Modal visible={visible} onRequestClose={() => setVisible(false)}>
+      <GestureViewer
+        data={images}
+        renderItem={renderImage}
+        ListComponent={FlatList}
+        onDismiss={() => setVisible(false)}
+      />
+    </Modal>
+  );
+}
+```
+
+## [useGestureViewerController](/guide/usage/programmatic-control.html)
+
+`useGestureViewerController` 훅을 사용하여 `GestureViewer`를 프로그래밍 방식으로 제어할 수 있습니다.
+
+```tsx
+import { GestureViewer, useGestureViewerController } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const {
+    goToIndex,
+    goToPrevious,
+    goToNext,
+    currentIndex,
+    totalCount,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    rotate
+  } = useGestureViewerController();
+
+  return (
+    <View>
+      <GestureViewer
+        data={images}
+        renderItem={renderImage}
+      />
+      {/* Navigation Controls */}
+      <View>
+        <Feather.Button name="chevron-left" onPress={goToPrevious} />
+        <Button title="Jump to index 2" onPress={() => goToIndex(2)} />
+        <Feather.Button name="chevron-right" onPress={goToNext} />
+        <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
+      </View>
+    </View>
+  );
+}
+```
+
+## [useGestureViewerEvent](/guide/usage/handling-viewer-events.html)
+
+`useGestureViewerEvent` 훅을 사용하여 `GestureViewer`의 특정 이벤트를 구독할 수 있습니다. 줌이나 회전과 같은 실시간 제스처 변화에 반응할 수 있습니다.
+
+```tsx
+import { GestureViewer, useGestureViewerEvent } from 'react-native-gesture-image-viewer';
+
+function App() {
+  useGestureViewerEvent('zoomChange', (data) => {
+    console.log(`Zoom changed from ${data.previousScale} to ${data.scale}`);
+  });
+
+  useGestureViewerEvent('rotationChange', (data) => {
+    console.log(`Rotation changed from ${data.previousRotation}° to ${data.rotation}°`);
+  });
+
+  return (
+    <GestureViewer
+      data={images}
+      renderItem={renderImage}
+    />
+  );
+}
+```

@@ -1,0 +1,83 @@
+# Programmatic Control
+
+You can programmatically control the `GestureViewer` using the `useGestureViewerController` hook.
+
+```tsx
+import { GestureViewer, useGestureViewerController } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const {
+    goToIndex,
+    goToPrevious,
+    goToNext,
+    currentIndex,
+    totalCount,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    rotate
+  } = useGestureViewerController();
+
+  return (
+    <View>
+      <GestureViewer
+        data={images}
+        renderItem={renderImage}
+      />
+      {/* Zoom Controls */}
+      <View>
+        <Feather.Button name="zoom-in" onPress={() => zoomIn(0.25)} />
+        <Feather.Button name="zoom-out" onPress={() => zoomOut(0.25)} />
+        <Feather.Button
+          name="refresh-cw"
+          onPress={() => {
+            rotate(0);
+            resetZoom();
+          }}
+        />
+        <Feather.Button name="rotate-cw" onPress={() => rotate(90)} />
+        <Feather.Button name="rotate-ccw" onPress={() => rotate(90, false)} />
+      </View>
+      {/* Navigation Controls */}
+      <View>
+        <Feather.Button name="chevron-left" onPress={goToPrevious} />
+        <Button title="Jump to index 2" onPress={() => goToIndex(2)} />
+        <Feather.Button name="chevron-right" onPress={goToNext} />
+        <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
+      </View>
+    </View>
+  );
+}
+```
+
+## `useGestureViewerController` API Reference
+
+| Property | Description | Type | Default |
+|:---------|:------------|:-----|:-------:|
+| `goToIndex` | Navigate to a specific index. | `(index: number) => void` | - |
+| `goToPrevious` | Navigate to the previous item. | `() => void` | - |
+| `goToNext` | Navigate to the next item. | `() => void` | - |
+| `currentIndex` | The index of the currently displayed item. | `number` | `0` |
+| `totalCount` | The total number of items. | `number` | `0` |
+| `zoomIn` | Zoom in by the specified multiplier. | `(multiplier?: number) => void` | `0.25` |
+| `zoomOut` | Zoom out by the specified multiplier. | `(multiplier?: number) => void` | `0.25` |
+| `resetZoom` | Reset zoom to the specified scale. | `(scale?: number) => void` | `1` |
+| `rotate` | Rotate by the specified angle. | `(angle?: number, clockwise?: boolean) => void` | `90, true` |
+
+### Parameters
+
+- `zoomIn(multiplier?)`
+  - **multiplier**: The multiplier for zooming in (range: `0.01 ~ 1`)
+  - Example: `zoomIn(0.5)` → Zoom in by an additional 50% of the current scale
+- `zoomOut(multiplier?)`
+  - **multiplier**: The multiplier for zooming out (range: `0.01 ~ 1`) 
+  - Example: `zoomOut(0.3)` → Zoom out by dividing the current scale by 1.3
+- `resetZoom(scale?)`
+  - **scale**: The scale value to reset to
+  - Example: `resetZoom(1.5)` → Reset to 1.5x scale
+- `rotate(angle?, clockwise?)`
+  - **angle**: The angle to rotate (0, 90, 180, 270, 360)
+  - **clockwise**: The direction to rotate (true: clockwise, false: counter-clockwise)
+  - Example: `rotate(90)` → Rotate 90 degrees clockwise
+  - Example: `rotate(90, false)` → Rotate 90 degrees counter-clockwise
+  - Example: `rotate(0)` → Reset rotation

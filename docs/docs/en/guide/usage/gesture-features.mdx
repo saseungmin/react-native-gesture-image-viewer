@@ -1,0 +1,43 @@
+# Gesture Features
+
+`react-native-gesture-image-viewer` supports various gestures essential for viewers. Please refer to the examples below for default gesture actions.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  return (
+    <GestureViewer
+      data={images}
+      renderItem={renderImage}
+      enableDismissGesture={true}
+      enableSwipeGesture={true}
+      enableZoomGesture={true}
+      enableDoubleTapGesture={true}
+      enableZoomPanGesture={true}
+    />
+  )
+}
+```
+
+## Props
+
+### `enableDismissGesture` (default: `true`)
+
+Calls `onDismiss` function when swiping down. Useful for closing modals with downward swipe gestures.
+
+### `enableSwipeGesture` (default: `true`)
+
+Controls left/right swipe gestures. When `false`, horizontal gestures are disabled.
+
+### `enableZoomGesture` (default: `true`)
+
+Controls two-finger pinch gestures with focal point zooming. When `false`, pinch zoom is disabled. Zoom centers on the point between your two fingers for intuitive scaling.
+
+### `enableDoubleTapGesture` (default: `true`)
+
+Controls double-tap zoom gestures with precision targeting. When `false`, double-tap zoom is disabled. Zoom centers exactly on the tapped location.
+
+### `enableZoomPanGesture` (default: `true`)
+
+Enables panning when zoomed in with automatic boundary detection. When `false`, movement is disabled during zoom. Prevents content from moving outside visible screen area.

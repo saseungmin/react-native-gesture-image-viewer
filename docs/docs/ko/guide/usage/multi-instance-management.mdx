@@ -1,0 +1,43 @@
+# 다중 인스턴스 관리
+
+여러 개의 `GestureViewer` 인스턴스를 효율적으로 관리하고 싶은 경우 `id` 값을 적용하면 여러 개의 `GestureViewer`를 사용할 수 있습니다.   
+`GestureViewer`는 컴포넌트가 언마운트되면 메모리에서 자동으로 인스턴스가 제거되어 메모리 관리를 수동으로 할 필요가 없습니다.   
+
+:::note
+`id` 기본값은 `default`입니다.
+:::
+
+```tsx
+import { GestureViewer, useGestureViewerController, useGestureViewerEvent } from 'react-native-gesture-image-viewer';
+
+const firstViewerId = 'firstViewerId';
+const secondViewerId = 'secondViewerId';
+
+function App() {
+  const { currentIndex: firstCurrentIndex, totalCount: firstTotalCount } = useGestureViewerController(firstViewerId);
+  const { currentIndex: secondCurrentIndex, totalCount: secondTotalCount } = useGestureViewerController(secondViewerId);
+
+  useGestureViewerEvent(firstViewerId, 'zoomChange', (data) => {
+    console.log(`Gallery zoom: ${data.scale}x`);
+  });
+
+  useGestureViewerEvent(secondViewerId, 'zoomChange', (data) => {
+    console.log(`Gallery zoom: ${data.scale}x`);
+  });
+
+  return (
+    <View>
+      <GestureViewer
+        id={firstViewerId}
+        data={images}
+        renderItem={renderImage}
+      />
+      <GestureViewer
+        id={secondViewerId}
+        data={images}
+        renderItem={renderImage}
+      />
+    </View>
+  );
+}
+```

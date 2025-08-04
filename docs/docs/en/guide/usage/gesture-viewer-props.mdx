@@ -1,0 +1,224 @@
+# GestureViewer Props
+
+### `enableLoop` (default: `false`)
+
+Enables loop mode. When `true`, navigating next from the last item goes to the first item, and navigating previous from the first item goes to the last item.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  return (
+    <GestureViewer
+      enableLoop={true}
+    />
+  );
+}
+```
+
+### `onIndexChange`
+
+The `onIndexChange` callback function is called when the `index` value changes.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  return (
+    <GestureViewer
+      onIndexChange={setCurrentIndex}
+    />
+  );
+}
+```
+
+### `useSnap` (default: `false`)
+
+Sets the scroll behavior mode. `false` (default) uses paging mode, `true` uses snap mode.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  return (
+    <GestureViewer
+      data={data}
+      renderItem={renderItem}
+      useSnap={true}
+    />
+  );
+}
+```
+
+### `itemSpacing`
+Sets the spacing between items in pixels. Only applied when `useSnap` is `true`.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  return (
+    <GestureViewer
+      data={data}
+      renderItem={renderItem}
+      useSnap={true}
+      itemSpacing={16} // 16px spacing between items
+    />
+  );
+}
+```
+
+### `initialIndex` (default: `0`)
+Sets the initial index value.
+
+### `dismissThreshold` (default: `80`)
+`dismissThreshold` controls when `onDismiss` is called by applying a threshold value during vertical gestures.
+
+### `resistance` (default: `2`)
+`resistance` controls the range of vertical movement by applying resistance during vertical gestures.
+
+### `maxZoomScale` (default: `2`)
+Controls the maximum zoom scale multiplier.
+
+## `GestureViewerProps` interface
+
+```tsx title="GestureViewerProps"
+export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
+  /**
+   * When you want to efficiently manage multiple `GestureViewer` instances, you can use the `id` prop to use multiple `GestureViewer` components.
+   * @remark `GestureViewer` automatically removes instances from memory when components are unmounted, so no manual memory management is required.
+   * @defaultValue 'default'
+   */
+  id?: string;
+  /**
+   * The data to display in the `GestureViewer`.
+   */
+  data: T[];
+  /**
+   * The index of the item to display in the `GestureViewer` when the component is mounted.
+   * @defaultValue 0
+   */
+  initialIndex?: number;
+  /**
+   * A callback function that is called when the index of the item changes.
+   */
+  onIndexChange?: (index: number) => void;
+  /**
+   * A callback function that is called when the `GestureViewer` is dismissed.
+   */
+  onDismiss?: () => void;
+  /**
+   * A callback function that is called to render the item.
+   */
+  renderItem: (item: T, index: number) => React.ReactElement;
+  /**
+   * A callback function that is called to render the container.
+   */
+  renderContainer?: (children: React.ReactElement) => React.ReactElement;
+  /**
+   * Support for any list component like `ScrollView`, `FlatList`, `FlashList` through the `ListComponent` prop.
+   */
+  ListComponent: LC;
+  /**
+   * The width of the `GestureViewer`.
+   * @remark If you don't set this prop, the width of the `GestureViewer` will be the same as the width of the screen.
+   * @defaultValue screen width
+   */
+  width?: number;
+  /**
+   * Enables snap scrolling mode.
+   *
+   * @remark
+   * **`false` (default)**: Paging mode (`pagingEnabled: true`)
+   * - Scrolls by full screen size increments
+   *
+   * **`true`**: Snap mode (`snapToInterval` auto-calculated)
+   * - `snapToInterval` is automatically calculated based on `width` and `itemSpacing` values
+   * - Use this option when you need item spacing
+   * @defaultValue false
+   *
+   */
+  useSnap?: boolean;
+  /**
+   * `dismissThreshold` controls when `onDismiss` is called by applying a threshold value during vertical gestures.
+   * @defaultValue 80
+   */
+  dismissThreshold?: number;
+  // swipeThreshold?: number;
+  // velocityThreshold?: number;
+  /**
+   * Calls `onDismiss` function when swiping down.
+   * @remark Useful for closing modals with downward swipe gestures.
+   * @defaultValue true
+   */
+  enableDismissGesture?: boolean;
+  /**
+   * Controls left/right swipe gestures.
+   * @remark When `false`, horizontal gestures are disabled.
+   * @defaultValue true
+   */
+  enableSwipeGesture?: boolean;
+  /**
+   * `resistance` controls the range of vertical movement by applying resistance during vertical gestures.
+   * @defaultValue 2
+   */
+  resistance?: number;
+  /**
+   * The props to pass to the list component.
+   * @remark The `listProps` provides **type inference based on the selected list component**, ensuring accurate autocompletion and type safety in your IDE.
+   */
+  listProps?: Partial<ConditionalListProps<LC>>;
+  /**
+   * The style of the backdrop.
+   */
+  backdropStyle?: StyleProp<ViewStyle>;
+  /**
+   * The style of the container.
+   */
+  containerStyle?: StyleProp<ViewStyle>;
+  /**
+   * By default, the background `opacity` gradually decreases from 1 to 0 during downward swipe gestures.
+   * @remark When `false`, this animation is disabled.
+   * @defaultValue true
+   */
+  animateBackdrop?: boolean;
+  /**
+   * Only works when zoom is active, allows moving item position when zoomed.
+   * @remark When `false`, gesture movement is disabled during zoom.
+   * @defaultValue true
+   */
+  enableZoomPanGesture?: boolean;
+  /**
+   * Controls two-finger pinch gestures.
+   * @remark When `false`, two-finger zoom gestures are disabled.
+   * @defaultValue true
+   */
+  enableZoomGesture?: boolean;
+  /**
+   * Controls double-tap zoom gestures.
+   * @remark When `false`, double-tap zoom gestures are disabled.
+   * @defaultValue true
+   */
+  enableDoubleTapGesture?: boolean;
+  /**
+   * Enables infinite loop navigation.
+   * @defaultValue false
+   */
+  enableLoop?: boolean;
+  /**
+   * The maximum zoom scale.
+   * @defaultValue 2
+   */
+  maxZoomScale?: number;
+  /**
+   * The spacing between items in pixels.
+   * @remark Only applied when `useSnap` is `true`.
+   * @defaultValue 0
+   */
+  itemSpacing?: number;
+}
+```
