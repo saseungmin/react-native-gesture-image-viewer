@@ -44,8 +44,8 @@ import { Tab, Tabs } from '@rspress/core/theme';
       return (
         <Modal
           isVisible={visible}
-          onBackButtonPress={() => setIsVisible(false)}
-          onBackdropPress={() => setIsVisible(false)}
+          onBackButtonPress={() => setVisible(false)}
+          onBackdropPress={() => setVisible(false)}
           hasBackdrop={false}
           style={styles.modal}
           useNativeDriver={true}

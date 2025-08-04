@@ -44,8 +44,8 @@ You can create a viewer using any `Modal` of your choice as shown below:
       return (
         <Modal
           isVisible={visible}
-          onBackButtonPress={() => setIsVisible(false)}
-          onBackdropPress={() => setIsVisible(false)}
+          onBackButtonPress={() => setVisible(false)}
+          onBackdropPress={() => setVisible(false)}
           hasBackdrop={false}
           style={styles.modal}
           useNativeDriver={true}
