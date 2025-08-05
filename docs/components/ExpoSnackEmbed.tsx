@@ -12,15 +12,20 @@ export function ExpoSnackEmbed({ snackId, platform = 'web', preview = true, heig
 
   useEffect(() => {
     const loadAndInitialize = async () => {
-      if (!document.querySelector('script[src="https://snack.expo.dev/embed.js"]')) {
-        const script = document.createElement('script');
-        script.src = 'https://snack.expo.dev/embed.js';
-        script.async = true;
-        document.head.appendChild(script);
+      try {
+        if (!document.querySelector('script[src="https://snack.expo.dev/embed.js"]')) {
+          const script = document.createElement('script');
+          script.src = 'https://snack.expo.dev/embed.js';
+          script.async = true;
+          document.head.appendChild(script);
 
-        await new Promise((resolve) => {
-          script.onload = resolve;
-        });
+          await new Promise((resolve, reject) => {
+            script.onload = resolve;
+            script.onerror = reject;
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load Expo Snack embed:', error);
       }
 
       setTimeout(() => {
