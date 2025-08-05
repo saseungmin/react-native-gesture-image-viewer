@@ -3,7 +3,7 @@
 > English | [한국어](./README-ko_kr.md)
 
 <div align="center">
-  <img src="/assets/logo.png" width="400px" /> 
+  <img src="./assets/logo.png" width="400px" alt="React Native Gesture Image Viewer logo" />
 </div>
 
 ## Overview
@@ -13,7 +13,7 @@ Have you ever struggled with implementing complex gesture handling and animation
 Existing libraries often have limited customization options or performance issues. `react-native-gesture-image-viewer` is a high-performance **universal gesture viewer** library built on React Native Reanimated and Gesture Handler, providing complete customization and intuitive gesture support for not only images but also videos, custom components, and any other content.
 
 <p align="center">
-  <img src="./assets/example.gif" width="600" />
+  <img src="./assets/example.gif" width="600" alt="Gesture and zoom demo" />
 </p>
 
 ### Key Features
@@ -32,7 +32,7 @@ Existing libraries often have limited customization options or performance issue
 
 ### 📚 Documentation
 
-Full documentation is available at: https://react-native-gesture-image-viewer.pages.dev
+Full documentation is available at: <https://react-native-gesture-image-viewer.pages.dev>
 
 ###  Examples & Demo
 
@@ -45,7 +45,7 @@ Full documentation is available at: https://react-native-gesture-image-viewer.pa
 
 ```tsx
 import { useCallback, useState } from 'react';
-import { ScrollView, Image, Modal, View, Button } from 'react-native';
+import { ScrollView, Image, Modal, View, Text, Button } from 'react-native';
 import { GestureViewer, useGestureViewerController, useGestureViewerEvent } from 'react-native-gesture-image-viewer';
 
 function App() {
