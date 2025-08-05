@@ -74,7 +74,7 @@
   "bugs": {
     "url": "https://github.com/saseungmin/react-native-gesture-image-viewer/issues"
   },
-  "homepage": "https://github.com/saseungmin/react-native-gesture-image-viewer#readme",
+  "homepage": "https://react-native-gesture-image-viewer.pages.dev",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },

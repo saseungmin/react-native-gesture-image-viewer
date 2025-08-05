@@ -25,19 +25,25 @@ Therefore, you **must install** React Native Reanimated and Gesture Handler befo
 ## Basic Usage
 
 `react-native-gesture-image-viewer` is a library focused purely on gesture interactions for complete customization.   
-You can create a viewer using any `Modal` of your choice as shown below:   
 
 ```tsx
-import { ScrollView, Image, Modal } from 'react-native';
-import { GestureViewer } from 'react-native-gesture-image-viewer';
+import { useCallback, useState } from 'react';
+import { ScrollView, Image, Modal, View, Button } from 'react-native';
+import { GestureViewer, useGestureViewerController, useGestureViewerEvent } from 'react-native-gesture-image-viewer';
 
 function App() {
   const images = [...];
   const [visible, setVisible] = useState(false);
 
+ const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount } = useGestureViewerController();
+
   const renderImage = useCallback((imageUrl: string) => {
     return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
   }, []);
+
+  useGestureViewerEvent('zoomChange', (data) => {
+    console.log(`Zoom changed from ${data.previousScale} to ${data.scale}`);
+  });
 
   return (
     <Modal visible={visible} onRequestClose={() => setVisible(false)}>
@@ -47,6 +53,12 @@ function App() {
         ListComponent={ScrollView}
         onDismiss={() => setVisible(false)}
       />
+      <View>
+        <Button title="<" onPress={goToPrevious} />
+        <Button title="Jump to index 2" onPress={() => goToIndex(2)} />
+        <Button title=">" onPress={goToNext} />
+        <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
+      </View>
     </Modal>
   );
 }
