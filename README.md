@@ -34,7 +34,7 @@ Existing libraries often have limited customization options or performance issue
 
 Full documentation is available at: <https://react-native-gesture-image-viewer.pages.dev>
 
-###  Examples & Demo
+### Examples & Demo
 
 - [📁 Example Project](/example/) - Real implementation code with various use cases
 - [🤖 Expo Go](https://snack.expo.dev/@harang/react-native-gesture-image-viewer) - Try it instantly on Snack Expo
