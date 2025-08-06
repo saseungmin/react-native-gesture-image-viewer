@@ -6,5 +6,7 @@
     "docs": "1.0.0",
     "react-native-gesture-image-viewer-example": "1.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "tame-hornets-lay"
+  ]
 }
