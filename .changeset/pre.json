@@ -1,0 +1,10 @@
+{
+  "mode": "pre",
+  "tag": "2.0.0-beta.0",
+  "initialVersions": {
+    "react-native-gesture-image-viewer": "1.6.2",
+    "docs": "1.0.0",
+    "react-native-gesture-image-viewer-example": "1.0.0"
+  },
+  "changesets": []
+}

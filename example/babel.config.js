@@ -13,8 +13,8 @@ module.exports = (api) => {
       plugins: [
         // for web
         '@babel/plugin-proposal-export-namespace-from',
-        // react-native-reanimated/plugin has to be listed last.
-        ['react-native-reanimated/plugin'],
+        // react-native-worklets/plugin has to be listed last.
+        'react-native-worklets/plugin',
       ],
     },
     { root, pkg },

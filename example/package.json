@@ -20,9 +20,10 @@
     "react-native": "0.79.5",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-gesture-image-viewer": "workspace:*",
-    "react-native-reanimated": "~3.17.4",
+    "react-native-reanimated": "~4.0.1",
     "react-native-safe-area-context": "5.4.0",
-    "react-native-web": "~0.20.0"
+    "react-native-web": "~0.20.0",
+    "react-native-worklets": "^0.4.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

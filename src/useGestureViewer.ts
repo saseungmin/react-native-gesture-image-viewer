@@ -9,13 +9,13 @@ import { Gesture } from 'react-native-gesture-handler';
 import {
   Easing,
   interpolate,
-  runOnJS,
   useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { runOnJS } from 'react-native-worklets';
 import type GestureViewerManager from './GestureViewerManager';
 import { registry } from './GestureViewerRegistry';
 import type { GestureViewerProps } from './types';
@@ -293,8 +293,11 @@ export const useGestureViewer = <T = any>({
         }
 
         translateY.value = withSpring(0, {
-          damping: 15,
-          stiffness: 150,
+          stiffness: 600,
+          damping: 50,
+          mass: 4,
+          overshootClamping: false,
+          energyThreshold: 6e-9,
         });
       });
   }, [translateY, dismissThreshold, enableDismissGesture, onDismiss, resistance, isZoomed]);

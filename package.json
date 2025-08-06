@@ -95,14 +95,16 @@
     "react-native": "0.79.5",
     "react-native-builder-bob": "^0.40.12",
     "react-native-gesture-handler": "^2.24.0",
-    "react-native-reanimated": "^3.18.0",
+    "react-native-reanimated": "^4.0.1",
+    "react-native-worklets": "^0.4.1",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-native": ">=0.75.0",
     "react-native-gesture-handler": ">=2.24.0",
-    "react-native-reanimated": ">=3.0.0"
+    "react-native-reanimated": ">=4.0.0",
+    "react-native-worklets": "*"
   },
   "workspaces": [
     ".",
