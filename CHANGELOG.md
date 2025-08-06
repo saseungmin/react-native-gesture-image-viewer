@@ -4,14 +4,14 @@
 
 ### Major Changes
 
-- db35df7: feat: migrated reanimated v4
+- db35df7: feat: upgraded react-native-reanimated v4
 
   - Upgraded react-native-reanimated to version 4.x.
   - Added react-native-worklets as a dependency.
   - Enhanced `withSpring` animation responsiveness and behavior.
   - https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-3.x
 
-  Migration Reanimated Configure Guide:
+  Reanimated Configure Migration Guide:
 
   ```bash
   npm install react-native-worklets
