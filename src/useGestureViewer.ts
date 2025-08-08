@@ -58,6 +58,7 @@ export const useGestureViewer = <T = any>({
   const listRef = useRef<any>(null);
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const onIndexChangeRef = useRef<((index: number) => void) | null>(null);
+  const lastEmittedIndexRef = useRef<number>(null);
 
   const initialTranslateY = useSharedValue(0);
   const initialTranslateX = useSharedValue(0);
@@ -130,9 +131,7 @@ export const useGestureViewer = <T = any>({
   );
 
   useEffect(() => {
-    if (onIndexChange) {
-      onIndexChangeRef.current = onIndexChange;
-    }
+    onIndexChangeRef.current = onIndexChange ?? null;
   });
 
   useEffect(() => {
@@ -148,9 +147,14 @@ export const useGestureViewer = <T = any>({
 
       setManager(manager);
 
+      lastEmittedIndexRef.current = null;
+
       if (manager) {
         unsubscribeRef.current = manager.subscribe((state) => {
-          onIndexChangeRef.current?.(state.currentIndex);
+          if (lastEmittedIndexRef.current !== state.currentIndex) {
+            lastEmittedIndexRef.current = state.currentIndex;
+            onIndexChangeRef.current?.(state.currentIndex);
+          }
         });
         return;
       }
@@ -244,7 +248,7 @@ export const useGestureViewer = <T = any>({
         scrollTo(jumpToIndex, false);
       }
 
-      const currentIndex = manager?.getState() || 0;
+      const currentIndex = manager?.getState() ?? 0;
 
       if (realIndex !== currentIndex && realIndex >= 0 && realIndex < dataLength) {
         if (manager) {
