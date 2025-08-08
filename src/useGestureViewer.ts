@@ -53,10 +53,11 @@ export const useGestureViewer = <T = any>({
 
   const [isZoomed, setIsZoomed] = useState(false);
   const [isRotated, setIsRotated] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [manager, setManager] = useState<GestureViewerManager | null>(null);
 
+  const listRef = useRef<any>(null);
   const unsubscribeRef = useRef<(() => void) | null>(null);
+  const onIndexChangeRef = useRef<((index: number) => void) | null>(null);
 
   const initialTranslateY = useSharedValue(0);
   const initialTranslateX = useSharedValue(0);
@@ -67,8 +68,6 @@ export const useGestureViewer = <T = any>({
   const scale = useSharedValue(1);
   const backdropOpacity = useSharedValue(1);
   const rotation = useSharedValue(0);
-
-  const listRef = useRef<any>(null);
 
   const dataLength = data?.length || 0;
 
@@ -131,6 +130,18 @@ export const useGestureViewer = <T = any>({
   );
 
   useEffect(() => {
+    if (onIndexChange) {
+      onIndexChangeRef.current = onIndexChange;
+    }
+  });
+
+  useEffect(() => {
+    return () => {
+      onIndexChangeRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
     const handleManagerChange = (manager: GestureViewerManager | null) => {
       unsubscribeRef.current?.();
       unsubscribeRef.current = null;
@@ -138,14 +149,11 @@ export const useGestureViewer = <T = any>({
       setManager(manager);
 
       if (manager) {
-        setCurrentIndex(manager.getState().currentIndex);
         unsubscribeRef.current = manager.subscribe((state) => {
-          setCurrentIndex(state.currentIndex);
+          onIndexChangeRef.current?.(state.currentIndex);
         });
         return;
       }
-
-      setCurrentIndex(0);
     };
 
     const unsubscribeFromRegistry = registry.subscribeToManager(id, handleManagerChange);
@@ -195,10 +203,6 @@ export const useGestureViewer = <T = any>({
   }, [manager]);
 
   useEffect(() => {
-    onIndexChange?.(currentIndex);
-  }, [currentIndex, onIndexChange]);
-
-  useEffect(() => {
     translateY.value = 0;
     translateX.value = 0;
     scale.value = 1;
@@ -240,10 +244,11 @@ export const useGestureViewer = <T = any>({
         scrollTo(jumpToIndex, false);
       }
 
+      const currentIndex = manager?.getState() || 0;
+
       if (realIndex !== currentIndex && realIndex >= 0 && realIndex < dataLength) {
         if (manager) {
           manager.setCurrentIndex(realIndex);
-          setCurrentIndex(realIndex);
           manager.notifyStateChange();
         }
 
@@ -259,7 +264,6 @@ export const useGestureViewer = <T = any>({
     [
       scrollTo,
       manager,
-      currentIndex,
       dataLength,
       width,
       itemSpacing,
@@ -492,7 +496,6 @@ export const useGestureViewer = <T = any>({
   }, [manager]);
 
   return {
-    currentIndex,
     dataLength,
     translateY,
     listRef,
