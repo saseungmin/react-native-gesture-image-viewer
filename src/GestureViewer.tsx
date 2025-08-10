@@ -35,6 +35,8 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
 
   const loopData = useMemo(() => createLoopData(dataRef, enableLoop), [enableLoop]);
 
+  const isScrollView = isScrollViewLike(Component);
+
   const {
     listRef,
     isZoomed,
@@ -71,7 +73,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
     ({ item, index }: { item: T; index: number }) => {
       return (
         <View
-          key={keyExtractor(item, index)}
+          key={isScrollView ? keyExtractor(item, index) : undefined}
           style={[
             {
               width,
@@ -86,7 +88,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
         </View>
       );
     },
-    [width, itemSpacing, renderItemProp, keyExtractor],
+    [width, itemSpacing, renderItemProp, keyExtractor, isScrollView],
   );
 
   const getItemLayout = useCallback(
@@ -141,7 +143,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
             {...(Platform.OS === 'web' &&
               isFlashListLike(Component) && { dataSet: { 'flash-list-paging-enabled-fix': true } })}
           >
-            {isScrollViewLike(Component) ? (
+            {isScrollView ? (
               <Component ref={listRef} {...commonProps} {...listProps}>
                 {loopData.map((item, index) => renderItem({ item, index }))}
               </Component>
