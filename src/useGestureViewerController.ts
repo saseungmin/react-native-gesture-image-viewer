@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
 import type GestureViewerManager from './GestureViewerManager';
 import { registry } from './GestureViewerRegistry';
 import type { GestureViewerController, GestureViewerControllerState } from './types';
@@ -56,48 +56,62 @@ import type { GestureViewerController, GestureViewerControllerState } from './ty
  * ```
  */
 export const useGestureViewerController = (id = 'default'): GestureViewerController => {
-  const [state, setState] = useState<GestureViewerControllerState>({
-    currentIndex: 0,
-    totalCount: 0,
-  });
+  const managerRef = useRef<GestureViewerManager | null>(null);
+  const stateRef = useRef<GestureViewerControllerState>({ currentIndex: 0, totalCount: 0 });
 
-  const [manager, setManager] = useState<GestureViewerManager | null>(null);
-  const unsubscribeRef = useRef<(() => void) | null>(null);
+  const updateState = useCallback((newState: GestureViewerControllerState, onStoreChange: () => void) => {
+    if (
+      stateRef.current.currentIndex !== newState.currentIndex ||
+      stateRef.current.totalCount !== newState.totalCount
+    ) {
+      stateRef.current = newState;
+      onStoreChange();
+    }
+  }, []);
 
-  useEffect(() => {
-    const handleManagerChange = (newManager: GestureViewerManager | null) => {
-      unsubscribeRef.current?.();
-      unsubscribeRef.current = null;
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => {
+      let unsubscribeFromManager: (() => void) | null = null;
 
-      setManager(newManager);
+      const unsubscribeFromRegistry = registry.subscribeToManager(id, (newManager) => {
+        managerRef.current = newManager;
 
-      if (newManager) {
-        setState(newManager.getState());
-        unsubscribeRef.current = newManager.subscribe(setState);
-        return;
-      }
+        if (newManager) {
+          updateState(newManager.getState(), onStoreChange);
 
-      setState({ currentIndex: 0, totalCount: 0 });
-    };
+          unsubscribeFromManager = newManager.subscribe((newState) => {
+            updateState(newState, onStoreChange);
+          });
+          return;
+        }
 
-    const unsubscribeFromRegistry = registry.subscribeToManager(id, handleManagerChange);
+        updateState({ currentIndex: 0, totalCount: 0 }, onStoreChange);
+      });
 
-    return () => {
-      unsubscribeFromRegistry();
-      unsubscribeRef.current?.();
-    };
-  }, [id]);
+      return () => {
+        unsubscribeFromRegistry();
+        unsubscribeFromManager?.();
+      };
+    },
+    [id, updateState],
+  );
+
+  const getSnapshot = useCallback(() => {
+    return stateRef.current;
+  }, []);
+
+  const state = useSyncExternalStore(subscribe, getSnapshot);
 
   const noopFunction = useMemo(() => () => {}, []);
 
   return {
-    goToIndex: manager?.goToIndex || noopFunction,
-    goToPrevious: manager?.goToPrevious || noopFunction,
-    goToNext: manager?.goToNext || noopFunction,
-    zoomIn: manager?.zoomIn || noopFunction,
-    zoomOut: manager?.zoomOut || noopFunction,
-    resetZoom: manager?.resetZoom || noopFunction,
-    rotate: manager?.rotate || noopFunction,
+    goToIndex: managerRef.current?.goToIndex || noopFunction,
+    goToPrevious: managerRef.current?.goToPrevious || noopFunction,
+    goToNext: managerRef.current?.goToNext || noopFunction,
+    zoomIn: managerRef.current?.zoomIn || noopFunction,
+    zoomOut: managerRef.current?.zoomOut || noopFunction,
+    resetZoom: managerRef.current?.resetZoom || noopFunction,
+    rotate: managerRef.current?.rotate || noopFunction,
     ...state,
   };
 };
