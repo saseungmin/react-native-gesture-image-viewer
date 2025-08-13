@@ -82,11 +82,11 @@ export const useGestureViewerController = (id = 'default'): GestureViewerControl
         managerRef.current = newManager;
 
         if (newManager) {
-          updateState(newManager.getState(), onStoreChange);
-
           unsubscribeFromManager = newManager.subscribe((newState) => {
             updateState(newState, onStoreChange);
           });
+
+          updateState(newManager.getState(), onStoreChange);
           return;
         }
 
