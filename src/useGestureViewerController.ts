@@ -64,7 +64,10 @@ export const useGestureViewerController = (id = 'default'): GestureViewerControl
       stateRef.current.currentIndex !== newState.currentIndex ||
       stateRef.current.totalCount !== newState.totalCount
     ) {
-      stateRef.current = newState;
+      stateRef.current = {
+        currentIndex: newState.currentIndex,
+        totalCount: newState.totalCount,
+      };
       onStoreChange();
     }
   }, []);
@@ -74,6 +77,8 @@ export const useGestureViewerController = (id = 'default'): GestureViewerControl
       let unsubscribeFromManager: (() => void) | null = null;
 
       const unsubscribeFromRegistry = registry.subscribeToManager(id, (newManager) => {
+        unsubscribeFromManager?.();
+        unsubscribeFromManager = null;
         managerRef.current = newManager;
 
         if (newManager) {
@@ -102,16 +107,35 @@ export const useGestureViewerController = (id = 'default'): GestureViewerControl
 
   const state = useSyncExternalStore(subscribe, getSnapshot);
 
-  const noopFunction = useMemo(() => () => {}, []);
+  const controller = useMemo<Omit<GestureViewerController, 'currentIndex' | 'totalCount'>>(
+    () => ({
+      goToIndex: (index) => {
+        managerRef.current?.goToIndex(index);
+      },
+      goToPrevious: () => {
+        managerRef.current?.goToPrevious();
+      },
+      goToNext: () => {
+        managerRef.current?.goToNext();
+      },
+      zoomIn: (multiplier) => {
+        managerRef.current?.zoomIn(multiplier);
+      },
+      zoomOut: (multiplier) => {
+        managerRef.current?.zoomOut(multiplier);
+      },
+      resetZoom: (scale) => {
+        managerRef.current?.resetZoom(scale);
+      },
+      rotate: (angle, clockwise) => {
+        managerRef.current?.rotate(angle, clockwise);
+      },
+    }),
+    [],
+  );
 
   return {
-    goToIndex: managerRef.current?.goToIndex || noopFunction,
-    goToPrevious: managerRef.current?.goToPrevious || noopFunction,
-    goToNext: managerRef.current?.goToNext || noopFunction,
-    zoomIn: managerRef.current?.zoomIn || noopFunction,
-    zoomOut: managerRef.current?.zoomOut || noopFunction,
-    resetZoom: managerRef.current?.resetZoom || noopFunction,
-    rotate: managerRef.current?.rotate || noopFunction,
+    ...controller,
     ...state,
   };
 };
