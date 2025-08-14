@@ -3,12 +3,7 @@ import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { useCallback, useState } from 'react';
 import { Button, Modal, StyleSheet, Text, View } from 'react-native';
-import {
-  GestureViewer,
-  useGestureViewerController,
-  useGestureViewerEvent,
-  useGestureViewerState,
-} from 'react-native-gesture-image-viewer';
+import { GestureViewer, useGestureViewerController, useGestureViewerEvent } from 'react-native-gesture-image-viewer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const images = [
@@ -19,13 +14,13 @@ const images = [
   'https://picsum.photos/200/400',
 ];
 
-function Example() {
+function V1Example() {
   const [visible, setVisible] = useState(false);
   const [enableLoop, setEnableLoop] = useState(false);
 
-  const { goToIndex, goToPrevious, goToNext, zoomIn, zoomOut, resetZoom, rotate } = useGestureViewerController();
-
-  const { currentIndex, totalCount } = useGestureViewerState();
+  // @ts-ignore
+  const { goToIndex, goToPrevious, goToNext, zoomIn, zoomOut, resetZoom, rotate, currentIndex, totalCount } =
+    useGestureViewerController();
 
   const insets = useSafeAreaInsets();
 
@@ -189,4 +184,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Example;
+export default V1Example;

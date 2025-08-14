@@ -1,9 +1,9 @@
 import { type SharedValue, withTiming } from 'react-native-reanimated';
 import type {
-  GestureViewerControllerState,
   GestureViewerEventCallback,
   GestureViewerEventData,
   GestureViewerEventType,
+  GestureViewerState,
 } from './types';
 import { createBoundsConstraint, createScrollAction } from './utils';
 
@@ -24,7 +24,7 @@ class GestureViewerManager {
 
   private loopCallback: (() => void) | null = null;
 
-  private listeners = new Set<(state: GestureViewerControllerState) => void>();
+  private listeners = new Set<(state: GestureViewerState) => void>();
   private eventListeners = new Map<GestureViewerEventType, Set<(data: any) => void>>();
 
   private notifyListeners() {
@@ -33,7 +33,7 @@ class GestureViewerManager {
     this.listeners.forEach((listener) => listener(state));
   }
 
-  subscribe(listener: (state: GestureViewerControllerState) => void) {
+  subscribe(listener: (state: GestureViewerState) => void) {
     this.listeners.add(listener);
 
     return () => {
