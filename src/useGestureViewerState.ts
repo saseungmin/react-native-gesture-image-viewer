@@ -1,5 +1,4 @@
 import { useCallback, useRef, useSyncExternalStore } from 'react';
-import type GestureViewerManager from './GestureViewerManager';
 import { registry } from './GestureViewerRegistry';
 import type { GestureViewerState } from './types';
 
@@ -36,7 +35,6 @@ import type { GestureViewerState } from './types';
  * ```
  */
 export const useGestureViewerState = (id = 'default'): GestureViewerState => {
-  const managerRef = useRef<GestureViewerManager | null>(null);
   const stateRef = useRef<GestureViewerState>({ currentIndex: 0, totalCount: 0 });
 
   const updateState = useCallback((newState: GestureViewerState, onStoreChange: () => void) => {
@@ -56,7 +54,6 @@ export const useGestureViewerState = (id = 'default'): GestureViewerState => {
       const unsubscribeFromRegistry = registry.subscribeToManager(id, (newManager) => {
         unsubscribeFromManager?.();
         unsubscribeFromManager = null;
-        managerRef.current = newManager;
 
         if (newManager) {
           unsubscribeFromManager = newManager.subscribe((newState) => {

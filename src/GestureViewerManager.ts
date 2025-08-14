@@ -77,7 +77,7 @@ class GestureViewerManager {
     this.emitEvent('rotationChange', { rotation, previousRotation });
   };
 
-  getState() {
+  getState(): GestureViewerState {
     return {
       currentIndex: this.currentIndex,
       totalCount: this.dataLength,

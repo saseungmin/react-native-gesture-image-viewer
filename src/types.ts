@@ -167,8 +167,10 @@ export type GestureViewerController = {
    *
    * @example
    * ```typescript
+   * const { totalCount } = useGestureViewerState();
+   *
    * controller.goToIndex(0); // Go to first item
-   * controller.goToIndex(controller.totalCount - 1); // Go to last item
+   * controller.goToIndex(totalCount - 1); // Go to last item
    * ```
    */
   goToIndex: (index: number) => void;
