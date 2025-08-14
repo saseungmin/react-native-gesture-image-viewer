@@ -29,7 +29,6 @@ type UseGestureViewerProps<T = any> = Omit<
 export const useGestureViewer = <T = any>({
   data,
   initialIndex = 0,
-  onIndexChange,
   onDismiss,
   width: customWidth,
   dismissThreshold = 80,
@@ -56,9 +55,6 @@ export const useGestureViewer = <T = any>({
   const [manager, setManager] = useState<GestureViewerManager | null>(null);
 
   const listRef = useRef<any>(null);
-  const unsubscribeRef = useRef<(() => void) | null>(null);
-  const onIndexChangeRef = useRef<((index: number) => void) | null>(null);
-  const lastEmittedIndexRef = useRef<number>(null);
 
   const initialTranslateY = useSharedValue(0);
   const initialTranslateX = useSharedValue(0);
@@ -96,14 +92,18 @@ export const useGestureViewer = <T = any>({
 
   const emitZoomChange = useCallback(
     (currentScale: number, prevScale: number | null) => {
-      manager?.emitZoomChange(currentScale, prevScale);
+      if (manager) {
+        manager.emitZoomChange(currentScale, prevScale);
+      }
     },
     [manager],
   );
 
   const emitRotationChange = useCallback(
     (currentRotation: number, prevRotation: number | null) => {
-      manager?.emitRotationChange(currentRotation, prevRotation);
+      if (manager) {
+        manager.emitRotationChange(currentRotation, prevRotation);
+      }
     },
     [manager],
   );
@@ -111,7 +111,7 @@ export const useGestureViewer = <T = any>({
   useAnimatedReaction(
     () => scale.value,
     (currentScale, previousScale) => {
-      if (manager && currentScale !== previousScale) {
+      if (currentScale !== previousScale) {
         runOnJS(emitZoomChange)(currentScale, previousScale);
       }
 
@@ -122,7 +122,7 @@ export const useGestureViewer = <T = any>({
   useAnimatedReaction(
     () => rotation.value,
     (currentRotation, previousRotation) => {
-      if (manager && currentRotation !== previousRotation) {
+      if (currentRotation !== previousRotation) {
         runOnJS(emitRotationChange)(currentRotation, previousRotation);
       }
 
@@ -131,41 +131,9 @@ export const useGestureViewer = <T = any>({
   );
 
   useEffect(() => {
-    onIndexChangeRef.current = onIndexChange ?? null;
-  });
+    const unsubscribe = registry.subscribeToManager(id, setManager);
 
-  useEffect(() => {
-    return () => {
-      onIndexChangeRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleManagerChange = (manager: GestureViewerManager | null) => {
-      unsubscribeRef.current?.();
-      unsubscribeRef.current = null;
-
-      setManager(manager);
-
-      lastEmittedIndexRef.current = null;
-
-      if (manager) {
-        unsubscribeRef.current = manager.subscribe((state) => {
-          if (lastEmittedIndexRef.current !== state.currentIndex) {
-            lastEmittedIndexRef.current = state.currentIndex;
-            onIndexChangeRef.current?.(state.currentIndex);
-          }
-        });
-        return;
-      }
-    };
-
-    const unsubscribeFromRegistry = registry.subscribeToManager(id, handleManagerChange);
-
-    return () => {
-      unsubscribeFromRegistry();
-      unsubscribeRef.current?.();
-    };
+    return unsubscribe;
   }, [id]);
 
   useEffect(() => {

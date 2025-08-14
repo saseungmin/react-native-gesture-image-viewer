@@ -30,10 +30,6 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
    */
   initialIndex?: number;
   /**
-   * A callback function that is called when the index of the item changes.
-   */
-  onIndexChange?: (index: number) => void;
-  /**
    * A callback function that is called when the `GestureViewer` is dismissed.
    */
   onDismiss?: () => void;
