@@ -55,7 +55,7 @@ export const useGestureViewerController = (id = 'default'): GestureViewerControl
     return unsubscribe;
   }, [id]);
 
-  return useMemo<Omit<GestureViewerController, 'currentIndex' | 'totalCount'>>(
+  return useMemo<GestureViewerController>(
     () => ({
       goToIndex: (index) => {
         managerRef.current?.goToIndex(index);
