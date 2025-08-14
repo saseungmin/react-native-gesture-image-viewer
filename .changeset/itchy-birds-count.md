@@ -23,4 +23,4 @@ useEffect(() => {
 }, [currentIndex]);
 ```
 
-BREAKING CHANGE: onIndexChange prop removed. Use useGestureViewerState for current index and useEffect for change detection.
+**❗ BREAKING CHANGE: onIndexChange prop removed. Use useGestureViewerState for current index and useEffect for change detection.**
