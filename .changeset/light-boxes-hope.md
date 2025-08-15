@@ -2,13 +2,13 @@
 "react-native-gesture-image-viewer": patch
 ---
 
-feat!: improve props naming for better developer experience
+refactor!: improve props naming for better developer experience
 
 - Replace ambiguous gesture props with clearer names
 - Group dismiss-related options into single object
 - Standardize `enable\*` pattern for gesture controls
 
-BREAKING CHANGE:
+**❗ BREAKING CHANGE:**
 
 - `enableDismissGesture` → `dismiss.enabled`
 - `dismissThreshold` → `dismiss.threshold`
