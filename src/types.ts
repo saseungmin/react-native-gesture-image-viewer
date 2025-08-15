@@ -13,7 +13,7 @@ type ConditionalListProps<LC> = LC extends FlatListComponent
     ? React.ComponentProps<LC>
     : GetComponentProps<LC>;
 
-export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
+export interface GestureViewerProps<T = any, LC = typeof RNScrollView> {
   /**
    * When you want to efficiently manage multiple `GestureViewer` instances, you can use the `id` prop to use multiple `GestureViewer` components.
    * @remark `GestureViewer` automatically removes instances from memory when components are unmounted, so no manual memory management is required.
@@ -52,44 +52,6 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
    */
   width?: number;
   /**
-   * Enables snap scrolling mode.
-   *
-   * @remark
-   * **`false` (default)**: Paging mode (`pagingEnabled: true`)
-   * - Scrolls by full screen size increments
-   *
-   * **`true`**: Snap mode (`snapToInterval` auto-calculated)
-   * - `snapToInterval` is automatically calculated based on `width` and `itemSpacing` values
-   * - Use this option when you need item spacing
-   * @defaultValue false
-   *
-   */
-  useSnap?: boolean;
-  /**
-   * `dismissThreshold` controls when `onDismiss` is called by applying a threshold value during vertical gestures.
-   * @defaultValue 80
-   */
-  dismissThreshold?: number;
-  // swipeThreshold?: number;
-  // velocityThreshold?: number;
-  /**
-   * Calls `onDismiss` function when swiping down.
-   * @remark Useful for closing modals with downward swipe gestures.
-   * @defaultValue true
-   */
-  enableDismissGesture?: boolean;
-  /**
-   * Controls left/right swipe gestures.
-   * @remark When `false`, horizontal gestures are disabled.
-   * @defaultValue true
-   */
-  enableSwipeGesture?: boolean;
-  /**
-   * `resistance` controls the range of vertical movement by applying resistance during vertical gestures.
-   * @defaultValue 2
-   */
-  resistance?: number;
-  /**
    * The props to pass to the list component.
    * @remark The `listProps` provides **type inference based on the selected list component**, ensuring accurate autocompletion and type safety in your IDE.
    */
@@ -103,45 +65,86 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
    */
   containerStyle?: StyleProp<ViewStyle>;
   /**
-   * By default, the background `opacity` gradually decreases from 1 to 0 during downward swipe gestures.
-   * @remark When `false`, this animation is disabled.
+   * Dismiss gesture options. Calls `onDismiss` function when swiping down.
+   * @remark Useful for closing modals with downward swipe gestures.
+   */
+  dismiss?: {
+    /**
+     * When `false`, dismiss gesture is disabled.
+     * @defaultValue true
+     */
+    enabled?: boolean;
+    /**
+     * `threshold` controls when `onDismiss` is called by applying a threshold value during vertical gestures.
+     * @defaultValue 80
+     */
+    threshold?: number;
+    /**
+     * `resistance` controls the range of vertical movement by applying resistance during dismiss gestures.
+     * @defaultValue 2
+     */
+    resistance?: number;
+    /**
+     * By default, the background `opacity` gradually decreases from 1 to 0 during downward swipe gestures.
+     * @remark When `false`, this animation is disabled.
+     * @defaultValue true
+     */
+    fadeBackdrop?: boolean;
+  };
+  /**
+   * Controls left/right swipe gestures.
+   * @remark When `false`, horizontal gestures are disabled.
    * @defaultValue true
    */
-  animateBackdrop?: boolean;
+  enableHorizontalSwipe?: boolean;
   /**
    * Only works when zoom is active, allows moving item position when zoomed.
    * @remark When `false`, gesture movement is disabled during zoom.
    * @defaultValue true
    */
-  enableZoomPanGesture?: boolean;
+  enablePanWhenZoomed?: boolean;
   /**
    * Controls two-finger pinch gestures.
    * @remark When `false`, two-finger zoom gestures are disabled.
    * @defaultValue true
    */
-  enableZoomGesture?: boolean;
+  enablePinchZoom?: boolean;
   /**
    * Controls double-tap zoom gestures.
    * @remark When `false`, double-tap zoom gestures are disabled.
    * @defaultValue true
    */
-  enableDoubleTapGesture?: boolean;
+  enableDoubleTapZoom?: boolean;
   /**
    * Enables infinite loop navigation.
    * @defaultValue false
    */
   enableLoop?: boolean;
   /**
+   * Enables snap scrolling mode.
+   *
+   * @remark
+   * **`false` (default)**: Paging mode (`pagingEnabled: true`)
+   * - Scrolls by full screen size increments
+   *
+   * **`true`**: Snap mode (`snapToInterval` auto-calculated)
+   * - `snapToInterval` is automatically calculated based on `width` and `itemSpacing` values
+   * - Use this option when you need item spacing
+   * @defaultValue false
+   *
+   */
+  enableSnapMode?: boolean;
+  /**
+   * The spacing between items in pixels.
+   * @remark Only applied when `enableSnapMode` is `true`.
+   * @defaultValue 0
+   */
+  itemSpacing?: number;
+  /**
    * The maximum zoom scale.
    * @defaultValue 2
    */
   maxZoomScale?: number;
-  /**
-   * The spacing between items in pixels.
-   * @remark Only applied when `useSnap` is `true`.
-   * @defaultValue 0
-   */
-  itemSpacing?: number;
 }
 
 /**

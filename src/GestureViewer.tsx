@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { type FlatList, Platform, type ScrollViewProps, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, type ScrollView, type ScrollViewProps, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { registry } from './GestureViewerRegistry';
@@ -8,7 +8,7 @@ import { useGestureViewer } from './useGestureViewer';
 import { createLoopData, isFlashListLike, isFlatListLike, isScrollViewLike } from './utils';
 import WebPagingFixStyle from './WebPagingFixStyle';
 
-export function GestureViewer<T = any, LC = typeof FlatList>({
+export function GestureViewer<T = any, LC = typeof ScrollView>({
   id = 'default',
   data,
   renderItem: renderItemProp,
@@ -20,7 +20,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
   containerStyle,
   initialIndex = 0,
   itemSpacing = 0,
-  useSnap = false,
+  enableSnapMode = false,
   enableLoop = false,
   ...props
 }: GestureViewerProps<T, LC>) {
@@ -31,7 +31,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
 
   const { width: screenWidth } = useWindowDimensions();
 
-  const width = useSnap ? customWidth || screenWidth : screenWidth;
+  const width = enableSnapMode ? customWidth || screenWidth : screenWidth;
 
   const loopData = useMemo(() => createLoopData(dataRef, enableLoop), [enableLoop]);
 
@@ -53,7 +53,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
     width,
     initialIndex,
     itemSpacing,
-    useSnap,
+    enableSnapMode,
     enableLoop,
     ...props,
   });
@@ -118,7 +118,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
         showsHorizontalScrollIndicator: false,
         onMomentumScrollEnd: onMomentumScrollEnd,
         onScrollBeginDrag,
-        ...(useSnap
+        ...(enableSnapMode
           ? {
               snapToInterval: width + itemSpacing,
               snapToAlignment: 'center',
@@ -130,7 +130,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
         scrollEventThrottle: 16,
         removeClippedSubviews: true,
       }) satisfies ScrollViewProps,
-    [width, itemSpacing, isZoomed, isRotated, onMomentumScrollEnd, onScrollBeginDrag, useSnap],
+    [width, itemSpacing, isZoomed, isRotated, onMomentumScrollEnd, onScrollBeginDrag, enableSnapMode],
   );
 
   const listComponent = (

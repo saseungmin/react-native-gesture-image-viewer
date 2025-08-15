@@ -31,24 +31,19 @@ export const useGestureViewer = <T = any>({
   initialIndex = 0,
   onDismiss,
   width: customWidth,
-  dismissThreshold = 80,
-  resistance = 2,
-  // swipeThreshold = 0.5,
-  // velocityThreshold = 200,
-  animateBackdrop = true,
-  enableDismissGesture = true,
-  enableSwipeGesture = true,
-  enableZoomGesture = true,
-  enableDoubleTapGesture = true,
-  enableZoomPanGesture = true,
+  dismiss,
+  enableDoubleTapZoom = true,
+  enablePinchZoom = true,
+  enableHorizontalSwipe = true,
+  enablePanWhenZoomed = true,
   enableLoop = false,
   maxZoomScale = 2,
   itemSpacing = 0,
-  useSnap = false,
+  enableSnapMode = false,
   id = 'default',
 }: UseGestureViewerProps<T>) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const width = useSnap ? customWidth || screenWidth : screenWidth;
+  const width = enableSnapMode ? customWidth || screenWidth : screenWidth;
 
   const [isZoomed, setIsZoomed] = useState(false);
   const [isRotated, setIsRotated] = useState(false);
@@ -67,6 +62,15 @@ export const useGestureViewer = <T = any>({
   const rotation = useSharedValue(0);
 
   const dataLength = data?.length || 0;
+
+  const dismissOptions = useMemo(() => {
+    return {
+      enabled: dismiss?.enabled ?? true,
+      threshold: dismiss?.threshold ?? 80,
+      resistance: dismiss?.resistance ?? 2,
+      fadeBackdrop: dismiss?.fadeBackdrop ?? true,
+    };
+  }, [dismiss?.enabled, dismiss?.threshold, dismiss?.resistance, dismiss?.fadeBackdrop]);
 
   const adjustedInitialIndex = useMemo(() => {
     if (enableLoop && data.length > 1) {
@@ -142,7 +146,7 @@ export const useGestureViewer = <T = any>({
     }
 
     manager.setDataLength(dataLength);
-    manager.setEnableSwipeGesture(enableSwipeGesture);
+    manager.setEnableHorizontalSwipe(enableHorizontalSwipe);
     manager.setCurrentIndex(initialIndex);
     manager.setWidth(width + itemSpacing);
     manager.setHeight(screenHeight);
@@ -152,7 +156,7 @@ export const useGestureViewer = <T = any>({
     manager.notifyStateChange();
   }, [
     dataLength,
-    enableSwipeGesture,
+    enableHorizontalSwipe,
     initialIndex,
     manager,
     width,
@@ -197,7 +201,7 @@ export const useGestureViewer = <T = any>({
 
   const onMomentumScrollEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (!enableSwipeGesture) {
+      if (!enableHorizontalSwipe) {
         return;
       }
 
@@ -239,7 +243,7 @@ export const useGestureViewer = <T = any>({
       dataLength,
       width,
       itemSpacing,
-      enableSwipeGesture,
+      enableHorizontalSwipe,
       enableLoop,
       translateX,
       translateY,
@@ -260,10 +264,10 @@ export const useGestureViewer = <T = any>({
       .failOffsetX([-10, 10])
       .enabled(!isZoomed)
       .onUpdate((event) => {
-        translateY.value = event.translationY / resistance;
+        translateY.value = event.translationY / dismissOptions.resistance;
       })
       .onEnd((event) => {
-        if (event.translationY > dismissThreshold && enableDismissGesture && onDismiss) {
+        if (event.translationY > dismissOptions.threshold && dismissOptions.enabled && onDismiss) {
           runOnJS(onDismiss)();
           return;
         }
@@ -276,11 +280,11 @@ export const useGestureViewer = <T = any>({
           energyThreshold: 6e-9,
         });
       });
-  }, [translateY, dismissThreshold, enableDismissGesture, onDismiss, resistance, isZoomed]);
+  }, [translateY, dismissOptions.threshold, dismissOptions.enabled, onDismiss, dismissOptions.resistance, isZoomed]);
 
   const zoomPinchGesture = useMemo(() => {
     return Gesture.Pinch()
-      .enabled(enableZoomGesture)
+      .enabled(enablePinchZoom)
       .onBegin(() => {
         startScale.value = scale.value;
         initialTranslateX.value = translateX.value;
@@ -356,7 +360,7 @@ export const useGestureViewer = <T = any>({
       });
   }, [
     scale,
-    enableZoomGesture,
+    enablePinchZoom,
     maxZoomScale,
     translateX,
     translateY,
@@ -370,7 +374,7 @@ export const useGestureViewer = <T = any>({
 
   const zoomPanGesture = useMemo(() => {
     return Gesture.Pan()
-      .enabled(enableZoomPanGesture && isZoomed)
+      .enabled(enablePanWhenZoomed && isZoomed)
       .activeCursor('grabbing')
       .averageTouches(true)
       .onBegin(() => {
@@ -395,7 +399,7 @@ export const useGestureViewer = <T = any>({
   }, [
     translateX,
     translateY,
-    enableZoomPanGesture,
+    enablePanWhenZoomed,
     isZoomed,
     scale,
     initialTranslateX,
@@ -405,7 +409,7 @@ export const useGestureViewer = <T = any>({
 
   const doubleTapGesture = useMemo(() => {
     return Gesture.Tap()
-      .enabled(enableDoubleTapGesture)
+      .enabled(enableDoubleTapZoom)
       .numberOfTaps(2)
       .onEnd((event) => {
         const nextScale = scale.value > 1 ? 1 : maxZoomScale;
@@ -439,7 +443,7 @@ export const useGestureViewer = <T = any>({
           easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
         });
       });
-  }, [scale, enableDoubleTapGesture, maxZoomScale, translateX, translateY, width, screenHeight]);
+  }, [scale, enableDoubleTapZoom, maxZoomScale, translateX, translateY, width, screenHeight]);
 
   const zoomGesture = useMemo(() => {
     return Gesture.Race(zoomPinchGesture, Gesture.Exclusive(zoomPanGesture, doubleTapGesture));
@@ -457,14 +461,14 @@ export const useGestureViewer = <T = any>({
   });
 
   const backdropStyle = useAnimatedStyle(() => {
-    if (!animateBackdrop || scale.value !== 1) {
+    if (!dismissOptions.fadeBackdrop || scale.value !== 1) {
       return { opacity: 1 };
     }
 
     const opacity = interpolate(translateY.value, [0, 200], [1, 0], 'clamp');
 
     return { opacity };
-  }, [animateBackdrop]);
+  }, [dismissOptions.fadeBackdrop]);
 
   const onScrollBeginDrag = useCallback(() => {
     manager?.handleScrollBeginDrag();

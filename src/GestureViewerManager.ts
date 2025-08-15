@@ -13,7 +13,7 @@ class GestureViewerManager {
   private width = 0;
   private height = 0;
   private maxZoomScale = 2;
-  private enableSwipeGesture = true;
+  private enableHorizontalSwipe = true;
   private enableLoop = false;
   private listRef: any | null = null;
 
@@ -104,8 +104,8 @@ class GestureViewerManager {
     this.dataLength = length;
   }
 
-  setEnableSwipeGesture(enabled: boolean) {
-    this.enableSwipeGesture = enabled;
+  setEnableHorizontalSwipe(enabled: boolean) {
+    this.enableHorizontalSwipe = enabled;
   }
 
   setCurrentIndex(index: number) {
@@ -224,7 +224,7 @@ class GestureViewerManager {
   };
 
   goToIndex = (index: number) => {
-    if (!this.enableSwipeGesture || !this.listRef) {
+    if (!this.enableHorizontalSwipe || !this.listRef) {
       return;
     }
 
@@ -299,7 +299,7 @@ class GestureViewerManager {
     this.loopCallback = null;
     this.listeners.clear();
     this.listRef = null;
-    this.enableSwipeGesture = true;
+    this.enableHorizontalSwipe = true;
     this.currentIndex = 0;
     this.dataLength = 0;
     this.maxZoomScale = 2;
