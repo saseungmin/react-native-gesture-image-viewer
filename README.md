@@ -37,7 +37,7 @@ Full documentation is available at: <https://react-native-gesture-image-viewer.p
 ### Examples & Demo
 
 - [📁 Example Project](/example/) - Real implementation code with various use cases
-- [🤖 Expo Go](https://snack.expo.dev/@harang/react-native-gesture-image-viewer-v2) - Try it instantly on Snack Expo
+- [🤖 Expo Go](https://snack.expo.dev/@harang/react-native-gesture-image-viewer-v2) - Try it instantly on Expo Snack
 
 ### Basic Usage
 
@@ -78,9 +78,9 @@ function App() {
         onDismiss={() => setVisible(false)}
       />
       <View>
-        <Button title="<" onPress={goToPrevious} />
+        <Button title="Prev" onPress={goToPrevious} />
         <Button title="Jump to index 2" onPress={() => goToIndex(2)} />
-        <Button title=">" onPress={goToNext} />
+        <Button title="Next" onPress={goToNext} />
         <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
       </View>
     </Modal>

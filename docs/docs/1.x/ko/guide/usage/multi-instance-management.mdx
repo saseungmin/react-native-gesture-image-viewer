@@ -18,11 +18,11 @@ function App() {
   const { currentIndex: secondCurrentIndex, totalCount: secondTotalCount } = useGestureViewerController(secondViewerId);
 
   useGestureViewerEvent(firstViewerId, 'zoomChange', (data) => {
-    console.log(`Gallery zoom: ${data.scale}x`);
+    console.log(`갤러리 줌: ${data.scale}배`);
   });
 
   useGestureViewerEvent(secondViewerId, 'zoomChange', (data) => {
-    console.log(`Gallery zoom: ${data.scale}x`);
+    console.log(`갤러리 줌: ${data.scale}배`);
   });
 
   return (

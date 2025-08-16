@@ -52,9 +52,9 @@ function App() {
         renderItem={renderImage}
       />
       <View>
-        <Feather.Button name="chevron-left" onPress={goToPrevious} />
+        <Button title="Prev" onPress={goToPrevious} />
         <Button title="Jump to index 2" onPress={() => goToIndex(2)} />
-        <Feather.Button name="chevron-right" onPress={goToNext} />
+        <Button title="Next" onPress={goToNext} />
       </View>
     </View>
   );

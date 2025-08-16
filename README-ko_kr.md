@@ -37,7 +37,7 @@ React Native에서 이미지 갤러리나 콘텐츠 뷰어를 구현할 때, 복
 ### 예제 및 데모
 
 - [📁 예제 프로젝트](/example/) - 실제 구현 코드와 다양한 사용 사례
-- [🤖 Expo Go](https://snack.expo.dev/@harang/react-native-gesture-image-viewer-v2) - Snack Expo에서 바로 체험
+- [🤖 Expo Snack](https://snack.expo.dev/@harang/react-native-gesture-image-viewer-v2) - Expo Snack에서 바로 체험
 
 ### 기본 사용법
 
@@ -78,9 +78,9 @@ function App() {
         onDismiss={() => setVisible(false)}
       />
       <View>
-        <Button title="<" onPress={goToPrevious} />
+        <Button title="Prev" onPress={goToPrevious} />
         <Button title="Jump to index 2" onPress={() => goToIndex(2)} />
-        <Button title=">" onPress={goToNext} />
+        <Button title="Next" onPress={goToNext} />
         <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
       </View>
     </Modal>

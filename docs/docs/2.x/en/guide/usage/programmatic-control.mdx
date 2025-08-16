@@ -24,36 +24,36 @@ function App() {
         data={images}
         renderItem={renderImage}
       />
-      {/* Zoom Controls */}
+      {/* Zoom Controls & Rotation Controls */}
       <View>
-        <Feather.Button name="zoom-in" onPress={() => zoomIn(0.25)} />
-        <Feather.Button name="zoom-out" onPress={() => zoomOut(0.25)} />
-        <Feather.Button
-          name="refresh-cw"
+        <Button title="Zoom In" onPress={() => zoomIn(0.25)} />
+        <Button title="Zoom Out" onPress={() => zoomOut(0.25)} />
+        <Button
+          title="Reset"
           onPress={() => {
             rotate(0);
             resetZoom();
           }}
         />
-        <Feather.Button name="rotate-cw" onPress={() => rotate(90)} />
-        <Feather.Button name="rotate-ccw" onPress={() => rotate(90, false)} />
+        <Button title="Rotate Clockwise" onPress={() => rotate(90)} />
+        <Button title="Rotate Counter Clockwise" onPress={() => rotate(90, false)} />
       </View>
       {/* Navigation Controls */}
       <View>
-        <Feather.Button name="chevron-left" onPress={goToPrevious} />
+        <Button title="Prev" onPress={goToPrevious} />
         <Button title="Jump to index 2" onPress={() => goToIndex(2)} />
-        <Feather.Button name="chevron-right" onPress={goToNext} />
+        <Button title="Next" onPress={goToNext} />
       </View>
     </View>
   );
 }
 ```
 
-### parameters
+### Parameters
 
-- `id` (`undefined` | `string`)
-  - **id**: The ID of the `GestureViewer` instance.
-  - defaultValue: `"default"`
+- `id?: string`
+  - The ID of the `GestureViewer` instance.
+  - Default: `"default"`
 
 ### API Reference
 

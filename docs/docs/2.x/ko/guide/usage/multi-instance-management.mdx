@@ -27,11 +27,11 @@ function App() {
   const { currentIndex: secondCurrentIndex } = useGestureViewerState(secondViewerId);
 
   useGestureViewerEvent(firstViewerId, 'zoomChange', (data) => {
-    console.log(`Gallery zoom: ${data.scale}x`);
+    console.log(`갤러리 줌: ${data.scale}배`);
   });
 
   useGestureViewerEvent(secondViewerId, 'zoomChange', (data) => {
-    console.log(`Gallery zoom: ${data.scale}x`);
+    console.log(`갤러리 줌: ${data.scale}배`);
   });
 
   return (
@@ -41,11 +41,13 @@ function App() {
         data={images}
         renderItem={renderImage}
       />
+      <Button title="Go to index 2 (first)" onPress={() => goToFirstIndex(2)} />
       <GestureViewer
         id={secondViewerId}
         data={images}
         renderItem={renderImage}
       />
+      <Button title="Go to index 0 (second)" onPress={() => goToSecondIndex(0)} />
     </View>
   );
 }
