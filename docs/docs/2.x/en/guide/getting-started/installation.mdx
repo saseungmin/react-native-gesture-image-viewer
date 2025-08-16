@@ -1,0 +1,80 @@
+import { Steps, PackageManagerTabs, Tab, Tabs } from '@rspress/core/theme';
+
+# Installation
+
+:::warning React Native Reanimated v3 Users
+If you're using **React Native Reanimated v3**, **version 1.x** of this library is recommended for the best experience.
+
+👉 **[Go to v1.x Documentation](/1.x/guide/getting-started/installation.html)**
+
+Version 2.x only supports React Native Reanimated v4.
+:::
+
+:::info Important
+`react-native-gesture-image-viewer` is a high-performance viewer library built on [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated) and [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler).   
+Therefore, you **must install** React Native Reanimated and Gesture Handler before using this library. Please refer to the official documentation of these libraries for detailed setup guides.
+:::
+
+#### Minimum Requirements
+
+|Library|Minimum Version|
+|:--|:--:|
+|`react`|`>=18.0.0`|
+|`react-native`|`>=0.75.0`|
+|`react-native-gesture-handler`|`>=2.24.0`|
+|`react-native-reanimated`|`>=4.0.0`|
+|`react-native-worklets`|`*`|
+
+## [React Native Reanimated Setup](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/)
+
+<Steps>
+  ### Install `react-native-reanimated` and `react-native-worklets` packages:
+
+  <PackageManagerTabs command="install react-native-reanimated" />
+
+  - `react-native-worklets` was separated from `react-native-reanimated` for better modularity and must be installed separately.
+
+  <PackageManagerTabs command="install react-native-worklets" />
+
+  ### Configure Babel
+
+  #### Expo
+  Run prebuild to update the native code in the ios and android directories.
+
+  <PackageManagerTabs command="expo prebuild" />
+
+  And that's it! Reanimated 4 is now configured in your Expo project.   
+  Since Expo SDK 50, the Expo starter template includes the Reanimated babel plugin by default.
+
+  #### React Native CLI
+  When using React Native Community CLI, you also need to manually add the `react-native-worklets/plugin` plugin to your `babel.config.js`.
+
+  ```js title="babel.config.js"
+  module.exports = {
+    presets: [
+      ... // don't add it here :)
+    ],
+    plugins: [
+      ...
+      // for web
+      '@babel/plugin-proposal-export-namespace-from', // [!code highlight]
+      // react-native-worklets/plugin has to be listed last.
+      'react-native-worklets/plugin', // [!code highlight]
+    ],
+  };
+  ```
+</Steps>
+
+## [React Native Gesture Handler Setup](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation)
+
+<PackageManagerTabs command="install react-native-gesture-handler" />
+
+- `react-native-gesture-handler` generally doesn't require additional setup, but please refer to the official documentation for your specific environment.
+- For [using gestures in Android modals](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation#android), you would normally need to wrap modal content with `GestureHandlerRootView`. However, **this library already includes `GestureHandlerRootView` internally, so no additional wrapping is needed when using modals.**
+
+## Install React Native Gesture Image Viewer
+
+You’re all set! 🎉   
+Start by installing `react-native-gesture-image-viewer`
+
+<PackageManagerTabs command="install react-native-gesture-image-viewer" />

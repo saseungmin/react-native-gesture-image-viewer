@@ -1,0 +1,63 @@
+# 뷰어 이벤트 처리하기
+
+`useGestureViewerEvent` 훅을 사용하여 `GestureViewer`의 특정 이벤트를 구독할 수 있습니다. 줌이나 회전과 같은 실시간 제스처 변화에 반응할 수 있습니다.
+
+## useGestureViewerEvent
+
+```tsx
+import { GestureViewer, useGestureViewerEvent } from 'react-native-gesture-image-viewer';
+
+function App() {
+  useGestureViewerEvent('zoomChange', (data) => {
+    console.log(`줌 변경: ${data.previousScale} → ${data.scale}`);
+  });
+
+  useGestureViewerEvent('rotationChange', (data) => {
+    console.log(`회전 변경: ${data.previousRotation}° → ${data.rotation}°`);
+  });
+
+  return (
+    <GestureViewer
+      data={images}
+      renderItem={renderImage}
+    />
+  );
+}
+```
+
+### 특정 인스턴스의 이벤트 구독
+
+`useGestureViewerEvent` 훅의 첫 번째 인수로 인스턴스 ID를 전달하여 특정 인스턴스의 이벤트를 구독할 수 있습니다.
+
+```ts
+// 특정 인스턴스의 이벤트 구독
+useGestureViewerEvent('gallery', 'zoomChange', (data) => {
+  console.log(`갤러리 줌: ${data.scale}x`);
+});
+```
+
+:::note
+기본 `id` 값은 `default`입니다.
+:::
+
+### API Reference
+
+```ts
+// 기본 인스턴스의 이벤트 구독
+function useGestureViewerEvent<T extends GestureViewerEventType>(
+  eventType: T,
+  callback: GestureViewerEventCallback<T>,
+): void;
+
+// 특정 인스턴스의 이벤트 구독
+function useGestureViewerEvent<T extends GestureViewerEventType>(
+  instanceId: string,
+  eventType: T,
+  callback: GestureViewerEventCallback<T>,
+): void;
+```
+
+| 이벤트 타입 | 설명 | 콜백 데이터 |
+|:-----|:-----|:-----|
+| `zoomChange` | 핀치 제스처 중 줌 스케일이 변경될 때 발생 | `{ scale: number, previousScale: number }` |
+| `rotationChange` | 회전 제스처 중 회전 각도가 변경될 때 발생 | `{ rotation: number, previousRotation: number }` |

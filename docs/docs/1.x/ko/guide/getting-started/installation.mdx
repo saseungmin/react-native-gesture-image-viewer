@@ -1,10 +1,19 @@
-import { Steps, PackageManagerTabs } from '@theme';
+import { Steps, PackageManagerTabs } from '@rspress/core/theme';
 
 # 설치
 
-:::info Important
-`react-native-gesture-image-viewer`는 고성능 뷰어 라이브러리로 [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated)와 [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler)를 기반으로 합니다.   
-따라서 사용하기 전에 React Native Reanimated와 Gesture Handler를 **필수적으로 설치**해야 합니다. 자세한 가이드는 해당 라이브러리 공식 문서를 참고해주세요.
+:::warning React Native Reanimated v4 사용자
+**React Native Reanimated v4**를 사용하고 계신다면, 최상의 경험을 위해 이 라이브러리의 **2.x 버전이 권장됩니다**.
+
+- 👉 **[2.x 문서로 이동](/2.x/ko/guide/getting-started/installation.html)**
+- 📖 **[1.x에서 2.x로 마이그레이션 가이드](/2.x/ko/guide/migration-from-1.x.html)**
+
+v1.x도 Reanimated v4에서 동작하겠지만, v3에 최적화되어 있어 deprecation 경고나 호환성 문제가 발생할 수 있습니다.
+:::
+
+:::info 중요
+`react-native-gesture-image-viewer`는 [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated)와 [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler)를 기반으로 한 높은 성능의 뷰어 라이브러리입니다.   
+따라서 이 라이브러리를 사용하기 전에 React Native Reanimated와 Gesture Handler를 **반드시 설치**해야 합니다. 자세한 설정 가이드는 각 라이브러리의 공식 문서를 참고해주세요.
 :::
 
 #### 필수 요구사항
@@ -16,7 +25,7 @@ import { Steps, PackageManagerTabs } from '@theme';
 |`react-native-gesture-handler`|`>=2.24.0`|
 |`react-native-reanimated`|`>=3.0.0`|
 
-## [React Native Reanimated 설정](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/)
+## [React Native Reanimated 설정](https://docs.swmansion.com/react-native-reanimated/docs/3.x/fundamentals/getting-started/)
 
 <PackageManagerTabs command="install react-native-reanimated" />
 

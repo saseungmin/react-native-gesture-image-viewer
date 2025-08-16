@@ -1,0 +1,110 @@
+import { Tab, Tabs } from '@rspress/core/theme';
+
+# Custom Components
+
+`react-native-gesture-image-viewer` offers powerful complete component customization. You can create gesture-supported items with not only images but any component you want.   
+
+## Modal Components
+
+You can create a viewer using any `Modal` of your choice as shown below:
+
+<Tabs>
+  <Tab label="Use Modal">
+    ```tsx
+    import { FlatList, Image, Modal } from 'react-native';
+    import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+    function App() {
+      const images = [...];
+      const [visible, setVisible] = useState(false);
+
+      return (
+        <Modal visible={visible} onRequestClose={() => setVisible(false)}>
+          <GestureViewer
+            data={images}
+            renderItem={renderImage}
+            ListComponent={FlatList}
+            onDismiss={() => setVisible(false)}
+          />
+        </Modal>
+      );
+    }
+    ```
+  </Tab>
+  <Tab label="Use React Native Modal">
+    ```tsx
+    import { FlatList, Image } from 'react-native';
+    import Modal from 'react-native-modal';
+    import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+    function App() {
+      const images = [...];
+      const [visible, setVisible] = useState(false);
+
+      return (
+        <Modal
+          isVisible={visible}
+          onBackButtonPress={() => setVisible(false)}
+          onBackdropPress={() => setVisible(false)}
+          hasBackdrop={false}
+          style={styles.modal}
+          useNativeDriver={true}
+          hideModalContentWhileAnimating={true}
+          animationInTiming={300}
+          animationOutTiming={300}
+        >
+          <GestureViewer
+            data={images}
+            renderItem={renderImage}
+            ListComponent={FlatList}
+            onDismiss={() => setVisible(false)}
+          />
+        </Modal>
+      );
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## List Components
+
+Support for any list component like `ScrollView`, `FlatList`, [`FlashList`](https://shopify.github.io/flash-list/) through the `ListComponent` prop.   
+The `listProps` provides **type inference based on the selected list component**, ensuring accurate autocompletion and type safety in your IDE.
+
+```tsx
+import { FlashList } from '@shopify/flash-list';
+
+function App() {
+  return (
+    <GestureViewer
+      data={images}
+      ListComponent={FlashList}
+      listProps={{
+        // ✅ FlashList props autocompletion
+      }}
+    />
+  );
+}
+```
+
+## Content Components
+
+You can inject various types of content components like [`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/), [`FastImage`](https://github.com/DylanVann/react-native-fast-image), etc., through the `renderItem` prop to use gestures.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+import { Image } from 'expo-image';
+
+function App() {
+  const renderImage = useCallback((imageUrl: string) => {
+    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} contentFit="contain" />;
+  }, []);
+
+  return (
+    <GestureViewer
+      data={images}
+      renderItem={renderImage}
+    />
+  );
+}
+```

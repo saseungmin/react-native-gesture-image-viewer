@@ -1,0 +1,14 @@
+[
+  {
+    "type": "dir",
+    "name": "getting-started",
+    "label": "시작하기"
+  },
+  {
+    "type": "dir",
+    "name": "usage",
+    "label": "사용법"
+  },
+  "performance-optimization-tips",
+  "migration-from-1.x"
+]

@@ -1,0 +1,55 @@
+# Gesture Features
+
+`react-native-gesture-image-viewer` supports various gestures essential for viewers. Please refer to the examples below for default gesture actions.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  return (
+    <GestureViewer
+      data={images}
+      renderItem={renderImage}
+      dismiss={{
+        enabled: true,
+        threshold: 80,
+        resistance: 2,
+        fadeBackdrop: true,
+      }}
+      enableHorizontalSwipe={true}
+      enablePinchZoom={true}
+      enableDoubleTapZoom={true}
+      enablePanWhenZoomed={true}
+    />
+  )
+}
+```
+
+## Gesture Props
+
+### `dismiss`
+
+Dismiss gesture options. Calls `onDismiss` function when swiping down. Useful for closing modals with downward swipe gestures.
+
+| Property | Description | Type | Default |
+|:---------|:------------|:-----|:-------:|
+| `enabled` | When `false`, dismiss gesture is disabled. | `boolean` | `true` |
+| `threshold` | `threshold` controls when `onDismiss` is called by applying a threshold value during vertical gestures. | `number` | `80` |
+| `resistance` | `resistance` controls the range of vertical movement by applying resistance during dismiss gestures. | `number` | `2` |
+| `fadeBackdrop` | By default, the background `opacity` gradually decreases from 1 to 0 during downward swipe gestures. | `boolean` | `true` |
+
+### `enableHorizontalSwipe` (default: `true`)
+
+Controls left/right swipe gestures. When `false`, horizontal gestures are disabled.
+
+### `enablePinchZoom` (default: `true`)
+
+Controls two-finger pinch gestures with focal point zooming. When `false`, pinch zoom is disabled. Zoom centers on the point between your two fingers for intuitive scaling.
+
+### `enableDoubleTapZoom` (default: `true`)
+
+Controls double-tap zoom gestures with precision targeting. When `false`, double-tap zoom is disabled. Zoom centers exactly on the tapped location.
+
+### `enablePanWhenZoomed` (default: `true`)
+
+Enables panning when zoomed in with automatic boundary detection. When `false`, movement is disabled during zoom. Prevents content from moving outside visible screen area.

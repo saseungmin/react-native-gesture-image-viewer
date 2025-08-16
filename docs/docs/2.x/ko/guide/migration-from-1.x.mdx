@@ -1,0 +1,150 @@
+import { Steps, PackageManagerTabs } from '@rspress/core/theme';
+
+# 1.x에서 2.x로 마이그레이션
+
+## [Reanimated 3.x에서 4.x로 마이그레이션](https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-3.x)
+
+### 마이그레이션 단계
+
+<Steps>
+### `react-native-reanimated` 패키지 업그레이드:
+
+<PackageManagerTabs command="install react-native-reanimated" />
+
+### `react-native-worklets` 패키지 설치:
+
+<PackageManagerTabs command="install react-native-worklets" />
+
+### 설정 업데이트
+
+#### Expo
+`ios` 및 `android` 디렉토리의 네이티브 코드를 업데이트하기 위해 prebuild를 실행합니다.
+
+<PackageManagerTabs command="expo prebuild" />
+
+끝입니다! 이제 Expo 프로젝트에서 Reanimated 4가 구성되었습니다.
+Expo SDK 50부터는 Expo 스타터 템플릿에 기본적으로 Reanimated Babel 플러그인이 포함되어 있습니다.
+
+#### React Native CLI
+React Native Community CLI를 사용할 때는 `babel.config.js`에 `react-native-worklets/plugin` 플러그인을 수동으로 추가해야 합니다.
+
+```diff title="babel.config.js"
+module.exports = {
+  presets: [
+    ... // 여기에 추가하지 마세요 :)
+  ],
+  plugins: [
+    ...
+    // for web
+    '@babel/plugin-proposal-export-namespace-from', // [!code highlight]
+-   'react-native-reanimated/plugin',
++   'react-native-worklets/plugin',
+  ],
+};
+```
+
+`metro.config.js`에서 `wrapWithReanimatedMetroConfig`를 제거합니다.
+
+```diff title="metro.config.js"
+- const { wrapWithReanimatedMetroConfig } = require('react-native-reanimated/metro-config');
+
+const config = {
+  // 기존 Metro 설정 옵션들
+};
+
+- module.exports = wrapWithReanimatedMetroConfig(config);
++ module.exports = config
+```
+
+</Steps>
+
+## `useGestureViewerController`에서 `currentIndex`와 `totalCount` 제거
+
+:::info ❗ 호환성 변경사항
+
+- `useGestureViewerController`는 더 이상 `currentIndex`와 `totalCount`를 반환하지 않습니다. 대신 `useGestureViewerState`를 사용하세요.
+- `GestureViewerControllerState` 타입을 `GestureViewerState`로 이름을 변경합니다.
+
+:::
+
+```diff
+import {
+  GestureViewer,
+- GestureViewerControllerState,
++ GestureViewerState
+  useGestureViewerController,
+  useGestureViewerEvent,
++ useGestureViewerState,
+} from 'react-native-gesture-image-viewer';
+
+const { 
+  goToIndex, goToPrevious, goToNext, zoomIn, zoomOut, resetZoom, rotate,
+- currentIndex, totalCount
+} = useGestureViewerController();
+
++ const { currentIndex, totalCount } = useGestureViewerState();
+```
+
+## `onIndexChange` prop 제거
+
+:::info ❗ 호환성 변경사항
+
+`onIndexChange` prop이 제거되었습니다. 대신 `useGestureViewerState`와 `useEffect`를 사용하세요.
+
+:::
+
+```tsx
+// 이전
+<GestureViewer onIndexChange={(index) => console.log(index)} />
+
+// 이후
+const { currentIndex } = useGestureViewerState();
+
+useEffect(() => {
+  console.log(currentIndex);
+}, [currentIndex]);
+```
+
+## 제스처 prop 이름 변경
+
+더 나은 개발자 경험을 위해 제스처 prop 이름을 개선했습니다.
+
+:::info ❗ 호환성 변경사항
+
+- `enableDismissGesture` → `dismiss.enabled`
+- `dismissThreshold` → `dismiss.threshold`
+- `resistance` → `dismiss.resistance`
+- `animateBackdrop` → `dismiss.fadeBackdrop`
+- `useSnap` → `enableSnapMode`
+- `enableZoomPanGesture` → `enablePanWhenZoomed`
+- `enableZoomGesture` → `enablePinchZoom`
+- `enableSwipeGesture` → `enableHorizontalSwipe`
+
+:::
+
+```diff
+<GestureViewer
+-  enableDismissGesture
+-  dismissThreshold
+-  resistance
+-  animateBackdrop
++  dismiss={{
++    enabled: true,
++    threshold: 80,
++    resistance: 2,
++    fadeBackdrop: true,
++  }}
+
+-  useSnap
++  enableSnapMode
+
+-  enableZoomPanGesture
++  enablePanWhenZoomed
+
+-  enableZoomGesture
++  enablePinchZoom
+
+-  enableSwipeGesture
++  enableHorizontalSwipe
+/>
+```

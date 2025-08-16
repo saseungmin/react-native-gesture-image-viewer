@@ -1,30 +1,20 @@
-import { PackageManagerTabs } from '@theme';
-import { ExpoSnackEmbed } from '../../../../components/ExpoSnackEmbed';
+import { ExpoSnackEmbed } from '../../../../../components/ExpoSnackEmbed';
 
-# Quick Start
+# 빠른 시작
 
 <div style={{ width: '100%', alignItems: 'center', display: 'flex', justifyContent: 'center' }}>
   <img src="https://raw.githubusercontent.com/saseungmin/react-native-gesture-image-viewer/main/assets/example.gif" width="600" alt="Demo of react-native-gesture-image-viewer gestures" />
 </div>
 
-## Examples & Demo
-- [📁 Example Project](https://github.com/saseungmin/react-native-gesture-image-viewer/tree/main/example) - Real implementation code with various use cases
-- [🤖 Expo Go](https://snack.expo.dev/@harang/react-native-gesture-image-viewer) - Try it instantly on Snack Expo
+## 예제 및 데모
+- [📁 예제 프로젝트](https://github.com/saseungmin/react-native-gesture-image-viewer/tree/main/example) - 실제 구현 코드와 다양한 사용 사례
+- [🤖 Expo Go](https://snack.expo.dev/@harang/react-native-gesture-image-viewer) - Snack Expo에서 바로 체험
 
 <ExpoSnackEmbed snackId="@harang/react-native-gesture-image-viewer" height="635px" />
 
-## Installation
+## 기본 사용법
 
-:::warning Important
-`react-native-gesture-image-viewer` is a high-performance viewer library built on [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated) and [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler).   
-Therefore, you **must install** React Native Reanimated and Gesture Handler before using this library. **If you haven't set it up yet, please refer to the [installation guide](/guide/getting-started/installation.html).**
-:::
-
-<PackageManagerTabs command="install react-native-gesture-image-viewer" />
-
-## Basic Usage
-
-`react-native-gesture-image-viewer` is a library focused purely on gesture interactions for complete customization.   
+`react-native-gesture-image-viewer`는 완전한 커스터마이징을 위해 제스처 동작에만 집중한 라이브러리입니다.   
 
 ```tsx
 import { useCallback, useState } from 'react';

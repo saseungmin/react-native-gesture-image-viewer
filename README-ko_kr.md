@@ -37,22 +37,29 @@ React Native에서 이미지 갤러리나 콘텐츠 뷰어를 구현할 때, 복
 ### 예제 및 데모
 
 - [📁 예제 프로젝트](/example/) - 실제 구현 코드와 다양한 사용 사례
-- [🤖 Expo Go](https://snack.expo.dev/@harang/react-native-gesture-image-viewer) - Snack Expo에서 바로 체험
+- [🤖 Expo Go](https://snack.expo.dev/@harang/react-native-gesture-image-viewer-v2) - Snack Expo에서 바로 체험
 
 ### 기본 사용법
 
-`react-native-gesture-image-viewer`는 완전한 커스터마이징을 위해 제스처 동작에만 집중한 라이브러리입니다.   
+`react-native-gesture-image-viewer`는 완전한 커스터마이징을 위해 제스처 동작에만 집중한 라이브러리입니다.  
 
 ```tsx
 import { useCallback, useState } from 'react';
 import { ScrollView, Image, Modal, View, Text, Button } from 'react-native';
-import { GestureViewer, useGestureViewerController, useGestureViewerEvent } from 'react-native-gesture-image-viewer';
+import {
+  GestureViewer,
+  useGestureViewerController,
+  useGestureViewerEvent,
+  useGestureViewerState,
+} from 'react-native-gesture-image-viewer';
 
 function App() {
   const images = [...];
   const [visible, setVisible] = useState(false);
 
- const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount } = useGestureViewerController();
+  const { goToIndex, goToPrevious, goToNext } = useGestureViewerController();
+
+  const { currentIndex, totalCount } = useGestureViewerState();
 
   const renderImage = useCallback((imageUrl: string) => {
     return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
