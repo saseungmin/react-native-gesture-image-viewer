@@ -3,6 +3,7 @@
   "gesture-features",
   "custom-components",
   "programmatic-control",
+  "gesture-viewer-state",
   "handling-viewer-events",
   "style-customization",
   "multi-instance-management",
