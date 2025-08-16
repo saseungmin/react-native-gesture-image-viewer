@@ -1,5 +1,104 @@
 # react-native-gesture-image-viewer
 
+## 2.0.0-beta.4
+
+### Patch Changes
+
+- b81f5a3: feat!: add `useGestureViewerState` hook and refactor controller
+
+  - Add `useGestureViewerState` hook to access `currentIndex` and `totalCount`
+  - Refactor `useGestureViewerController` to return control methods only
+  - Rename `GestureViewerControllerState` to `GestureViewerState`
+  - Update exports and type definitions
+
+  BREAKING CHANGE: `useGestureViewerController` no longer returns `currentIndex` and `totalCount`. Use `useGestureViewerState` instead.
+
+  Example:
+
+  ```diff
+  import {
+    GestureViewer,
+  -  GestureViewerControllerState,
+  +  GestureViewerState
+    useGestureViewerController,
+    useGestureViewerEvent,
+  +  useGestureViewerState,
+  } from 'react-native-gesture-image-viewer';
+
+  const {
+    goToIndex, goToPrevious, goToNext, zoomIn, zoomOut, resetZoom, rotate,
+  -  currentIndex, totalCount
+  } = useGestureViewerController();
+
+  + const { currentIndex, totalCount } = useGestureViewerState();
+  ```
+
+- fae40a9: refactor!: remove `onIndexChange` prop in favor of state hook
+
+  - Remove `onIndexChange` prop from `GestureViewerProps`
+  - For current index: use `useGestureViewerState` hook
+  - For index changes: use `useGestureViewerState` with `useEffect`
+  - Update component implementation to remove prop handling
+
+  Example:
+
+  ```tsx
+  // Before
+  <GestureViewer onIndexChange={(index) => console.log(index)} />;
+
+  // After
+  const { currentIndex } = useGestureViewerState();
+
+  useEffect(() => {
+    console.log(currentIndex);
+  }, [currentIndex]);
+  ```
+
+  **❗ BREAKING CHANGE: onIndexChange prop removed. Use useGestureViewerState for current index and useEffect for change detection.**
+
+- 37087da: refactor!: improve props naming for better developer experience
+
+  - Replace ambiguous gesture props with clearer names
+  - Group dismiss-related options into single object
+  - Standardize `enable\*` pattern for gesture controls
+
+  **❗ BREAKING CHANGE:**
+
+  - `enableDismissGesture` → `dismiss.enabled`
+  - `dismissThreshold` → `dismiss.threshold`
+  - `resistance` → `dismiss.resistance`
+  - `animateBackdrop` → `dismiss.fadeBackdrop`
+  - `useSnap` → `enableSnapMode`
+  - `enableZoomPanGesture` → `enablePanWhenZoomed`
+  - `enableZoomGesture` → `enablePinchZoom`
+  - `enableSwipeGesture` → `enableHorizontalSwipe`
+
+  Example:
+
+  ```tsx
+  <GestureViewer
+    dismiss={{
+      enabled: true,
+      threshold: 80,
+      resistance: 2,
+      fadeBackdrop: true,
+    }}
+    enableSnapMode
+    enablePanWhenZoomed
+    enablePinchZoom
+    enableHorizontalSwipe
+  />
+  ```
+
+- 816ab00: docs: complete v2 documentation setup
+
+  - Add v2 guide pages and API documentation
+  - Create v2 home pages (en/ko) with feature highlights
+  - Add migration guide from 1.x to 2.x with breaking changes
+  - Add cross-version compatibility warnings for Reanimated v3/v4
+  - Complete API documentation translation (props, hooks, events)
+  - Set up v2 as default version in rspress config
+
 ## 2.0.0-beta.3
 
 ### Patch Changes

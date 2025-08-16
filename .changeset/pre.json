@@ -7,8 +7,12 @@
     "react-native-gesture-image-viewer-example": "1.0.0"
   },
   "changesets": [
+    "afraid-worlds-create",
     "curvy-bottles-fold",
+    "itchy-birds-count",
+    "light-boxes-hope",
     "major-areas-mix",
+    "plain-buttons-start",
     "tame-hornets-lay",
     "tender-cows-flow"
   ]
