@@ -53,6 +53,8 @@ class GestureViewerRegistry {
       this.managers.delete(id);
 
       this.notifySubscribers(id, null);
+
+      this.triggers.delete(id);
     }
   }
 
