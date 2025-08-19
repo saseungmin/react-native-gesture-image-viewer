@@ -389,7 +389,7 @@ export const useGestureViewer = <T = any>({
         translateY.value = event.translationY / dismissOptions.resistance;
       })
       .onEnd((event) => {
-        if (event.translationY > dismissOptions.threshold && dismissOptions.enabled) {
+        if (!isZoomed && dismissOptions.enabled && event.translationY > dismissOptions.threshold) {
           runOnJS(handleDismiss)();
           return;
         }
