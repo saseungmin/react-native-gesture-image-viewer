@@ -1,5 +1,11 @@
 # react-native-gesture-image-viewer
 
+## 1.6.6
+
+### Patch Changes
+
+- 38dd3b1: fix: disable the dismiss pan gesture when `enableDismissGesture` is false
+
 ## 1.6.5
 
 ### Patch Changes
