@@ -27,7 +27,6 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
   const Component = ListComponent as React.ComponentType<any>;
 
   const dataRef = useRef(data);
-  dataRef.current = data;
 
   const { width: screenWidth } = useWindowDimensions();
 
@@ -47,6 +46,7 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
     onScrollBeginDrag,
     animatedStyle,
     backdropStyle,
+    handleDismiss,
   } = useGestureViewer({
     id,
     data,
@@ -105,6 +105,10 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
   }, [zoomGesture, dismissGesture]);
 
   useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+
+  useEffect(() => {
     registry.createManager(id);
 
     return () => registry.deleteManager(id);
@@ -132,6 +136,8 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
       }) satisfies ScrollViewProps,
     [width, itemSpacing, isZoomed, isRotated, onMomentumScrollEnd, onScrollBeginDrag, enableSnapMode],
   );
+
+  const control = useMemo(() => ({ dismiss: handleDismiss }), [handleDismiss]);
 
   const listComponent = (
     <GestureHandlerRootView>
@@ -174,7 +180,7 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
     </GestureHandlerRootView>
   );
 
-  return renderContainer ? renderContainer(listComponent) : listComponent;
+  return renderContainer ? renderContainer(listComponent, control) : listComponent;
 }
 
 const styles = StyleSheet.create({

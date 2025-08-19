@@ -1,3 +1,5 @@
+export type { GestureTriggerProps } from './GestureTrigger';
+export { GestureTrigger } from './GestureTrigger';
 export { GestureViewer } from './GestureViewer';
 export type {
   GestureViewerController,

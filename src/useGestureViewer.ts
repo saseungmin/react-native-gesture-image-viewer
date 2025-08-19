@@ -18,7 +18,7 @@ import {
 import { runOnJS } from 'react-native-worklets';
 import type GestureViewerManager from './GestureViewerManager';
 import { registry } from './GestureViewerRegistry';
-import type { GestureViewerProps } from './types';
+import type { GestureViewerProps, TriggerRect } from './types';
 import { createBoundsConstraint, createScrollAction, getLoopAdjustedIndex } from './utils';
 
 type UseGestureViewerProps<T = any> = Omit<
@@ -41,15 +41,20 @@ export const useGestureViewer = <T = any>({
   itemSpacing = 0,
   enableSnapMode = false,
   id = 'default',
+  onDismissStart,
+  triggerAnimation,
 }: UseGestureViewerProps<T>) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const width = enableSnapMode ? customWidth || screenWidth : screenWidth;
 
   const [isZoomed, setIsZoomed] = useState(false);
   const [isRotated, setIsRotated] = useState(false);
+  const [shouldStartTriggerAnimation, setShouldStartTriggerAnimation] = useState(false);
   const [manager, setManager] = useState<GestureViewerManager | null>(null);
 
   const listRef = useRef<any>(null);
+  const triggerRectRef = useRef<TriggerRect | null>(null);
+  const onAnimationCompleteRef = useRef(triggerAnimation?.onAnimationComplete);
 
   const initialTranslateY = useSharedValue(0);
   const initialTranslateX = useSharedValue(0);
@@ -61,7 +66,21 @@ export const useGestureViewer = <T = any>({
   const backdropOpacity = useSharedValue(1);
   const rotation = useSharedValue(0);
 
+  const triggerScale = useSharedValue(1);
+  const triggerTranslateX = useSharedValue(0);
+  const triggerTranslateY = useSharedValue(0);
+  const triggerOpacity = useSharedValue(1);
+
   const dataLength = data?.length || 0;
+
+  const animationConfig = useMemo(
+    () => ({
+      duration: triggerAnimation?.duration ?? 300,
+      easing: triggerAnimation?.easing ?? Easing.bezier(0.25, 0.1, 0.25, 1.0),
+      reduceMotion: triggerAnimation?.reduceMotion,
+    }),
+    [triggerAnimation?.duration, triggerAnimation?.easing, triggerAnimation?.reduceMotion],
+  );
 
   const dismissOptions = useMemo(() => {
     return {
@@ -111,6 +130,10 @@ export const useGestureViewer = <T = any>({
     },
     [manager],
   );
+
+  const onAnimationComplete = useCallback(() => {
+    onAnimationCompleteRef.current?.();
+  }, []);
 
   useAnimatedReaction(
     () => scale.value,
@@ -199,6 +222,104 @@ export const useGestureViewer = <T = any>({
     };
   }, [adjustedInitialIndex, translateY, backdropOpacity, translateX, scale, startScale, rotation, scrollTo]);
 
+  useEffect(() => {
+    onAnimationCompleteRef.current = triggerAnimation?.onAnimationComplete;
+  }, [triggerAnimation?.onAnimationComplete]);
+
+  useEffect(() => {
+    if (shouldStartTriggerAnimation && triggerRectRef.current) {
+      const startX = triggerRectRef.current.x + triggerRectRef.current.width / 2 - screenWidth / 2;
+      const startY = triggerRectRef.current.y + triggerRectRef.current.height / 2 - screenHeight / 2;
+      const startScale = Math.min(
+        triggerRectRef.current.width / screenWidth,
+        triggerRectRef.current.height / screenHeight,
+      );
+
+      triggerScale.value = startScale;
+      triggerTranslateX.value = startX;
+      triggerTranslateY.value = startY;
+      triggerOpacity.value = 0;
+
+      triggerScale.value = withTiming(1, animationConfig, (finished) => {
+        if (finished) {
+          runOnJS(onAnimationComplete)();
+        }
+      });
+      triggerTranslateX.value = withTiming(0, animationConfig);
+      triggerTranslateY.value = withTiming(0, animationConfig);
+      triggerOpacity.value = withTiming(1, {
+        duration: animationConfig.duration / 2,
+        easing: animationConfig.easing,
+        reduceMotion: animationConfig.reduceMotion,
+      });
+
+      setShouldStartTriggerAnimation(false);
+    }
+  }, [
+    shouldStartTriggerAnimation,
+    animationConfig,
+    screenWidth,
+    screenHeight,
+    triggerOpacity,
+    triggerScale,
+    triggerTranslateX,
+    triggerTranslateY,
+    onAnimationComplete,
+  ]);
+
+  useEffect(() => {
+    const node = registry.getTriggerNode(id);
+
+    if (node && typeof node.measure === 'function') {
+      node.measure((_x, _y, width, height, pageX, pageY) => {
+        triggerRectRef.current = { x: pageX, y: pageY, width, height };
+        setShouldStartTriggerAnimation(true);
+        registry.clearTriggerNode(id);
+      });
+    }
+
+    return () => {
+      triggerRectRef.current = null;
+    };
+  }, [id]);
+
+  const handleDismiss = useCallback(() => {
+    onDismissStart?.();
+
+    if (triggerRectRef.current) {
+      const endX = triggerRectRef.current.x + triggerRectRef.current.width / 2 - screenWidth / 2;
+      const endY = triggerRectRef.current.y + triggerRectRef.current.height / 2 - screenHeight / 2;
+      const endScale = Math.min(
+        triggerRectRef.current.width / screenWidth,
+        triggerRectRef.current.height / screenHeight,
+      );
+
+      triggerScale.value = withTiming(endScale, animationConfig);
+      triggerTranslateX.value = withTiming(endX, animationConfig);
+      triggerTranslateY.value = withTiming(endY, animationConfig);
+      triggerOpacity.value = withTiming(0, animationConfig, (finished) => {
+        if (finished && onDismiss) {
+          runOnJS(onDismiss)();
+        }
+      });
+      return;
+    }
+
+    if (onDismiss) {
+      runOnJS(onDismiss)();
+    }
+  }, [
+    animationConfig,
+    onDismiss,
+    onDismissStart,
+    screenWidth,
+    screenHeight,
+    triggerTranslateX,
+    triggerScale,
+    triggerTranslateY,
+    triggerOpacity,
+  ]);
+
   const onMomentumScrollEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       if (!enableHorizontalSwipe) {
@@ -267,8 +388,8 @@ export const useGestureViewer = <T = any>({
         translateY.value = event.translationY / dismissOptions.resistance;
       })
       .onEnd((event) => {
-        if (event.translationY > dismissOptions.threshold && dismissOptions.enabled && onDismiss) {
-          runOnJS(onDismiss)();
+        if (event.translationY > dismissOptions.threshold && dismissOptions.enabled) {
+          runOnJS(handleDismiss)();
           return;
         }
 
@@ -280,7 +401,7 @@ export const useGestureViewer = <T = any>({
           energyThreshold: 6e-9,
         });
       });
-  }, [translateY, dismissOptions.threshold, dismissOptions.enabled, onDismiss, dismissOptions.resistance, isZoomed]);
+  }, [translateY, dismissOptions, handleDismiss, isZoomed]);
 
   const zoomPinchGesture = useMemo(() => {
     return Gesture.Pinch()
@@ -451,7 +572,12 @@ export const useGestureViewer = <T = any>({
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
+      opacity: triggerOpacity.value,
       transform: [
+        { translateX: triggerTranslateX.value },
+        { translateY: triggerTranslateY.value },
+        { scale: triggerScale.value },
+
         { translateY: translateY.value },
         { translateX: translateX.value },
         { scale: scale.value },
@@ -461,13 +587,15 @@ export const useGestureViewer = <T = any>({
   });
 
   const backdropStyle = useAnimatedStyle(() => {
+    const baseOpacity = triggerOpacity.value;
+
     if (!dismissOptions.fadeBackdrop || scale.value !== 1) {
-      return { opacity: 1 };
+      return { opacity: baseOpacity };
     }
 
-    const opacity = interpolate(translateY.value, [0, 200], [1, 0], 'clamp');
+    const dismissOpacity = interpolate(translateY.value, [0, 200], [1, 0], 'clamp');
 
-    return { opacity };
+    return { opacity: baseOpacity * dismissOpacity };
   }, [dismissOptions.fadeBackdrop]);
 
   const onScrollBeginDrag = useCallback(() => {
@@ -476,7 +604,6 @@ export const useGestureViewer = <T = any>({
 
   return {
     dataLength,
-    translateY,
     listRef,
     isZoomed,
     isRotated,
@@ -485,6 +612,7 @@ export const useGestureViewer = <T = any>({
 
     onMomentumScrollEnd,
     onScrollBeginDrag,
+    handleDismiss,
 
     animatedStyle,
     backdropStyle,

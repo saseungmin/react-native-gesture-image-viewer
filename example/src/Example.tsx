@@ -2,8 +2,9 @@ import { Feather } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { useCallback, useState } from 'react';
-import { Button, Modal, StyleSheet, Text, View } from 'react-native';
+import { Button, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import {
+  GestureTrigger,
   GestureViewer,
   useGestureViewerController,
   useGestureViewerEvent,
@@ -22,12 +23,20 @@ const images = [
 function Example() {
   const [visible, setVisible] = useState(false);
   const [enableLoop, setEnableLoop] = useState(false);
+  const [showExternalUI, setShowExternalUI] = useState(true);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   const { goToIndex, goToPrevious, goToNext, zoomIn, zoomOut, resetZoom, rotate } = useGestureViewerController();
 
   const { currentIndex, totalCount } = useGestureViewerState();
 
   const insets = useSafeAreaInsets();
+
+  const modalOpen = useCallback((index: number) => {
+    setSelectedIndex(index);
+    setShowExternalUI(true);
+    setVisible(true);
+  }, []);
 
   useGestureViewerEvent('zoomChange', (data) => {
     console.log(`Zoom changed from ${data.previousScale} to ${data.scale}`);
@@ -52,126 +61,146 @@ function Example() {
     <View style={styles.container}>
       <View style={styles.buttonWrapper}>
         <Button title={`Loop: ${enableLoop ? 'ON' : 'OFF'}`} onPress={() => setEnableLoop(!enableLoop)} />
-        <Button title="Open Gallery" onPress={() => setVisible(true)} />
+        <Text style={styles.text}>Click on thumbnail to open!</Text>
+        <View style={styles.galleryContainer}>
+          {images.map((uri, index) => (
+            <GestureTrigger key={uri} onPress={() => modalOpen(index)}>
+              <Pressable style={styles.thumb}>
+                <Image source={{ uri }} style={styles.thumbImage} contentFit="cover" />
+              </Pressable>
+            </GestureTrigger>
+          ))}
+        </View>
       </View>
-      <Modal visible={visible} onRequestClose={() => setVisible(false)}>
+      <Modal visible={visible} transparent onRequestClose={() => setVisible(false)} animationType="none">
         <View style={{ flex: 1 }}>
           <GestureViewer
             data={images}
-            initialIndex={0}
+            initialIndex={selectedIndex}
             onDismiss={() => setVisible(false)}
+            onDismissStart={() => setShowExternalUI(false)}
             enableLoop={enableLoop}
             ListComponent={FlashList}
             renderItem={renderImage}
-            backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.90)' }}
-            renderContainer={(children) => <View style={{ flex: 1 }}>{children}</View>}
+            backdropStyle={{ backgroundColor: '#181818' }}
+            renderContainer={(children, helpers) => (
+              <View style={{ flex: 1 }}>
+                {children}
+                {showExternalUI && (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: insets.top + 10,
+                      right: 10,
+                      zIndex: 1000,
+                    }}
+                  >
+                    <Feather.Button
+                      name="x"
+                      size={30}
+                      iconStyle={{ marginRight: 0 }}
+                      backgroundColor="transparent"
+                      color="white"
+                      onPress={helpers.dismiss}
+                    />
+                  </View>
+                )}
+              </View>
+            )}
           />
-          <View
-            style={{
-              position: 'absolute',
-              top: insets.top + 10,
-              left: 10,
-              zIndex: 1000,
-              flexDirection: 'row',
-              gap: 10,
-            }}
-          >
-            <View style={{ flexDirection: 'column' }}>
-              <Feather.Button
-                name="zoom-in"
-                size={30}
-                iconStyle={{ marginRight: 0 }}
-                backgroundColor="transparent"
-                color="white"
-                onPress={() => zoomIn(0.25)}
-              />
-              <Feather.Button
-                name="zoom-out"
-                size={30}
-                iconStyle={{ marginRight: 0 }}
-                backgroundColor="transparent"
-                color="white"
-                onPress={() => zoomOut(0.25)}
-              />
-              <Feather.Button
-                name="refresh-cw"
-                size={30}
-                iconStyle={{ marginRight: 0 }}
-                backgroundColor="transparent"
-                color="white"
-                onPress={() => {
-                  rotate(0);
-                  resetZoom();
+          {showExternalUI && (
+            <>
+              <View
+                style={{
+                  position: 'absolute',
+                  top: insets.top + 10,
+                  left: 10,
+                  zIndex: 1000,
+                  flexDirection: 'row',
+                  gap: 10,
                 }}
-              />
-            </View>
-            <View style={{ flexDirection: 'column' }}>
-              <Feather.Button
-                name="rotate-cw"
-                size={30}
-                iconStyle={{ marginRight: 0 }}
-                backgroundColor="transparent"
-                color="white"
-                onPress={() => rotate()}
-              />
-              <Feather.Button
-                name="rotate-ccw"
-                size={30}
-                iconStyle={{ marginRight: 0 }}
-                backgroundColor="transparent"
-                color="white"
-                onPress={() => rotate(90, false)}
-              />
-            </View>
-          </View>
-          <View
-            style={{
-              position: 'absolute',
-              top: insets.top + 10,
-              right: 10,
-              zIndex: 1000,
-            }}
-          >
-            <Feather.Button
-              name="x"
-              size={30}
-              iconStyle={{ marginRight: 0 }}
-              backgroundColor="transparent"
-              color="white"
-              onPress={() => setVisible(false)}
-            />
-          </View>
-          <View
-            style={{
-              position: 'absolute',
-              bottom: insets.bottom + 10,
-              left: 0,
-              right: 0,
-              gap: 10,
-              flexDirection: 'column',
-            }}
-          >
-            <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'space-around', alignItems: 'center' }}>
-              <Feather.Button
-                backgroundColor="transparent"
-                name="chevron-left"
-                size={30}
-                iconStyle={{ marginRight: 0 }}
-                color="white"
-                onPress={goToPrevious}
-              />
-              <Button title="Jump to 3" onPress={() => goToIndex(2)} />
-              <Feather.Button
-                backgroundColor="transparent"
-                name="chevron-right"
-                size={30}
-                iconStyle={{ marginRight: 0 }}
-                color="white"
-                onPress={goToNext}
-              />
-            </View>
-            <Text style={{ textAlign: 'center', color: 'white' }}>{`${currentIndex + 1} / ${totalCount}`}</Text>
-          </View>
+              >
+                <View style={{ flexDirection: 'column' }}>
+                  <Feather.Button
+                    name="zoom-in"
+                    size={30}
+                    iconStyle={{ marginRight: 0 }}
+                    backgroundColor="transparent"
+                    color="white"
+                    onPress={() => zoomIn(0.25)}
+                  />
+                  <Feather.Button
+                    name="zoom-out"
+                    size={30}
+                    iconStyle={{ marginRight: 0 }}
+                    backgroundColor="transparent"
+                    color="white"
+                    onPress={() => zoomOut(0.25)}
+                  />
+                  <Feather.Button
+                    name="refresh-cw"
+                    size={30}
+                    iconStyle={{ marginRight: 0 }}
+                    backgroundColor="transparent"
+                    color="white"
+                    onPress={() => {
+                      rotate(0);
+                      resetZoom();
+                    }}
+                  />
+                </View>
+                <View style={{ flexDirection: 'column' }}>
+                  <Feather.Button
+                    name="rotate-cw"
+                    size={30}
+                    iconStyle={{ marginRight: 0 }}
+                    backgroundColor="transparent"
+                    color="white"
+                    onPress={() => rotate()}
+                  />
+                  <Feather.Button
+                    name="rotate-ccw"
+                    size={30}
+                    iconStyle={{ marginRight: 0 }}
+                    backgroundColor="transparent"
+                    color="white"
+                    onPress={() => rotate(90, false)}
+                  />
+                </View>
+              </View>
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: insets.bottom + 10,
+                  left: 0,
+                  right: 0,
+                  gap: 10,
+                  flexDirection: 'column',
+                }}
+              >
+                <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'space-around', alignItems: 'center' }}>
+                  <Feather.Button
+                    backgroundColor="transparent"
+                    name="chevron-left"
+                    size={30}
+                    iconStyle={{ marginRight: 0 }}
+                    color="white"
+                    onPress={goToPrevious}
+                  />
+                  <Button title="Jump to 3" onPress={() => goToIndex(2)} />
+                  <Feather.Button
+                    backgroundColor="transparent"
+                    name="chevron-right"
+                    size={30}
+                    iconStyle={{ marginRight: 0 }}
+                    color="white"
+                    onPress={goToNext}
+                  />
+                </View>
+                <Text style={{ textAlign: 'center', color: 'white' }}>{`${currentIndex + 1} / ${totalCount}`}</Text>
+              </View>
+            </>
+          )}
         </View>
       </Modal>
     </View>
@@ -185,7 +214,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   buttonWrapper: {
+    gap: 16,
+  },
+  galleryContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    maxWidth: 360,
+  },
+  thumb: {
+    width: 110,
+    height: 110,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#222',
+  },
+  thumbImage: {
+    width: '100%',
+    height: '100%',
+  },
+  text: {
+    textAlign: 'center',
+    color: '#222',
+    fontSize: 22,
+    fontWeight: 'bold',
   },
 });
 
