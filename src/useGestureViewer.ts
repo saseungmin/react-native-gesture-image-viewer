@@ -378,18 +378,20 @@ export const useGestureViewer = <T = any>({
   );
 
   const dismissGesture = useMemo(() => {
+    const canDismiss = !isZoomed && dismissOptions.enabled;
+
     return Gesture.Pan()
       .minDistance(10)
       .averageTouches(true)
       .activeCursor('grabbing')
       .activeOffsetY([-10, 10])
       .failOffsetX([-10, 10])
-      .enabled(!isZoomed && dismissOptions.enabled)
+      .enabled(canDismiss)
       .onUpdate((event) => {
         translateY.value = event.translationY / dismissOptions.resistance;
       })
       .onEnd((event) => {
-        if (!isZoomed && dismissOptions.enabled && event.translationY > dismissOptions.threshold) {
+        if (canDismiss && event.translationY > dismissOptions.threshold) {
           runOnJS(handleDismiss)();
           return;
         }
