@@ -290,12 +290,12 @@ export const useGestureViewer = <T = any>({
       .activeCursor('grabbing')
       .activeOffsetY([-10, 10])
       .failOffsetX([-10, 10])
-      .enabled(!isZoomed)
+      .enabled(!isZoomed && enableDismissGesture)
       .onUpdate((event) => {
         translateY.value = event.translationY / resistance;
       })
       .onEnd((event) => {
-        if (event.translationY > dismissThreshold && enableDismissGesture && onDismiss) {
+        if (!isZoomed && enableDismissGesture && event.translationY > dismissThreshold && onDismiss) {
           runOnJS(onDismiss)();
           return;
         }
