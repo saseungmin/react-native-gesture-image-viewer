@@ -384,7 +384,7 @@ export const useGestureViewer = <T = any>({
       .activeCursor('grabbing')
       .activeOffsetY([-10, 10])
       .failOffsetX([-10, 10])
-      .enabled(!isZoomed)
+      .enabled(!isZoomed && dismissOptions.enabled)
       .onUpdate((event) => {
         translateY.value = event.translationY / dismissOptions.resistance;
       })
