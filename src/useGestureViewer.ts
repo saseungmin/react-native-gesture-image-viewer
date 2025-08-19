@@ -230,12 +230,12 @@ export const useGestureViewer = <T = any>({
     if (shouldStartTriggerAnimation && triggerRectRef.current) {
       const startX = triggerRectRef.current.x + triggerRectRef.current.width / 2 - screenWidth / 2;
       const startY = triggerRectRef.current.y + triggerRectRef.current.height / 2 - screenHeight / 2;
-      const startScale = Math.min(
+      const initialScaleFromTrigger = Math.min(
         triggerRectRef.current.width / screenWidth,
         triggerRectRef.current.height / screenHeight,
       );
 
-      triggerScale.value = startScale;
+      triggerScale.value = initialScaleFromTrigger;
       triggerTranslateX.value = startX;
       triggerTranslateY.value = startY;
       triggerOpacity.value = 0;
@@ -273,6 +273,7 @@ export const useGestureViewer = <T = any>({
     if (node && typeof node.measure === 'function') {
       node.measure((_x, _y, width, height, pageX, pageY) => {
         triggerRectRef.current = { x: pageX, y: pageY, width, height };
+        triggerOpacity.value = 0;
         setShouldStartTriggerAnimation(true);
         registry.clearTriggerNode(id);
       });
@@ -281,7 +282,7 @@ export const useGestureViewer = <T = any>({
     return () => {
       triggerRectRef.current = null;
     };
-  }, [id]);
+  }, [id, triggerOpacity]);
 
   const handleDismiss = useCallback(() => {
     onDismissStart?.();
