@@ -110,3 +110,30 @@ function App() {
   );
 }
 ```
+
+## [GestureTrigger](/guide/usage/trigger-based-animations.html)
+
+`GestureTrigger`는 썸네일과 같은 트리거 요소에서 전체 모달 뷰로의 원활한 전환을 생성하는 부드러운 트리거 기반 애니메이션을 지원합니다. 이 기능은 트리거와 모달 콘텐츠 간의 시각적 연속성을 유지하여 사용자 경험을 향상시킵니다.
+
+```tsx
+import { GestureTrigger, GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <View>
+      <GestureTrigger onPress={() => setVisible(true)}>
+        <Pressable style={styles.thumb}>
+          <Image source={{ uri }} style={styles.thumbImage} />
+        </Pressable>
+      </GestureTrigger>
+      <GestureViewer
+        data={images}
+        renderItem={renderImage}
+        onDismiss={() => setVisible(false)}
+      />
+    </View>
+  );
+}
+```

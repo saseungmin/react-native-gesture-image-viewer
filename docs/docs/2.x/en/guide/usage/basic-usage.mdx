@@ -3,7 +3,7 @@
 ## GestureViewer
 
 ```tsx
-import { FlatList, Image, Modal } from 'react-native';
+import { ScrollView, Image, Modal } from 'react-native';
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 
 function App() {
@@ -19,7 +19,7 @@ function App() {
       <GestureViewer
         data={images}
         renderItem={renderImage}
-        ListComponent={FlatList}
+        ListComponent={ScrollView}
         onDismiss={() => setVisible(false)}
       />
     </Modal>
@@ -106,6 +106,33 @@ function App() {
       data={images}
       renderItem={renderImage}
     />
+  );
+}
+```
+
+## [GestureTrigger](/guide/usage/trigger-based-animations.html)
+
+`GestureTrigger` supports smooth trigger-based animations that create seamless transitions from trigger elements (like thumbnails) to the full modal view. This feature enhances user experience by maintaining visual continuity between the trigger and modal content.
+
+```tsx
+import { GestureTrigger, GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <View>
+      <GestureTrigger onPress={() => setVisible(true)}>
+        <Pressable style={styles.thumb}>
+          <Image source={{ uri }} style={styles.thumbImage} />
+        </Pressable>
+      </GestureTrigger>
+      <GestureViewer
+        data={images}
+        renderItem={renderImage}
+        onDismiss={() => setVisible(false)}
+      />
+    </View>
   );
 }
 ```

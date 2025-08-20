@@ -11,6 +11,7 @@
 ```tsx
 import {
   GestureViewer,
+  GestureTrigger,
   useGestureViewerController,
   useGestureViewerEvent,
   useGestureViewerState,
@@ -27,21 +28,31 @@ function App() {
   const { currentIndex: secondCurrentIndex } = useGestureViewerState(secondViewerId);
 
   useGestureViewerEvent(firstViewerId, 'zoomChange', (data) => {
-    console.log(`갤러리 줌: ${data.scale}배`);
+    console.log(`Gallery zoom: ${data.scale}x`);
   });
 
   useGestureViewerEvent(secondViewerId, 'zoomChange', (data) => {
-    console.log(`갤러리 줌: ${data.scale}배`);
+    console.log(`Gallery zoom: ${data.scale}x`);
   });
 
   return (
     <View>
+      <GestureTrigger id={firstViewerId}>
+        <Pressable style={styles.thumb}>
+          <Image source={{ uri }} style={styles.thumbImage} />
+        </Pressable>
+      </GestureTrigger>
       <GestureViewer
         id={firstViewerId}
         data={images}
         renderItem={renderImage}
       />
       <Button title="Go to index 2 (first)" onPress={() => goToFirstIndex(2)} />
+      <GestureTrigger id={secondViewerId}>
+        <Pressable style={styles.thumb}>
+          <Image source={{ uri }} style={styles.thumbImage} />
+        </Pressable>
+      </GestureTrigger>
       <GestureViewer
         id={secondViewerId}
         data={images}

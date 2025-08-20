@@ -11,6 +11,7 @@ The default `id` value is `default`.
 ```tsx
 import {
   GestureViewer,
+  GestureTrigger,
   useGestureViewerController,
   useGestureViewerEvent,
   useGestureViewerState,
@@ -36,12 +37,22 @@ function App() {
 
   return (
     <View>
+      <GestureTrigger id={firstViewerId}>
+        <Pressable style={styles.thumb}>
+          <Image source={{ uri }} style={styles.thumbImage} />
+        </Pressable>
+      </GestureTrigger>
       <GestureViewer
         id={firstViewerId}
         data={images}
         renderItem={renderImage}
       />
       <Button title="Go to index 2 (first)" onPress={() => goToFirstIndex(2)} />
+      <GestureTrigger id={secondViewerId}>
+        <Pressable style={styles.thumb}>
+          <Image source={{ uri }} style={styles.thumbImage} />
+        </Pressable>
+      </GestureTrigger>
       <GestureViewer
         id={secondViewerId}
         data={images}

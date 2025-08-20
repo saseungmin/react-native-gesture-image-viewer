@@ -1,0 +1,359 @@
+import { normalizeImagePath } from '@rspress/core/runtime';
+
+# 트리거 기반 모달 애니메이션
+
+`GestureTrigger`는 썸네일과 같은 트리거 요소에서 전체 모달 뷰로의 원활한 전환을 생성하는 부드러운 트리거 기반 애니메이션을 지원합니다. 이 기능은 트리거와 모달 콘텐츠 간의 시각적 연속성을 유지하여 사용자 경험을 향상시킵니다.
+
+<video src={normalizeImagePath("/guide/usage/trigger-based-animations.mp4")} controls autoPlay loop muted style={{ maxHeight: 480, justifySelf: 'center' }} />
+
+## GestureTrigger 사용법
+
+`GestureTrigger` 컴포넌트는 누를 수 있는 요소를 감싸고 부드러운 모달 전환을 위해 해당 위치를 등록합니다.
+
+```tsx
+import { GestureTrigger, GestureViewer } from 'react-native-gesture-image-viewer';
+
+function Gallery() {
+  const [visible, setVisible] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const openModal = (index: number) => {
+    setSelectedIndex(index);
+    setVisible(true);
+  };
+
+  return (
+    <View>
+      {/* 갤러리 그리드 */}
+      {images.map((uri, index) => (
+        <GestureTrigger key={uri} id="gallery" onPress={() => openModal(index)}>
+          <Pressable style={styles.thumb}>
+            <Image source={{ uri }} style={styles.thumbImage} />
+          </Pressable>
+        </GestureTrigger>
+      ))}
+
+      {/* 모달 */}
+      <Modal visible={visible} transparent>
+        <GestureViewer
+          id="gallery"
+          data={images}
+          initialIndex={selectedIndex}
+          renderItem={renderImage}
+          onDismiss={() => setVisible(false)}
+          triggerAnimation={{
+            duration: 300,
+            easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
+            onAnimationComplete: () => console.log('애니메이션 완료!')
+          }}
+        />
+      </Modal>
+    </View>
+  );
+}
+```
+
+### 1. GestureTrigger에 onPress 사용 (권장)
+
+```tsx
+<GestureTrigger onPress={() => openModal(index)}>
+  <Pressable style={styles.thumb}>
+    <Image source={{ uri }} style={styles.thumbImage} />
+  </Pressable>
+</GestureTrigger>
+```
+
+### 2. 하위 요소에 onPress 사용
+
+```tsx
+<GestureTrigger>
+  <Pressable style={styles.thumb} onPress={() => openModal(index)}>
+    <Image source={{ uri }} style={styles.thumbImage} />
+  </Pressable>
+</GestureTrigger>
+```
+
+:::note 중요
+
+- 두 방법은 기능적으로 동일합니다
+- `GestureTrigger`는 자동으로 하위 컴포넌트에 press 핸들러를 주입합니다
+- 하위 컴포넌트는 반드시 press 가능해야 합니다 (`onPress` prop 지원)
+- `GestureTrigger`와 하위 요소 모두에 `onPress`가 있는 경우, 둘 다 호출됩니다 (하위 요소의 핸들러가 먼저 호출됨)
+
+**지원되는 하위 컴포넌트**
+
+다음과 같은 press 가능한 컴포넌트를 하위 요소로 사용할 수 있습니다:
+
+- `Pressable`
+- `TouchableOpacity`
+- `TouchableHighlight`
+- `Button`
+- `onPress` prop를 가지고 있는 컴포넌트 및 커스텀 컴포넌트
+
+**다양한 컴포넌트 예시**
+
+```tsx
+// TouchableOpacity 사용
+<GestureTrigger onPress={handlePress}>
+  <TouchableOpacity style={styles.button}>
+    <Text>이미지 보기</Text>
+  </TouchableOpacity>
+</GestureTrigger>
+
+// 커스텀 컴포넌트 사용
+function CustomButton({ onPress, children }) {
+  return (
+    <Pressable onPress={onPress} style={styles.customButton}>
+      {children}
+    </Pressable>
+  );
+}
+
+<GestureTrigger>
+  <CustomButton onPress={handlePress}>
+    <Text>커스텀 버튼</Text>
+  </CustomButton>
+</GestureTrigger>
+```
+:::
+
+## 애니메이션 구성
+
+`triggerAnimation` prop을 사용하여 트리거 애니메이션 동작을 사용자 정의할 수 있습니다:
+
+```tsx
+import { ReduceMotion, Easing } from 'react-native-reanimated';
+
+function App() {
+  return (
+    <GestureViewer
+      triggerAnimation={{
+        duration: 400, // 애니메이션 지속 시간(밀리초)
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1.0), // 사용자 정의 이징 함수
+        reduceMotion: ReduceMotion.System, // 시스템 감소 모션 설정 준수
+        onAnimationComplete: () => { // 애니메이션 완료 시 콜백
+          console.log('모달 애니메이션 완료');
+        }
+      }}
+    />
+  )
+}
+```
+
+## 다중 트리거 인스턴스
+
+다른 ID를 사용하여 여러 트리거 인스턴스를 가질 수 있습니다:
+
+```tsx
+// 사진 갤러리 트리거
+<GestureTrigger id="photos" onPress={() => openPhotoModal(index)}>
+  <Image source={photo} />
+</GestureTrigger>
+
+// 비디오 갤러리 트리거
+<GestureTrigger id="videos" onPress={() => openVideoModal(index)}>
+  <Video source={video} />
+</GestureTrigger>
+```
+
+:::tip
+애니메이션이 제대로 작동하려면 `GestureTrigger`와 `GestureViewer` 컴포넌트 간에 `id` prop이 일치해야 합니다. (기본값: `default`)
+:::
+
+## 닫기 애니메이션 처리
+
+### onDismissStart 콜백
+
+`onDismissStart` 콜백은 닫기 애니메이션이 시작될 때 즉시 트리거되며, 애니메이션이 완료되기 전에 사라져야 하는 UI 요소를 숨기는 데 유용합니다.
+
+```tsx
+function App() {
+  const [visible, setVisible] = useState(false);
+  const [showExternalUI, setShowExternalUI] = useState(false);
+
+  const handleDismissStart = () => {
+    setShowExternalUI(false);
+  };
+
+  return (
+    <Modal visible={visible} transparent>
+      <GestureViewer
+        onDismissStart={handleDismissStart}
+        {...modalProps}
+      />
+      {showExternalUI && (
+        <View>
+          <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
+        </View>
+      )}
+    </Modal>
+  );
+}
+```
+
+### 커스텀 컴포넌트에서 닫기
+
+`renderContainer`의 `dismiss` 헬퍼를 사용하여 프로그래밍 방식으로 뷰어를 닫을 수 있습니다:
+
+```tsx
+<GestureViewer
+  renderContainer={(children, { dismiss }) => (
+    <View style={{ flex: 1 }}>
+      {children}
+      <Pressable
+        style={styles.closeButton}
+        {/*  이 버튼은 원래 썸네일 위치로 돌아가는 닫기 애니메이션을 올바르게 트리거합니다 */}
+        onPress={dismiss}
+      >
+        <Text>닫기</Text>
+      </Pressable>
+    </View>
+  )}
+/>
+```
+
+:::note `renderContainer`의 `dismiss`를 사용하는 이유
+
+트리거 기반 애니메이션을 사용할 때는 `setVisible(false)`로 직접 제어하는 대신 `renderContainer`가 제공하는 `dismiss` 메서드를 사용하는 것이 중요합니다. 그 이유는 다음과 같습니다:
+
+```tsx
+// ❌ 피하세요: 트리거 애니메이션 없이 즉시 닫힙니다
+<Button onPress={() => setVisible(false)} title="닫기" />
+
+// ✅ 권장: 트리거 애니메이션을 사용하여 닫힙니다
+<Button onPress={dismiss} title="닫기" />
+```
+
+**작동 방식:**
+
+1. 트리거 애니메이션 사용 시:
+    - `dismiss`가 호출되면 뷰어가 원래 트리거 위치로 애니메이션되며 돌아갑니다
+    - 애니메이션 시작 시 `onDismissStart`가 호출됩니다
+    - 애니메이션 완료 후 `onDismiss`가 호출됩니다
+2. 트리거 애니메이션 없이 사용 시:
+    - 트리거 애니메이션이 구성되지 않은 경우에도 `dismiss`는 간단한 닫기로 작동합니다
+
+:::
+
+### 닫기 처리 완전한 예제
+
+```tsx
+function ImageViewer() {
+  const [visible, setVisible] = useState(false);
+  const [showUI, setShowUI] = useState(true);
+
+  return (
+    <Modal visible={visible} transparent>
+      <GestureViewer
+        onDismissStart={() => setShowUI(false)}
+        onDismiss={() => setVisible(false)}
+        renderContainer={(children, { dismiss }) => (
+          <View style={{ flex: 1 }}>
+            {children}
+            {showUI && (
+              <View style={styles.header}>
+                <Button onPress={dismiss} title="닫기" />
+              </View>
+            )}
+          </View>
+        )}
+      />
+    </Modal>
+  );
+}
+```
+
+### 트리거 애니메이션과 함께하는 닫기 동작
+
+트리거 기반 애니메이션을 사용할 때, 닫기 애니메이션은 원래 트리거 위치로 돌아갑니다. `onDismissStart` 콜백은 이 애니메이션이 시작될 때 호출되므로, 닫기 애니메이션 중에 표시되지 않아야 하는 UI 요소를 숨길 수 있습니다.
+
+```tsx
+<GestureViewer
+  onDismissStart={() => {
+    console.log('닫기 애니메이션 시작됨');
+    setShowUI(false);
+  }}
+  onDismiss={() => {
+    console.log('닫기 애니메이션 완료됨');
+    setVisible(false);
+  }}
+/>
+```
+
+이 패턴은 다음과 같은 사용자 경험을 보장합니다:
+
+1. 닫기가 시작되면 즉시 UI 요소를 숨깁니다
+2. 닫기 애니메이션이 자연스럽게 완료되도록 합니다
+3. 애니메이션이 완전히 완료된 후에만 리소스를 정리합니다
+
+### 모범 사례
+
+1. 애니메이션과 함께 뷰어를 닫으려면 항상 `renderContainer`의 `dismiss` 메서드를 사용하세요
+2. 닫기 애니메이션 중에 표시되지 않아야 하는 UI 요소는 `onDismissStart`를 사용하여 숨기세요
+3. 애니메이션 완료 후에 실행되어야 하는 정리 작업은 `onDismiss`에 배치하세요
+
+#### 흔히 하는 실수
+
+```tsx
+// ❌ 피하세요: 트리거 애니메이션을 우회합니다
+<Button onPress={() => setVisible(false)} title="닫기" />
+
+// ❌ 피하세요: 애니메이션이 중단됩니다
+const handleClose = () => {
+  setShowUI(false);
+  setVisible(false); // 너무 일찍 닫힙니다
+};
+<Button onPress={handleClose} title="닫기" />
+
+// ✅ 올바른 방법: 애니메이션이 자연스럽게 완료되도록 합니다
+<GestureViewer
+  onDismissStart={() => setShowUI(false)}
+  onDismiss={() => setVisible(false)}
+  renderContainer={(children, { dismiss }) => (
+    <View style={{ flex: 1 }}>
+      {children}
+      {showUI && (
+        <View style={styles.header}>
+          <Button onPress={dismiss} title="닫기" />
+        </View>
+      )}
+    </View>
+  )}
+/>
+```
+
+이 패턴은 트리거 기반 애니메이션이 일관되게 작동하도록 하며 최상의 사용자 경험을 제공합니다.
+
+## API 참조
+
+### GestureTrigger Props
+
+```ts
+interface GestureTriggerProps<T extends WithOnPress> {
+  id?: string; // GestureViewer과 연결할 식별자 (기본값: "default")
+  children: ReactElement<T>; // 단일 pressable 자식 요소
+  onPress?: (...args: unknown[]) => void; // 추가 onPress 핸들러
+}
+```
+
+### TriggerAnimation 구성
+
+```ts
+interface TriggerAnimationConfig {
+  duration?: number; // 밀리초 단위의 애니메이션 지속 시간
+  easing?: EasingFunction; // 사용자 정의 이징 함수
+  reduceMotion?: boolean; // 시스템 감소 모션 설정 준수 여부
+  onAnimationComplete?: () => void; // 애니메이션 완료 시 호출될 콜백
+}
+```
+
+| 속성 | 타입 | 기본값 | 설명 |
+|:-----|:-----|:-------|:------|
+| `duration` | `number` | `300` | 밀리초 단위의 애니메이션 지속 시간 |
+| `easing` | `EasingFunction` | `Easing.bezier(0.25, 0.1, 0.25, 1.0)` | 애니메이션을 위한 이징 함수 |
+| `reduceMotion` | `ReduceMotion` | `undefined` | 시스템 감소 모션 설정 준수 여부 |
+| `onAnimationComplete` | `() => void` | `undefined` | 애니메이션이 완료될 때 호출되는 콜백 |
+
+:::note
+트리거 애니메이션은 누를 때 트리거 요소의 위치를 측정하고 해당 위치에서 전체 화면으로 모달을 애니메이션하는 방식으로 작동합니다.
+:::

@@ -45,9 +45,10 @@ React Native에서 이미지 갤러리나 콘텐츠 뷰어를 구현할 때, 복
 
 ```tsx
 import { useCallback, useState } from 'react';
-import { ScrollView, Image, Modal, View, Text, Button } from 'react-native';
+import { ScrollView, Image, Modal, View, Text, Button, Pressable } from 'react-native';
 import {
   GestureViewer,
+  GestureTrigger,
   useGestureViewerController,
   useGestureViewerEvent,
   useGestureViewerState,
@@ -70,20 +71,29 @@ function App() {
   });
 
   return (
-    <Modal visible={visible} onRequestClose={() => setVisible(false)}>
-      <GestureViewer
-        data={images}
-        renderItem={renderImage}
-        ListComponent={ScrollView}
-        onDismiss={() => setVisible(false)}
-      />
-      <View>
-        <Button title="Prev" onPress={goToPrevious} />
-        <Button title="Jump to index 2" onPress={() => goToIndex(2)} />
-        <Button title="Next" onPress={goToNext} />
-        <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
-      </View>
-    </Modal>
+    <View>
+      {images.map((uri, index) => (
+        <GestureTrigger key={uri} onPress={() => setVisible(true)}>
+          <Pressable>
+            <Image source={{ uri }} />
+          </Pressable>
+        </GestureTrigger>
+      ))}
+      <Modal visible={visible} onRequestClose={() => setVisible(false)}>
+        <GestureViewer
+          data={images}
+          renderItem={renderImage}
+          ListComponent={ScrollView}
+          onDismiss={() => setVisible(false)}
+        />
+        <View>
+          <Button title="Prev" onPress={goToPrevious} />
+          <Button title="Jump to index 2" onPress={() => goToIndex(2)} />
+          <Button title="Next" onPress={goToNext} />
+          <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
+        </View>
+      </Modal>
+    </View>
   );
 }
 ```

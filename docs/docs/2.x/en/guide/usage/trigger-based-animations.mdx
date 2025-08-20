@@ -1,0 +1,366 @@
+import { normalizeImagePath } from '@rspress/core/runtime';
+
+# Trigger-Based Modal Animations
+
+`GestureTrigger` supports smooth trigger-based animations that create seamless transitions from trigger elements (like thumbnails) to the full modal view. This feature enhances user experience by maintaining visual continuity between the trigger and modal content.
+
+<video src={normalizeImagePath("/guide/usage/trigger-based-animations.mp4")} controls autoPlay loop muted style={{ maxHeight: 480, justifySelf: 'center' }} />
+
+## GestureTrigger Usage
+
+The `GestureTrigger` component wraps pressable elements and registers their position for smooth modal transitions.
+
+```tsx
+import { GestureTrigger, GestureViewer } from 'react-native-gesture-image-viewer';
+
+function Gallery() {
+  const [visible, setVisible] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const openModal = (index: number) => {
+    setSelectedIndex(index);
+    setVisible(true);
+  };
+
+  return (
+    <View>
+      {/* Gallery Grid */}
+      {images.map((uri, index) => (
+        <GestureTrigger key={uri} id="gallery" onPress={() => openModal(index)}>
+          <Pressable style={styles.thumb}>
+            <Image source={{ uri }} style={styles.thumbImage} />
+          </Pressable>
+        </GestureTrigger>
+      ))}
+
+      {/* Modal */}
+      <Modal visible={visible} transparent>
+        <GestureViewer
+          id="gallery"
+          data={images}
+          initialIndex={selectedIndex}
+          renderItem={renderImage}
+          onDismiss={() => setVisible(false)}
+          triggerAnimation={{
+            duration: 300,
+            easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
+            onAnimationComplete: () => console.log('Animation finished!')
+          }}
+        />
+      </Modal>
+    </View>
+  );
+}
+```
+
+### 1. Using onPress on GestureTrigger (Recommended)
+
+```tsx
+<GestureTrigger onPress={() => openModal(index)}>
+  <Pressable style={styles.thumb}>
+    <Image source={{ uri }} style={styles.thumbImage} />
+  </Pressable>
+</GestureTrigger>
+```
+
+### 2. Using onPress on Child Element
+
+```tsx
+<GestureTrigger>
+  <Pressable style={styles.thumb} onPress={() => openModal(index)}>
+    <Image source={{ uri }} style={styles.thumbImage} />
+  </Pressable>
+</GestureTrigger>
+```
+
+:::note important
+
+- Both methods are functionally equivalent
+- The `GestureTrigger` will automatically inject the press handler into the child component
+- The child component must be pressable (support onPress prop)
+- If both `GestureTrigger` and child have onPress, both will be called (child's handler first)
+
+**Supported Child Components**
+
+You can use any pressable component as a child, such as:
+
+- `Pressable`
+- `TouchableOpacity`
+- `TouchableHighlight`
+- `Button`
+- Any custom component that accepts `onPress` prop
+
+**Example with Different Components**
+
+```tsx
+// Using TouchableOpacity
+<GestureTrigger onPress={handlePress}>
+  <TouchableOpacity style={styles.button}>
+    <Text>View Image</Text>
+  </TouchableOpacity>
+</GestureTrigger>
+
+// Using custom component
+function CustomButton({ onPress, children }) {
+  return (
+    <Pressable onPress={onPress} style={styles.customButton}>
+      {children}
+    </Pressable>
+  );
+}
+
+<GestureTrigger>
+  <CustomButton onPress={handlePress}>
+    <Text>Custom Button</Text>
+  </CustomButton>
+</GestureTrigger>
+```
+
+:::
+
+## Animation Configuration
+
+You can customize the trigger animation behavior using the `triggerAnimation` prop:
+
+```tsx
+import { ReduceMotion, Easing } from 'react-native-reanimated';
+
+function App() {
+  return (
+    <GestureViewer
+      triggerAnimation={{
+        duration: 400, // Animation duration in ms
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1.0), // Custom easing function
+        reduceMotion: ReduceMotion.System, // Respect system reduce motion
+        onAnimationComplete: () => { // Callback when animation finishes
+          console.log('Modal animation completed');
+        }
+      }}
+    />
+  )
+}
+```
+
+## Multiple Trigger Instances
+
+You can have multiple trigger instances by using different IDs:
+
+```tsx
+// Photo gallery triggers
+<GestureTrigger id="photos" onPress={() => openPhotoModal(index)}>
+  <Image source={photo} />
+</GestureTrigger>
+
+// Video gallery triggers
+<GestureTrigger id="videos" onPress={() => openVideoModal(index)}>
+  <Video source={video} />
+</GestureTrigger>
+```
+
+:::tip
+Make sure the `id` prop matches between `GestureTrigger` and `GestureViewer` components for the animation to work properly. (default value: `default`)
+:::
+
+## Handling Dismissal Animations
+
+### onDismissStart Callback
+
+The `onDismissStart` callback is triggered immediately when the dismiss animation begins, which is useful for hiding UI elements that should disappear before the animation completes.
+
+```tsx
+function App() {
+  const [visible, setVisible] = useState(false);
+  const [showExternalUI, setShowExternalUI] = useState(false); // [!code highlight]
+
+  // [!code highlight:3]
+  const handleDismissStart = () => {
+    setShowExternalUI(false);
+  };
+
+  return (
+    <Modal visible={visible} transparent>
+      <GestureViewer
+        onDismissStart={handleDismissStart} // [!code highlight]
+        {...modalProps}
+      />
+      // [!code highlight:5]
+      {showExternalUI && (
+        <View>
+          <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
+        </View>
+      )}
+    </Modal>
+  );
+}
+```
+
+### Dismissing from Custom Components
+
+You can dismiss the viewer programmatically using the `dismiss` helper from `renderContainer`:
+
+```tsx
+<GestureViewer
+  renderContainer={(children, { dismiss }) => ( // [!code highlight]
+    <View style={{ flex: 1 }}>
+      {children}
+      <Pressable
+        style={styles.closeButton}
+        {/* 
+          This button will properly trigger the dismiss animation
+          back to the original thumbnail position 
+        */}
+        onPress={dismiss} // [!code highlight]
+      >
+        <Text>Close</Text>
+      </Pressable>
+    </View>
+  )}
+/>
+```
+
+
+:::note Why Use renderContainer's dismiss?
+
+When using trigger-based animations, it's important to use the `dismiss` method provided by `renderContainer` instead of directly controlling the visibility with `setVisible(false)`. Here's why:
+
+```tsx
+// ❌ Avoid: This will close immediately without trigger animation
+<Button onPress={() => setVisible(false)} title="Close" />
+
+// ✅ Preferred: This will use the trigger animation to close
+<Button onPress={dismiss} title="Close" />
+```
+
+**How It Works:**
+
+1. With Trigger Animation:
+    - When `dismiss` is called, the viewer will animate back to the original trigger position
+    - `onDismissStart` is called at the start of the animation
+    - `onDismiss` is called after the animation completes
+2. Without Trigger Animation:
+    - If no trigger animation is configured, `dismiss` will still work as a simple close
+
+:::
+
+### Complete Example with Dismiss Handling
+
+```tsx
+function ImageViewer() {
+  const [visible, setVisible] = useState(false);
+  const [showUI, setShowUI] = useState(true);
+
+  return (
+    <Modal visible={visible} transparent>
+      <GestureViewer
+        onDismissStart={() => setShowUI(false)}
+        onDismiss={() => setVisible(false)}
+        renderContainer={(children, { dismiss }) => (
+          <View style={{ flex: 1 }}>
+            {children}
+            {showUI && (
+              <View style={styles.header}>
+                <Button onPress={dismiss} title="Close" />
+              </View>
+            )}
+          </View>
+        )}
+      />
+    </Modal>
+  );
+}
+```
+
+### Dismiss Behavior with Trigger Animation
+
+When using trigger-based animations, the dismiss animation will animate back to the original trigger position. The `onDismissStart` callback is called at the start of this animation, allowing you to hide any UI elements that should not be visible during the dismiss animation.
+
+```tsx
+<GestureViewer
+  onDismissStart={() => {
+    console.log('Dismiss animation started');
+    setShowUI(false);
+  }}
+  onDismiss={() => {
+    console.log('Dismiss animation complete');
+    setVisible(false);
+  }}
+/>
+```
+
+This pattern ensures a smooth user experience by:
+
+1. Immediately hiding UI elements when dismiss starts
+2. Allowing the dismiss animation to complete naturally
+3. Cleaning up any resources only after the animation is fully complete
+
+### Best Practices
+
+1. Always use the `dismiss` method from `renderContainer` when you want to close the viewer with animations
+2. Use `onDismissStart` to hide UI elements that shouldn't be visible during the dismiss animation
+3. Use `onDismiss` for cleanup operations that should happen after the animation completes
+
+#### Common Pitfalls
+
+```tsx
+// ❌ Avoid: This will bypass the trigger animation
+<Button onPress={() => setVisible(false)} title="Close" />
+
+// ❌ Avoid: This will cause the animation to break
+const handleClose = () => {
+  setShowUI(false);
+  setVisible(false); // Closes too early
+};
+<Button onPress={handleClose} title="Close" />
+
+// ✅ Correct: Let the animation complete naturally
+<GestureViewer
+  onDismissStart={() => setShowUI(false)}
+  onDismiss={() => setVisible(false)}
+  renderContainer={(children, { dismiss }) => (
+    <View style={{ flex: 1 }}>
+      {children}
+      {showUI && (
+        <View style={styles.header}>
+          <Button onPress={dismiss} title="Close" />
+        </View>
+      )}
+    </View>
+  )}
+/>
+```
+
+This pattern ensures that your trigger-based animations work consistently and provides the best user experience.
+
+## API Reference
+
+### GestureTrigger Props
+
+```ts
+interface GestureTriggerProps<T extends WithOnPress> {
+  id?: string; // Identifier to associate with GestureViewer (default: "default")
+  children: ReactElement<T>; // Single pressable child element
+  onPress?: (...args: unknown[]) => void; // Additional onPress handler
+}
+```
+
+### TriggerAnimation Config
+
+```ts
+interface TriggerAnimationConfig {
+  duration?: number; // Animation duration in milliseconds
+  easing?: EasingFunction; // Custom easing function
+  reduceMotion?: boolean; // Respect system reduce motion preference
+  onAnimationComplete?: () => void; // Callback fired when animation completes
+}
+```
+
+| Property | Type | Default | Description |
+|:---------|:-----|:--------|:------------|
+| `duration` | `number` | `300` | Animation duration in milliseconds |
+| `easing` | `EasingFunction` | `Easing.bezier(0.25, 0.1, 0.25, 1.0)` | Easing function for the animation |
+| `reduceMotion` | `ReduceMotion` | `undefined` | Whether to respect system reduce motion settings |
+| `onAnimationComplete` | `() => void` | `undefined` | Callback fired when the animation completes |
+
+:::note
+The trigger animation works by measuring the trigger element's position when pressed and animating the modal from that position to full screen.
+:::
