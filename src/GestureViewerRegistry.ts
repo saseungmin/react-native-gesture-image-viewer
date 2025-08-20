@@ -52,9 +52,8 @@ class GestureViewerRegistry {
       manager.cleanUp();
       this.managers.delete(id);
 
-      this.notifySubscribers(id, null);
-
       this.clearTriggerNode(id);
+      this.notifySubscribers(id, null);
     }
   }
 
@@ -67,6 +66,11 @@ class GestureViewerRegistry {
   }
 
   setTriggerNode(id: string, node: View | null) {
+    if (!node) {
+      this.clearTriggerNode(id);
+      return;
+    }
+
     this.triggers.set(id, node);
   }
 

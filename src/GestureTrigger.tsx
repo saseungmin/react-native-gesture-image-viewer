@@ -82,5 +82,9 @@ export function GestureTrigger<T extends WithOnPress>({ id = 'default', children
     });
   }, [id, onPress, children]);
 
-  return <View ref={ref}>{wrapped}</View>;
+  return (
+    <View ref={ref} collapsable={false}>
+      {wrapped}
+    </View>
+  );
 }
