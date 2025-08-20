@@ -1,6 +1,7 @@
 import type React from 'react';
 import type { FlatList as RNFlatList, ScrollView as RNScrollView, StyleProp, ViewStyle } from 'react-native';
 import type { FlatList as GHFlatList, ScrollView as GHScrollView } from 'react-native-gesture-handler';
+import type { WithTimingConfig } from 'react-native-reanimated';
 
 export type FlatListComponent = typeof RNFlatList | typeof GHFlatList;
 export type ScrollViewComponent = typeof RNScrollView | typeof GHScrollView;
@@ -12,6 +13,30 @@ type ConditionalListProps<LC> = LC extends FlatListComponent
   : LC extends ScrollViewComponent
     ? React.ComponentProps<LC>
     : GetComponentProps<LC>;
+
+export type TriggerRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export interface TriggerAnimationConfig extends WithTimingConfig {
+  /**
+   * Animation duration in milliseconds
+   * @defaultValue 300
+   */
+  duration?: WithTimingConfig['duration'];
+  /**
+   * Animation easing function
+   * @defaultValue Easing.bezier(0.25, 0.1, 0.25, 1.0)
+   */
+  easing?: WithTimingConfig['easing'];
+  /**
+   * Callback function called after animation completion
+   */
+  onAnimationComplete?: () => void;
+}
 
 export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
   /**
@@ -38,13 +63,24 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
    */
   onDismiss?: () => void;
   /**
+   * A callback function that is called when the dismiss interaction starts.
+   * @remarks Useful to hide external UI (e.g., headers, buttons) while the dismiss gesture/animation is in progress.
+   */
+  onDismissStart?: () => void;
+  /**
    * A callback function that is called to render the item.
    */
   renderItem: (item: T, index: number) => React.ReactElement;
   /**
    * A callback function that is called to render the container.
+   * @remarks Useful for composing additional UI (e.g., close button, toolbars) around the viewer.
+   * The second argument provides control helpers such as `dismiss()` to close the viewer.
+   *
+   * @param children - The viewer content to be rendered inside your container.
+   * @param helpers - Control helpers for the viewer. Currently includes `dismiss()`.
+   * @returns A React element that wraps and renders the provided `children`.
    */
-  renderContainer?: (children: React.ReactElement) => React.ReactElement;
+  renderContainer?: (children: React.ReactElement, helpers: { dismiss: () => void }) => React.ReactElement;
   /**
    * Support for any list component like `ScrollView`, `FlatList`, `FlashList` through the `ListComponent` prop.
    */
@@ -74,8 +110,6 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
    * @defaultValue 80
    */
   dismissThreshold?: number;
-  // swipeThreshold?: number;
-  // velocityThreshold?: number;
   /**
    * Calls `onDismiss` function when swiping down.
    * @remark Useful for closing modals with downward swipe gestures.
@@ -146,6 +180,25 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
    * @defaultValue 0
    */
   itemSpacing?: number;
+  /**
+   * Trigger-based animation settings
+   * @remarks You can customize animation duration, easing, and system reduce-motion behavior.
+   *
+   * @example
+   * ```tsx
+   * <GestureViewer
+   *   triggerAnimation={{
+   *     duration: 250,
+   *     easing: Easing.out(Easing.cubic),
+   *     reduceMotion: 'system',
+   *     onAnimationComplete: () => {
+   *       console.log('Animation complete');
+   *     },
+   *   }}
+   * />
+   * ```
+   */
+  triggerAnimation?: TriggerAnimationConfig;
 }
 
 /**

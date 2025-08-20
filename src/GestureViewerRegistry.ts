@@ -1,8 +1,10 @@
+import type { View } from 'react-native';
 import GestureViewerManager from './GestureViewerManager';
 
 class GestureViewerRegistry {
   private managers = new Map<string, GestureViewerManager>();
   private subscribers = new Map<string, Set<(manager: GestureViewerManager | null) => void>>();
+  private triggers = new Map<string, View | null>();
 
   subscribeToManager(id: string, callback: (manager: GestureViewerManager | null) => void) {
     if (!this.subscribers.has(id)) {
@@ -51,6 +53,8 @@ class GestureViewerRegistry {
       this.managers.delete(id);
 
       this.notifySubscribers(id, null);
+
+      this.clearTriggerNode(id);
     }
   }
 
@@ -60,6 +64,18 @@ class GestureViewerRegistry {
     if (listeners) {
       [...listeners].forEach((callback) => callback(manager));
     }
+  }
+
+  setTriggerNode(id: string, node: View | null) {
+    this.triggers.set(id, node);
+  }
+
+  getTriggerNode(id: string): View | null {
+    return this.triggers.get(id) ?? null;
+  }
+
+  clearTriggerNode(id: string) {
+    this.triggers.delete(id);
   }
 }
 

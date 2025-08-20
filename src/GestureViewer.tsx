@@ -45,6 +45,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
     zoomGesture,
     onMomentumScrollEnd,
     onScrollBeginDrag,
+    handleDismiss,
     animatedStyle,
     backdropStyle,
   } = useGestureViewer({
@@ -133,6 +134,8 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
     [width, itemSpacing, isZoomed, isRotated, onMomentumScrollEnd, onScrollBeginDrag, useSnap],
   );
 
+  const control = useMemo(() => ({ dismiss: handleDismiss }), [handleDismiss]);
+
   const listComponent = (
     <GestureHandlerRootView>
       <GestureDetector gesture={gesture}>
@@ -174,7 +177,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
     </GestureHandlerRootView>
   );
 
-  return renderContainer ? renderContainer(listComponent) : listComponent;
+  return renderContainer ? renderContainer(listComponent, control) : listComponent;
 }
 
 const styles = StyleSheet.create({
