@@ -1,5 +1,47 @@
 # react-native-gesture-image-viewer
 
+## 2.0.0-beta.5
+
+### Minor Changes
+
+- adfb590: feat: implement trigger-based modal animation system
+
+  - Add `GestureTrigger` component for registering trigger elements
+  - Implement trigger position-based modal open/close animations
+  - Add `GestureViewerRegistry` for managing trigger nodes
+  - Support customizable animation config (duration, easing, callbacks)
+  - Enable smooth transition from trigger element to full modal view
+
+  Example:
+
+  ```tsx
+  import { GestureTrigger, GestureViewer } from 'react-native-gesture-image-viewer';
+
+  // Wrap your thumbnail with GestureTrigger
+  <GestureTrigger id="gallery" onPress={() => openModal(index)}>
+    <Pressable style={styles.thumb}>
+      <Image source={{ uri }} style={styles.thumbImage} />
+    </Pressable>
+  </GestureTrigger>
+
+  // Configure GestureViewer with matching id
+  <GestureViewer
+    id="gallery"
+    data={images}
+    renderItem={renderImage}
+    triggerAnimation={{
+      duration: 300,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
+      onAnimationComplete: () => console.log('Animation finished!')
+    }}
+  />
+  ```
+
+### Patch Changes
+
+- 8856347: fix: disable the dismiss pan gesture when `dismiss.enabled` is false
+- d32950f: docs: add trigger-based modal animations documentation
+
 ## 2.0.0-beta.4
 
 ### Patch Changes
