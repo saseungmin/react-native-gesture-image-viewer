@@ -41,18 +41,29 @@ React Native에서 이미지 갤러리나 콘텐츠 뷰어를 구현할 때, 복
 
 ### 기본 사용법
 
-`react-native-gesture-image-viewer`는 완전한 커스터마이징을 위해 제스처 동작에만 집중한 라이브러리입니다.   
+`react-native-gesture-image-viewer`는 완전한 커스터마이징을 위해 제스처 동작에만 집중한 라이브러리입니다.  
 
 ```tsx
 import { useCallback, useState } from 'react';
-import { ScrollView, Image, Modal, View, Text, Button } from 'react-native';
-import { GestureViewer, useGestureViewerController, useGestureViewerEvent } from 'react-native-gesture-image-viewer';
+import { ScrollView, Image, Modal, View, Text, Button, Pressable } from 'react-native';
+import {
+  GestureViewer,
+  GestureTrigger,
+  useGestureViewerController,
+  useGestureViewerEvent,
+} from 'react-native-gesture-image-viewer';
 
 function App() {
   const images = [...];
   const [visible, setVisible] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
- const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount } = useGestureViewerController();
+  const { goToIndex, goToPrevious, goToNext, currentIndex, totalCount } = useGestureViewerController();
+
+  const openModal = (index: number) => {
+    setSelectedIndex(index);
+    setVisible(true);
+  };
 
   const renderImage = useCallback((imageUrl: string) => {
     return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
@@ -63,20 +74,30 @@ function App() {
   });
 
   return (
-    <Modal visible={visible} onRequestClose={() => setVisible(false)}>
-      <GestureViewer
-        data={images}
-        renderItem={renderImage}
-        ListComponent={ScrollView}
-        onDismiss={() => setVisible(false)}
-      />
-      <View>
-        <Button title="<" onPress={goToPrevious} />
-        <Button title="Jump to index 2" onPress={() => goToIndex(2)} />
-        <Button title=">" onPress={goToNext} />
-        <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
-      </View>
-    </Modal>
+    <View>
+      {images.map((uri, index) => (
+        <GestureTrigger key={uri} onPress={() => openModal(index)}>
+          <Pressable>
+            <Image source={{ uri }} />
+          </Pressable>
+        </GestureTrigger>
+      ))}
+      <Modal transparent visible={visible}>
+        <GestureViewer
+          data={images}
+          initialIndex={selectedIndex}
+          renderItem={renderImage}
+          ListComponent={ScrollView}
+          onDismiss={() => setVisible(false)}
+        />
+        <View>
+          <Button title="Prev" onPress={goToPrevious} />
+          <Button title="Jump to index 2" onPress={() => goToIndex(2)} />
+          <Button title="Next" onPress={goToNext} />
+          <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
+        </View>
+      </Modal>
+    </View>
   );
 }
 ```
