@@ -27,7 +27,6 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
   const Component = ListComponent as React.ComponentType<any>;
 
   const dataRef = useRef(data);
-  dataRef.current = data;
 
   const { width: screenWidth } = useWindowDimensions();
 
@@ -104,6 +103,10 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
   const gesture = useMemo(() => {
     return Gesture.Race(dismissGesture, zoomGesture);
   }, [zoomGesture, dismissGesture]);
+
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   useEffect(() => {
     registry.createManager(id);
