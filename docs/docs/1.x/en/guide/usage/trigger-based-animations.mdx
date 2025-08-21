@@ -201,10 +201,9 @@ You can dismiss the viewer programmatically using the `dismiss` helper from `ren
 ```tsx
 <GestureViewer
   renderContainer={(children, { dismiss }) => ( // [!code highlight]
-    <View >
+    <View>
       {children}
       <Pressable
-      
         {/* 
           This button will properly trigger the dismiss animation
           back to the original thumbnail position 
@@ -317,7 +316,7 @@ const handleClose = () => {
   onDismissStart={() => setShowUI(false)}
   onDismiss={() => setVisible(false)}
   renderContainer={(children, { dismiss }) => (
-    <View style={{ flex: 1 }}>
+    <View>
       {children}
       {showUI && (
         <View>

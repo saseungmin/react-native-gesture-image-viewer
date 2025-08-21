@@ -89,3 +89,30 @@ function App() {
   );
 }
 ```
+
+## [GestureTrigger](/guide/usage/trigger-based-animations.html)
+
+`GestureTrigger` supports smooth trigger-based animations that create seamless transitions from trigger elements (like thumbnails) to the full modal view. This feature enhances user experience by maintaining visual continuity between the trigger and modal content.
+
+```tsx
+import { GestureTrigger, GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <View>
+      <GestureTrigger onPress={() => setVisible(true)}>
+        <Pressable>
+          <Image source={{ uri }} />
+        </Pressable>
+      </GestureTrigger>
+      <GestureViewer
+        data={images}
+        renderItem={renderImage}
+        onDismiss={() => setVisible(false)}
+      />
+    </View>
+  );
+}
+```

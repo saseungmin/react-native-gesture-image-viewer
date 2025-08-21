@@ -4,6 +4,7 @@
   "custom-components",
   "programmatic-control",
   "handling-viewer-events",
+  "trigger-based-animations",
   "style-customization",
   "multi-instance-management",
   "gesture-viewer-props"

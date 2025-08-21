@@ -9,7 +9,7 @@ The default `id` value is `default`.
 :::
 
 ```tsx
-import { GestureViewer, useGestureViewerController, useGestureViewerEvent } from 'react-native-gesture-image-viewer';
+import { GestureViewer, GestureTrigger, useGestureViewerController, useGestureViewerEvent } from 'react-native-gesture-image-viewer';
 
 const firstViewerId = 'firstViewerId';
 const secondViewerId = 'secondViewerId';
@@ -28,11 +28,21 @@ function App() {
 
   return (
     <View>
+      <GestureTrigger id={firstViewerId}>
+        <Pressable>
+          <Image source={{ uri }} />
+        </Pressable>
+      </GestureTrigger>
       <GestureViewer
         id={firstViewerId}
         data={images}
         renderItem={renderImage}
       />
+      <GestureTrigger id={secondViewerId}>
+        <Pressable>
+          <Image source={{ uri }} />
+        </Pressable>
+      </GestureTrigger>
       <GestureViewer
         id={secondViewerId}
         data={images}

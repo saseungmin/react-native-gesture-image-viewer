@@ -124,8 +124,8 @@ function App() {
   return (
     <View>
       <GestureTrigger onPress={() => setVisible(true)}>
-        <Pressable style={styles.thumb}>
-          <Image source={{ uri }} style={styles.thumbImage} />
+        <Pressable>
+          <Image source={{ uri }} />
         </Pressable>
       </GestureTrigger>
       <GestureViewer
