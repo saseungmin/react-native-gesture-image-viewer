@@ -368,7 +368,7 @@ export const useGestureViewer = <T = any>({
         scrollTo(jumpToIndex, false);
       }
 
-      const currentIndex = manager?.getState() ?? 0;
+      const currentIndex = manager?.getState().currentIndex;
 
       if (realIndex !== currentIndex && realIndex >= 0 && realIndex < dataLength) {
         if (manager) {
