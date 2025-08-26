@@ -27,7 +27,7 @@ export type GestureTriggerProps<T extends WithOnPress> = {
 /**
  * Wraps a pressable child element and registers its native view as a trigger for `GestureViewer`.
  *
- * @remark
+ * @remarks
  * Behavior on press:
  * - Registers the child's native node to the internal registry under the given `id`.
  * - Invokes the child's own `onPress` first (if provided).

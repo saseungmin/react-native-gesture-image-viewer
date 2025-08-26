@@ -41,7 +41,7 @@ export interface TriggerAnimationConfig extends WithTimingConfig {
 export interface GestureViewerProps<T = any, LC = typeof RNScrollView> {
   /**
    * When you want to efficiently manage multiple `GestureViewer` instances, you can use the `id` prop to use multiple `GestureViewer` components.
-   * @remark `GestureViewer` automatically removes instances from memory when components are unmounted, so no manual memory management is required.
+   * @remarks `GestureViewer` automatically removes instances from memory when components are unmounted, so no manual memory management is required.
    * @defaultValue 'default'
    */
   id?: string;
@@ -83,13 +83,13 @@ export interface GestureViewerProps<T = any, LC = typeof RNScrollView> {
   ListComponent: LC;
   /**
    * The width of the `GestureViewer`.
-   * @remark If you don't set this prop, the width of the `GestureViewer` will be the same as the width of the screen.
+   * @remarks If you don't set this prop, the width of the `GestureViewer` will be the same as the width of the screen.
    * @defaultValue screen width
    */
   width?: number;
   /**
    * The props to pass to the list component.
-   * @remark The `listProps` provides **type inference based on the selected list component**, ensuring accurate autocompletion and type safety in your IDE.
+   * @remarks The `listProps` provides **type inference based on the selected list component**, ensuring accurate autocompletion and type safety in your IDE.
    */
   listProps?: Partial<ConditionalListProps<LC>>;
   /**
@@ -102,7 +102,7 @@ export interface GestureViewerProps<T = any, LC = typeof RNScrollView> {
   containerStyle?: StyleProp<ViewStyle>;
   /**
    * Dismiss gesture options. Calls `onDismiss` function when swiping down.
-   * @remark Useful for closing modals with downward swipe gestures.
+   * @remarks Useful for closing modals with downward swipe gestures.
    */
   dismiss?: {
     /**
@@ -122,32 +122,32 @@ export interface GestureViewerProps<T = any, LC = typeof RNScrollView> {
     resistance?: number;
     /**
      * By default, the background `opacity` gradually decreases from 1 to 0 during downward swipe gestures.
-     * @remark When `false`, this animation is disabled.
+     * @remarks When `false`, this animation is disabled.
      * @defaultValue true
      */
     fadeBackdrop?: boolean;
   };
   /**
    * Controls left/right swipe gestures.
-   * @remark When `false`, horizontal gestures are disabled.
+   * @remarks When `false`, horizontal gestures are disabled.
    * @defaultValue true
    */
   enableHorizontalSwipe?: boolean;
   /**
    * Only works when zoom is active, allows moving item position when zoomed.
-   * @remark When `false`, gesture movement is disabled during zoom.
+   * @remarks When `false`, gesture movement is disabled during zoom.
    * @defaultValue true
    */
   enablePanWhenZoomed?: boolean;
   /**
    * Controls two-finger pinch gestures.
-   * @remark When `false`, two-finger zoom gestures are disabled.
+   * @remarks When `false`, two-finger zoom gestures are disabled.
    * @defaultValue true
    */
   enablePinchZoom?: boolean;
   /**
    * Controls double-tap zoom gestures.
-   * @remark When `false`, double-tap zoom gestures are disabled.
+   * @remarks When `false`, double-tap zoom gestures are disabled.
    * @defaultValue true
    */
   enableDoubleTapZoom?: boolean;
@@ -159,7 +159,7 @@ export interface GestureViewerProps<T = any, LC = typeof RNScrollView> {
   /**
    * Enables snap scrolling mode.
    *
-   * @remark
+   * @remarks
    * **`false` (default)**: Paging mode (`pagingEnabled: true`)
    * - Scrolls by full screen size increments
    *
@@ -172,7 +172,7 @@ export interface GestureViewerProps<T = any, LC = typeof RNScrollView> {
   enableSnapMode?: boolean;
   /**
    * The spacing between items in pixels.
-   * @remark Only applied when `enableSnapMode` is `true`.
+   * @remarks Only applied when `enableSnapMode` is `true`.
    * @defaultValue 0
    */
   itemSpacing?: number;
