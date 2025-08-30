@@ -1,5 +1,21 @@
 # react-native-gesture-image-viewer
 
+## 2.0.0-beta.6
+
+### Patch Changes
+
+- 7632f33: docs(package.json): update project description for better clarity and add keywords
+- 6d5cdc7: chore(docs): replace `@remark` with `@remarks` per TSDoc spec
+
+  - TSDoc specifies the tag name as `@remarks` (not `@remark`).
+  - This aligns our comments with the spec and improves tooling support.
+  - No runtime behavior changes.
+  - Ref: https://tsdoc.org/pages/tags/remarks/
+
+- 9e3fcf1: fix(GestureTrigger): set `collapsable` prop to `false` for stable gesture handling
+
+  - Explicitly sets `collapsable` to `false` to prevent the view from being removed from the native hierarchy, ensuring consistent gesture recognition and layout stability.
+
 ## 2.0.0-beta.5
 
 ### Minor Changes
