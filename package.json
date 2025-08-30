@@ -59,11 +59,16 @@
     "photo-viewer",
     "image-carousel",
     "touch-gestures",
-    "react-native-reanimated",
-    "react-native-gesture-handler",
     "lightbox",
     "gallery",
-    "viewer"
+    "viewer",
+    "react-native-reanimated",
+    "react-native-gesture-handler",
+    "react-native-viewer",
+    "react-native-image-viewer",
+    "react-native-image-gallery",
+    "react-native-reanimated-image-viewer",
+    "react-native-image-zoom-viewer"
   ],
   "repository": {
     "type": "git",
