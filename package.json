@@ -1,7 +1,7 @@
 {
   "name": "react-native-gesture-image-viewer",
   "version": "1.7.0",
-  "description": "🖼️ A highly customizable and easy-to-use React Native image viewer with gesture support and external controls",
+  "description": "🖼️ React Native Image Viewer - Reanimated-powered image gestures with full control",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
@@ -59,11 +59,20 @@
     "photo-viewer",
     "image-carousel",
     "touch-gestures",
-    "react-native-reanimated",
-    "react-native-gesture-handler",
     "lightbox",
     "gallery",
-    "viewer"
+    "viewer",
+    "zoomable",
+    "double-tap",
+    "image viewer",
+    "react native image viewer",
+    "react-native-reanimated",
+    "react-native-gesture-handler",
+    "react-native-viewer",
+    "react-native-image-viewer",
+    "react-native-image-gallery",
+    "react-native-reanimated-image-viewer",
+    "react-native-image-zoom-viewer"
   ],
   "repository": {
     "type": "git",
