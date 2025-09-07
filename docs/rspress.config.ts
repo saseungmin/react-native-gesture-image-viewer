@@ -45,7 +45,7 @@ export default defineConfig({
         lang: 'en',
         label: 'English',
         editLink: {
-          docRepoBaseUrl: 'https://github.com/saseungmin/react-native-gesture-image-viewer/tree/main/docs/docs',
+          docRepoBaseUrl: 'https://github.com/saseungmin/react-native-gesture-image-viewer/tree/next/docs/docs',
           text: '📝 Edit this page on GitHub',
         },
       },
@@ -53,7 +53,7 @@ export default defineConfig({
         lang: 'ko',
         label: '한국어',
         editLink: {
-          docRepoBaseUrl: 'https://github.com/saseungmin/react-native-gesture-image-viewer/tree/main/docs/docs',
+          docRepoBaseUrl: 'https://github.com/saseungmin/react-native-gesture-image-viewer/tree/next/docs/docs',
           text: '📝 GitHub에서 이 페이지 편집하기',
         },
       },
