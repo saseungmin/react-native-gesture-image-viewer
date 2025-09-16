@@ -28,7 +28,7 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
 
   const dataRef = useRef(data);
 
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
   const width = enableSnapMode ? customWidth || screenWidth : screenWidth;
 
@@ -77,18 +77,17 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
           style={[
             {
               width,
-              height: '100%',
-              justifyContent: 'center',
-              alignItems: 'center',
+              height: screenHeight,
               marginHorizontal: itemSpacing / 2,
             },
+            styles.item,
           ]}
         >
           {renderItemProp(item, index)}
         </View>
       );
     },
-    [width, itemSpacing, renderItemProp, keyExtractor, isScrollView],
+    [width, itemSpacing, renderItemProp, keyExtractor, isScrollView, screenHeight],
   );
 
   const getItemLayout = useCallback(
@@ -162,10 +161,10 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
                   renderItem={renderItem}
                   initialScrollIndex={enableLoop && data.length > 1 ? initialIndex + 1 : initialIndex}
                   keyExtractor={keyExtractor}
-                  windowSize={3}
-                  maxToRenderPerBatch={3}
-                  getItemLayout={getItemLayout}
-                  {...(isFlashListLike(Component) && { estimatedItemSize: width + itemSpacing })}
+                  {...(isFlashListLike(Component)
+                    ? // NOTE - Deprecated estimatedItemSize for FlashList V2 (https://shopify.github.io/flash-list/docs/v2-changes#deprecated)
+                      { estimatedItemSize: width + itemSpacing }
+                    : { windowSize: 3, maxToRenderPerBatch: 3, getItemLayout })}
                   // NOTE - https://github.com/necolas/react-native-web/issues/1299
                   {...(Platform.OS === 'web' &&
                     isFlatListLike(Component) && { dataSet: { 'flat-list-paging-enabled-fix': true } })}
@@ -191,6 +190,10 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+  },
+  item: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   background: {
     position: 'absolute',
