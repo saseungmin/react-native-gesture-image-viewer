@@ -143,7 +143,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
   const listComponent = (
     <GestureHandlerRootView>
       <GestureDetector gesture={gesture}>
-        <View style={[styles.container, { height, maxHeight: height, minHeight: height, width }, containerStyle]}>
+        <View style={[{ height, width }, containerStyle]}>
           <Animated.View style={[styles.background, backdropStyleProps, backdropStyle]} />
           <Animated.View
             style={[styles.content, animatedStyle]}
@@ -185,9 +185,6 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   item: {
     justifyContent: 'center',
     alignItems: 'center',
