@@ -155,7 +155,7 @@ export function GestureViewer<ItemT, LC>({
                 {loopData.map((item, index) => renderItem({ item, index }))}
               </Component>
             ) : (
-              isFlatListLike<ItemT>(Component) && (
+              isFlatListLike(Component) && (
                 <Component
                   ref={listRef}
                   {...commonProps}
@@ -169,7 +169,7 @@ export function GestureViewer<ItemT, LC>({
                     : { windowSize: 3, maxToRenderPerBatch: 3 })}
                   // NOTE - https://github.com/necolas/react-native-web/issues/1299
                   {...(Platform.OS === 'web' &&
-                    isFlatListLike<ItemT>(Component) && { dataSet: { 'flat-list-paging-enabled-fix': true } })}
+                    isFlatListLike(Component) && { dataSet: { 'flat-list-paging-enabled-fix': true } })}
                   {...listProps}
                 />
               )

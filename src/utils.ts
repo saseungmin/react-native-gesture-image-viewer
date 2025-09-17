@@ -6,7 +6,7 @@ export const isScrollViewLike = (component: React.ComponentType<any>): component
   return component === RNScrollView || component === GestureScrollView;
 };
 
-export const isFlatListLike = <ItemT>(component: React.ComponentType<any>): component is FlatListComponent<ItemT> => {
+export const isFlatListLike = (component: React.ComponentType<any>): component is FlatListComponent<any> => {
   if (component === RNFlatList || component === GestureFlatList || isFlashListLike(component)) {
     return true;
   }
@@ -25,7 +25,7 @@ export const isFlashListLike = (component: React.ComponentType<any>): boolean =>
     // do nothing
   }
 
-  return component?.name === 'FlashList';
+  return component?.displayName === 'FlashList' || component?.name === 'FlashList';
 };
 
 export const createBoundsConstraint =
