@@ -148,7 +148,7 @@ export function GestureViewer<ItemT, LC>({
           <Animated.View
             style={[styles.content, animatedStyle]}
             {...(Platform.OS === 'web' &&
-              isFlashListLike<ItemT, LC>(Component) && { dataSet: { 'flash-list-paging-enabled-fix': true } })}
+              isFlashListLike(Component) && { dataSet: { 'flash-list-paging-enabled-fix': true } })}
           >
             {isScrollView ? (
               <Component ref={listRef} {...commonProps} {...listProps}>
@@ -164,7 +164,7 @@ export function GestureViewer<ItemT, LC>({
                   initialScrollIndex={enableLoop && data.length > 1 ? initialIndex + 1 : initialIndex}
                   keyExtractor={keyExtractor}
                   getItemLayout={getItemLayout}
-                  {...(isFlashListLike<ItemT, LC>(Component)
+                  {...(isFlashListLike(Component)
                     ? { estimatedItemSize: width + itemSpacing }
                     : { windowSize: 3, maxToRenderPerBatch: 3 })}
                   // NOTE - https://github.com/necolas/react-native-web/issues/1299

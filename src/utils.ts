@@ -1,6 +1,6 @@
 import { FlatList as RNFlatList, ScrollView as RNScrollView } from 'react-native';
 import { FlatList as GestureFlatList, ScrollView as GestureScrollView } from 'react-native-gesture-handler';
-import type { FlatListComponent, GetComponentProps, ScrollViewComponent } from './types';
+import type { FlatListComponent, ScrollViewComponent } from './types';
 
 export const isScrollViewLike = (component: React.ComponentType<any>): component is ScrollViewComponent => {
   return component === RNScrollView || component === GestureScrollView;
@@ -14,9 +14,7 @@ export const isFlatListLike = <ItemT>(component: React.ComponentType<any>): comp
   return false;
 };
 
-export const isFlashListLike = <ItemT, LC>(
-  component: React.ComponentType<any>,
-): component is GetComponentProps<ItemT, LC> => {
+export const isFlashListLike = (component: React.ComponentType<any>): boolean => {
   try {
     const FlashList = require('@shopify/flash-list')?.FlashList;
 

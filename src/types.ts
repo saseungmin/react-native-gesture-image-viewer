@@ -13,34 +13,28 @@ export type FlatListComponent<ItemT> = typeof RNFlatList<ItemT> | typeof GHFlatL
 export type ScrollViewComponent = typeof RNScrollView | typeof GHScrollView;
 
 // Helper type to instantiate generic components with specific type parameter
-type InstantiateGeneric<ItemT, LC> = LC extends new (
-  props: infer P,
-) => any
-  ? LC extends new (
-      props: any,
-    ) => any
-    ? P extends Record<string, any>
-      ? {
-          [K in keyof P]: K extends 'data'
-            ? ArrayLike<ItemT>
-            : K extends 'renderItem'
-              ? ListRenderItem<ItemT>
-              : K extends 'keyExtractor'
-                ? (item: ItemT, index: number) => string
-                : K extends 'getItemType'
-                  ? (item: ItemT, index: number, extraData?: any) => string | number | undefined
-                  : K extends 'overrideItemLayout'
-                    ? (
-                        layout: { span?: number; size?: number },
-                        item: ItemT,
-                        index: number,
-                        maxColumns?: number,
-                        extraData?: any,
-                      ) => void
-                    : P[K];
-        }
-      : P
-    : never
+export type InstantiateGeneric<ItemT, LC> = LC extends React.ComponentType<infer P>
+  ? P extends Record<string, any>
+    ? {
+        [K in keyof P]: K extends 'data'
+          ? ArrayLike<ItemT> | null | undefined
+          : K extends 'renderItem'
+            ? ListRenderItem<ItemT>
+            : K extends 'keyExtractor'
+              ? (item: ItemT, index: number) => string
+              : K extends 'getItemType'
+                ? (item: ItemT, index: number, extraData?: any) => string | number | undefined
+                : K extends 'overrideItemLayout'
+                  ? (
+                      layout: { span?: number; size?: number },
+                      item: ItemT,
+                      index: number,
+                      maxColumns?: number,
+                      extraData?: any,
+                    ) => void
+                  : P[K];
+      }
+    : P
   : never;
 
 export type GetComponentProps<ItemT, LC> = LC extends React.ComponentType<any> ? InstantiateGeneric<ItemT, LC> : never;
