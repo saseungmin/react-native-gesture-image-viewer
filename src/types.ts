@@ -92,6 +92,12 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
    */
   width?: number;
   /**
+   * The height of the `GestureViewer`.
+   * @remarks If you don't set this prop, the height of the `GestureViewer` will be the same as the height of the screen.
+   * @defaultValue screen height
+   */
+  height?: number;
+  /**
    * Enables snap scrolling mode.
    *
    * @remarks
