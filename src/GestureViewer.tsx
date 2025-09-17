@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { type FlatList, Platform, type ScrollViewProps, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, type ScrollViewProps, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { registry } from './GestureViewerRegistry';
@@ -8,7 +8,7 @@ import { useGestureViewer } from './useGestureViewer';
 import { createLoopData, isFlashListLike, isFlatListLike, isScrollViewLike } from './utils';
 import WebPagingFixStyle from './WebPagingFixStyle';
 
-export function GestureViewer<T = any, LC = typeof FlatList>({
+export function GestureViewer<ItemT, LC>({
   id = 'default',
   data,
   renderItem: renderItemProp,
@@ -24,7 +24,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
   useSnap = false,
   enableLoop = false,
   ...props
-}: GestureViewerProps<T, LC>) {
+}: GestureViewerProps<ItemT, LC>) {
   const Component = ListComponent as React.ComponentType<any>;
 
   const dataRef = useRef(data);
@@ -61,7 +61,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
   });
 
   const keyExtractor = useCallback(
-    (item: T, index: number) => {
+    (item: ItemT, index: number) => {
       if (enableLoop) {
         return typeof item === 'string' ? `${item}-${index}` : `item-${index}`;
       }
@@ -72,7 +72,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
   );
 
   const renderItem = useCallback(
-    ({ item, index }: { item: T; index: number }) => {
+    ({ item, index }: { item: ItemT; index: number }) => {
       return (
         <View
           key={isScrollView ? keyExtractor(item, index) : undefined}
@@ -93,7 +93,7 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
   );
 
   const getItemLayout = useCallback(
-    (_: ArrayLike<T> | null | undefined, index: number) => ({
+    (_: ArrayLike<ItemT> | null | undefined, index: number) => ({
       length: width + itemSpacing,
       offset: (width + itemSpacing) * index,
       index,
@@ -148,14 +148,14 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
           <Animated.View
             style={[styles.content, animatedStyle]}
             {...(Platform.OS === 'web' &&
-              isFlashListLike(Component) && { dataSet: { 'flash-list-paging-enabled-fix': true } })}
+              isFlashListLike<ItemT, LC>(Component) && { dataSet: { 'flash-list-paging-enabled-fix': true } })}
           >
             {isScrollView ? (
               <Component ref={listRef} {...commonProps} {...listProps}>
                 {loopData.map((item, index) => renderItem({ item, index }))}
               </Component>
             ) : (
-              isFlatListLike(Component) && (
+              isFlatListLike<ItemT>(Component) && (
                 <Component
                   ref={listRef}
                   {...commonProps}
@@ -164,12 +164,12 @@ export function GestureViewer<T = any, LC = typeof FlatList>({
                   initialScrollIndex={enableLoop && data.length > 1 ? initialIndex + 1 : initialIndex}
                   keyExtractor={keyExtractor}
                   getItemLayout={getItemLayout}
-                  {...(isFlashListLike(Component)
+                  {...(isFlashListLike<ItemT, LC>(Component)
                     ? { estimatedItemSize: width + itemSpacing }
                     : { windowSize: 3, maxToRenderPerBatch: 3 })}
                   // NOTE - https://github.com/necolas/react-native-web/issues/1299
                   {...(Platform.OS === 'web' &&
-                    isFlatListLike(Component) && { dataSet: { 'flat-list-paging-enabled-fix': true } })}
+                    isFlatListLike<ItemT>(Component) && { dataSet: { 'flat-list-paging-enabled-fix': true } })}
                   {...listProps}
                 />
               )
