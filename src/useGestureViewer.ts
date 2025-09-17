@@ -23,7 +23,7 @@ import { createBoundsConstraint, createScrollAction, getLoopAdjustedIndex } from
 
 type UseGestureViewerProps<T = any> = Omit<
   GestureViewerProps<T>,
-  'renderItem' | 'renderContainer' | 'ListComponent' | 'listProps' | 'containerStyle' | 'backdropStyle'
+  'renderItem' | 'renderContainer' | 'ListComponent' | 'listProps' | 'containerStyle' | 'backdropStyle' | 'useSnap'
 >;
 
 export const useGestureViewer = <T = any>({
@@ -32,6 +32,7 @@ export const useGestureViewer = <T = any>({
   onIndexChange,
   onDismiss,
   width: customWidth,
+  height: customHeight,
   dismissThreshold = 80,
   resistance = 2,
   animateBackdrop = true,
@@ -43,13 +44,13 @@ export const useGestureViewer = <T = any>({
   enableLoop = false,
   maxZoomScale = 2,
   itemSpacing = 0,
-  useSnap = false,
   id = 'default',
   onDismissStart,
   triggerAnimation,
 }: UseGestureViewerProps<T>) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const width = useSnap ? customWidth || screenWidth : screenWidth;
+  const width = customWidth || screenWidth;
+  const height = customHeight || screenHeight;
 
   const [isZoomed, setIsZoomed] = useState(false);
   const [isRotated, setIsRotated] = useState(false);
@@ -97,10 +98,7 @@ export const useGestureViewer = <T = any>({
     return initialIndex;
   }, [enableLoop, data.length, initialIndex]);
 
-  const constrainTranslation = useMemo(
-    () => createBoundsConstraint({ width, height: screenHeight }),
-    [width, screenHeight],
-  );
+  const constrainTranslation = useMemo(() => createBoundsConstraint({ width, height }), [width, height]);
 
   const onAnimationComplete = useCallback(() => {
     onAnimationCompleteRef.current?.();
@@ -167,11 +165,11 @@ export const useGestureViewer = <T = any>({
 
   useEffect(() => {
     if (shouldStartTriggerAnimation && triggerRectRef.current) {
-      const startX = triggerRectRef.current.x + triggerRectRef.current.width / 2 - screenWidth / 2;
-      const startY = triggerRectRef.current.y + triggerRectRef.current.height / 2 - screenHeight / 2;
+      const startX = triggerRectRef.current.x + triggerRectRef.current.width / 2 - width / 2;
+      const startY = triggerRectRef.current.y + triggerRectRef.current.height / 2 - height / 2;
       const initialScaleFromTrigger = Math.min(
-        triggerRectRef.current.width / screenWidth,
-        triggerRectRef.current.height / screenHeight,
+        triggerRectRef.current.width / width,
+        triggerRectRef.current.height / height,
       );
 
       triggerScale.value = initialScaleFromTrigger;
@@ -197,8 +195,8 @@ export const useGestureViewer = <T = any>({
   }, [
     shouldStartTriggerAnimation,
     animationConfig,
-    screenWidth,
-    screenHeight,
+    width,
+    height,
     triggerOpacity,
     triggerScale,
     triggerTranslateX,
@@ -260,7 +258,7 @@ export const useGestureViewer = <T = any>({
     manager.setEnableSwipeGesture(enableSwipeGesture);
     manager.setCurrentIndex(initialIndex);
     manager.setWidth(width + itemSpacing);
-    manager.setHeight(screenHeight);
+    manager.setHeight(height);
     manager.setZoomSharedValues(scale, translateX, translateY, maxZoomScale);
     manager.setRotation(rotation);
     manager.setEnableLoop(enableLoop);
@@ -275,7 +273,7 @@ export const useGestureViewer = <T = any>({
     maxZoomScale,
     enableLoop,
     scale,
-    screenHeight,
+    height,
     translateX,
     translateY,
     rotation,
@@ -314,12 +312,9 @@ export const useGestureViewer = <T = any>({
     onDismissStart?.();
 
     if (triggerRectRef.current) {
-      const endX = triggerRectRef.current.x + triggerRectRef.current.width / 2 - screenWidth / 2;
-      const endY = triggerRectRef.current.y + triggerRectRef.current.height / 2 - screenHeight / 2;
-      const endScale = Math.min(
-        triggerRectRef.current.width / screenWidth,
-        triggerRectRef.current.height / screenHeight,
-      );
+      const endX = triggerRectRef.current.x + triggerRectRef.current.width / 2 - width / 2;
+      const endY = triggerRectRef.current.y + triggerRectRef.current.height / 2 - height / 2;
+      const endScale = Math.min(triggerRectRef.current.width / width, triggerRectRef.current.height / height);
 
       triggerScale.value = withTiming(endScale, animationConfig);
       triggerTranslateX.value = withTiming(endX, animationConfig);
@@ -339,8 +334,8 @@ export const useGestureViewer = <T = any>({
     animationConfig,
     onDismiss,
     onDismissStart,
-    screenWidth,
-    screenHeight,
+    width,
+    height,
     triggerTranslateX,
     triggerScale,
     triggerTranslateY,
@@ -450,7 +445,7 @@ export const useGestureViewer = <T = any>({
 
         const deltaScale = newScale - startScale.value;
         const centerX = event.focalX - width / 2;
-        const centerY = event.focalY - screenHeight / 2;
+        const centerY = event.focalY - height / 2;
 
         // NOTE 새로운 이동값 = 기존 이동값 - (중심점 거리 × 스케일 변화량) / 원래 스케일 (중심점이 화면 중심에서 멀수록, 확대 배율이 클수록 더 많이 이동)
         const newTranslateX = initialTranslateX.value - (centerX * deltaScale) / startScale.value;
@@ -515,7 +510,7 @@ export const useGestureViewer = <T = any>({
     initialTranslateX,
     initialTranslateY,
     width,
-    screenHeight,
+    height,
     constrainTranslation,
   ]);
 
@@ -563,7 +558,7 @@ export const useGestureViewer = <T = any>({
 
         if (nextScale > 1) {
           const centerX = event.x - width / 2;
-          const centerY = event.y - screenHeight / 2;
+          const centerY = event.y - height / 2;
 
           // NOTE 확대로 밀려난 거리만큼 반대로 이동해서 탭 지점을 제자리에 유지
           translateX.value = withTiming(-centerX * (nextScale - 1), {
@@ -590,7 +585,7 @@ export const useGestureViewer = <T = any>({
           easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
         });
       });
-  }, [scale, enableDoubleTapGesture, maxZoomScale, translateX, translateY, width, screenHeight]);
+  }, [scale, enableDoubleTapGesture, maxZoomScale, translateX, translateY, width, height]);
 
   const zoomGesture = useMemo(() => {
     return Gesture.Race(zoomPinchGesture, Gesture.Exclusive(zoomPanGesture, doubleTapGesture));
