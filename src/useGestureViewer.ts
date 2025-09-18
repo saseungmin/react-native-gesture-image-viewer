@@ -47,6 +47,8 @@ export const useGestureViewer = <ItemT, LC>({
   id = 'default',
   onDismissStart,
   triggerAnimation,
+  autoPlay = false,
+  autoPlayInterval = 3000,
 }: UseGestureViewerProps<ItemT, LC>) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const width = customWidth || screenWidth;
@@ -56,6 +58,7 @@ export const useGestureViewer = <ItemT, LC>({
   const [isRotated, setIsRotated] = useState(false);
   const [manager, setManager] = useState<GestureViewerManager | null>(null);
   const [shouldStartTriggerAnimation, setShouldStartTriggerAnimation] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
   const listRef = useRef<any>(null);
   const unsubscribeRef = useRef<(() => void) | null>(null);
@@ -91,12 +94,12 @@ export const useGestureViewer = <ItemT, LC>({
   );
 
   const adjustedInitialIndex = useMemo(() => {
-    if (enableLoop && data.length > 1) {
+    if (enableLoop && dataLength > 1) {
       return initialIndex + 1;
     }
 
     return initialIndex;
-  }, [enableLoop, data.length, initialIndex]);
+  }, [enableLoop, dataLength, initialIndex]);
 
   const constrainTranslation = useMemo(() => createBoundsConstraint({ width, height }), [width, height]);
 
@@ -148,6 +151,35 @@ export const useGestureViewer = <ItemT, LC>({
       runOnJS(setIsRotated)(currentRotation % 360 !== 0);
     },
   );
+
+  useEffect(() => {
+    if (
+      !autoPlay ||
+      !manager ||
+      dataLength <= 1 ||
+      isZoomed ||
+      isRotated ||
+      (!enableLoop && currentIndex === dataLength - 1)
+    ) {
+      return;
+    }
+
+    const intervalMs = Math.max(250, Math.floor(autoPlayInterval || 0));
+
+    if (!Number.isFinite(intervalMs)) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      if (isZoomed || isRotated) {
+        return;
+      }
+
+      manager.goToNext();
+    }, intervalMs);
+
+    return () => clearInterval(interval);
+  }, [autoPlay, autoPlayInterval, manager, dataLength, currentIndex, enableLoop, isZoomed, isRotated]);
 
   useEffect(() => {
     onIndexChangeRef.current = onIndexChange ?? null;
@@ -235,6 +267,7 @@ export const useGestureViewer = <ItemT, LC>({
           if (lastEmittedIndexRef.current !== state.currentIndex) {
             lastEmittedIndexRef.current = state.currentIndex;
             onIndexChangeRef.current?.(state.currentIndex);
+            setCurrentIndex(state.currentIndex);
           }
         });
         return;
