@@ -133,6 +133,21 @@ export interface GestureViewerProps<ItemT, LC> {
    */
   height?: number;
   /**
+   * Auto play mode.
+   * @remarks
+   * - When `true`, the viewer will automatically play the next item after the specified interval.
+   * - When `enableLoop` is enabled, the viewer will loop back to the first item after the last item.
+   * - When `enableLoop` is disabled, the viewer will stop at the last item.
+   * @defaultValue false
+   */
+  autoPlay?: boolean;
+  /**
+   * Auto play interval.
+   * @remarks When `autoPlay` is enabled, the viewer will automatically play the next item after the specified interval.
+   * @defaultValue 3000
+   */
+  autoPlayInterval?: number;
+  /**
    * Enables snap scrolling mode.
    *
    * @remarks
