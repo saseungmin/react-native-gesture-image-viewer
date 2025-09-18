@@ -171,8 +171,12 @@ export const useGestureViewer = <ItemT, LC>({
     }
 
     const interval = setInterval(() => {
+      if (isZoomed || isRotated) {
+        return;
+      }
+
       manager.goToNext();
-    }, autoPlayInterval);
+    }, intervalMs);
 
     return () => clearInterval(interval);
   }, [autoPlay, autoPlayInterval, manager, dataLength, currentIndex, enableLoop, isZoomed, isRotated]);
