@@ -153,7 +153,20 @@ export const useGestureViewer = <ItemT, LC>({
   );
 
   useEffect(() => {
-    if (!autoPlay || !manager || dataLength <= 1 || (!enableLoop && currentIndex === dataLength - 1)) {
+    if (
+      !autoPlay ||
+      !manager ||
+      dataLength <= 1 ||
+      isZoomed ||
+      isRotated ||
+      (!enableLoop && currentIndex === dataLength - 1)
+    ) {
+      return;
+    }
+
+    const intervalMs = Math.max(250, Math.floor(autoPlayInterval || 0));
+
+    if (!Number.isFinite(intervalMs)) {
       return;
     }
 
@@ -162,7 +175,7 @@ export const useGestureViewer = <ItemT, LC>({
     }, autoPlayInterval);
 
     return () => clearInterval(interval);
-  }, [autoPlay, autoPlayInterval, manager, dataLength, currentIndex, enableLoop]);
+  }, [autoPlay, autoPlayInterval, manager, dataLength, currentIndex, enableLoop, isZoomed, isRotated]);
 
   useEffect(() => {
     onIndexChangeRef.current = onIndexChange ?? null;
