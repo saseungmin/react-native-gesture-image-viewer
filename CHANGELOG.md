@@ -1,5 +1,81 @@
 # react-native-gesture-image-viewer
 
+## 2.0.0-beta.8
+
+### Minor Changes
+
+- 193779d: feat: add customizable `width` and `height` props to `GestureViewer`
+
+  - Add `height` prop to enable custom viewer height
+  - Remove `useSnap` restriction for `width` customization
+  - Allow custom `width` in both snap and paging modes
+  - Maintain backward compatibility with screen dimensions as defaults
+  - Improve flexibility for different layout requirements
+
+  Example:
+
+  ```tsx
+  <GestureViewer width={400} height={600} />
+  ```
+
+- a7b58a5: feat: add auto-play functionality to gesture viewer with configurable interval
+
+  - add `autoPlay` and `autoPlayInterval` props
+  - when `autoPlay` is enabled, the viewer will automatically play the next item after the specified interval
+  - when `enableLoop` is enabled, the viewer will loop back to the first item after the last item
+  - when `enableLoop` is disabled, the viewer will stop at the last item
+  - when there is only one item, auto-play is disabled
+  - interval must be a positive integer in milliseconds (values < 250ms are clamped to 250ms)
+  - `autoPlayInterval` is optional and defaults to 3000ms
+  - `autoPlay` is optional and defaults to `false`
+  - when zoom or rotate gestures are detected, the auto-play will be paused
+
+  ```tsx
+  import { GestureViewer } from "react-native-gesture-image-viewer";
+
+  function App() {
+    return <GestureViewer autoPlay autoPlayInterval={3000} />;
+  }
+  ```
+
+### Patch Changes
+
+- 9b006b7: fix: improve type inference for listProps with generic list components
+
+  - Add InstantiateGeneric helper type for better generic component props inference
+  - Change generic type parameter from T to ItemT for clarity
+  - Fix type inference issues with FlashList, FlatList keyExtractor and renderItem props
+  - Ensure all list component props receive correct ItemT type instead of unknown
+
+  **Before:**
+
+  ```tsx
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    ListComponent={FlashList}
+    // keyExtractor's item parameter was unknown type
+    listProps={{
+      keyExtractor: (item, index) => item.id, // ❌ item is unknown
+    }}
+  />
+  ```
+
+  **After:**
+
+  ```tsx
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    ListComponent={FlashList}
+    // keyExtractor's item parameter is now properly typed
+    listProps={{
+      keyExtractor: (item, index) => item.id, // ✅ item has correct type
+      // and other props...
+    }}
+  />
+  ```
+
 ## 2.0.0-beta.7
 
 ### Patch Changes
