@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Platform, type ScrollView, type ScrollViewProps, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Platform, type ScrollViewProps, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { registry } from './GestureViewerRegistry';
@@ -8,7 +8,7 @@ import { useGestureViewer } from './useGestureViewer';
 import { createLoopData, isFlashListLike, isFlatListLike, isScrollViewLike } from './utils';
 import WebPagingFixStyle from './WebPagingFixStyle';
 
-export function GestureViewer<T = any, LC = typeof ScrollView>({
+export function GestureViewer<ItemT, LC>({
   id = 'default',
   data,
   renderItem: renderItemProp,
@@ -24,7 +24,7 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
   enableSnapMode = false,
   enableLoop = false,
   ...props
-}: GestureViewerProps<T, LC>) {
+}: GestureViewerProps<ItemT, LC>) {
   const Component = ListComponent as React.ComponentType<any>;
 
   const dataRef = useRef(data);
@@ -61,7 +61,7 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
   });
 
   const keyExtractor = useCallback(
-    (item: T, index: number) => {
+    (item: ItemT, index: number) => {
       if (enableLoop) {
         return typeof item === 'string' ? `${item}-${index}` : `item-${index}`;
       }
@@ -72,7 +72,7 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
   );
 
   const renderItem = useCallback(
-    ({ item, index }: { item: T; index: number }) => {
+    ({ item, index }: { item: ItemT; index: number }) => {
       return (
         <View
           key={isScrollView ? keyExtractor(item, index) : undefined}
@@ -93,7 +93,7 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
   );
 
   const getItemLayout = useCallback(
-    (_: ArrayLike<T> | null | undefined, index: number) => ({
+    (_: ArrayLike<ItemT> | null | undefined, index: number) => ({
       length: width + itemSpacing,
       offset: (width + itemSpacing) * index,
       index,

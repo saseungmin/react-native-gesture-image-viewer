@@ -21,8 +21,8 @@ import { registry } from './GestureViewerRegistry';
 import type { GestureViewerProps, TriggerRect } from './types';
 import { createBoundsConstraint, createScrollAction, getLoopAdjustedIndex } from './utils';
 
-type UseGestureViewerProps<T = any> = Omit<
-  GestureViewerProps<T>,
+type UseGestureViewerProps<ItemT, LC> = Omit<
+  GestureViewerProps<ItemT, LC>,
   | 'renderItem'
   | 'renderContainer'
   | 'ListComponent'
@@ -32,7 +32,7 @@ type UseGestureViewerProps<T = any> = Omit<
   | 'enableSnapMode'
 >;
 
-export const useGestureViewer = <T = any>({
+export const useGestureViewer = <ItemT, LC>({
   data,
   initialIndex = 0,
   onDismiss,
@@ -49,7 +49,7 @@ export const useGestureViewer = <T = any>({
   id = 'default',
   onDismissStart,
   triggerAnimation,
-}: UseGestureViewerProps<T>) => {
+}: UseGestureViewerProps<ItemT, LC>) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const width = customWidth || screenWidth;
   const height = customHeight || screenHeight;

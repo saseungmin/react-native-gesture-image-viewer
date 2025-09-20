@@ -1,18 +1,65 @@
 import type React from 'react';
-import type { FlatList as RNFlatList, ScrollView as RNScrollView, StyleProp, ViewStyle } from 'react-native';
+import type {
+  FlatListProps,
+  ListRenderItem,
+  FlatList as RNFlatList,
+  ScrollView as RNScrollView,
+  StyleProp,
+  ViewabilityConfig,
+  ViewStyle,
+  ViewToken,
+} from 'react-native';
 import type { FlatList as GHFlatList, ScrollView as GHScrollView } from 'react-native-gesture-handler';
 import type { WithTimingConfig } from 'react-native-reanimated';
 
-export type FlatListComponent = typeof RNFlatList | typeof GHFlatList;
+export type FlatListComponent<ItemT> = typeof RNFlatList<ItemT> | typeof GHFlatList<ItemT>;
 export type ScrollViewComponent = typeof RNScrollView | typeof GHScrollView;
 
-type GetComponentProps<T> = T extends React.ComponentType<infer P> ? P : never;
+interface ViewabilityConfigCallbackPair<TItem> {
+  viewabilityConfig: ViewabilityConfig;
+  onViewableItemsChanged: ((info: { viewableItems: ViewToken<TItem>[]; changed: ViewToken<TItem>[] }) => void) | null;
+}
 
-type ConditionalListProps<LC> = LC extends FlatListComponent
-  ? React.ComponentProps<LC>
-  : LC extends ScrollViewComponent
-    ? React.ComponentProps<LC>
-    : GetComponentProps<LC>;
+// Helper type to instantiate generic components with specific type parameter
+export type InstantiateGeneric<ItemT, LC> = LC extends React.ComponentType<infer P>
+  ? P extends Record<string, any>
+    ? {
+        [K in keyof P]: K extends 'data'
+          ? ArrayLike<ItemT> | null | undefined
+          : K extends 'renderItem'
+            ? ListRenderItem<ItemT>
+            : K extends 'keyExtractor'
+              ? (item: ItemT, index: number) => string
+              : K extends 'getItemType'
+                ? (item: ItemT, index: number, extraData?: any) => string | number | undefined
+                : K extends 'overrideItemLayout'
+                  ? (
+                      layout: { span?: number; size?: number },
+                      item: ItemT,
+                      index: number,
+                      maxColumns?: number,
+                      extraData?: any,
+                    ) => void
+                  : K extends 'onViewableItemsChanged'
+                    ? FlatListProps<ItemT>['onViewableItemsChanged']
+                    : K extends 'viewabilityConfigCallbackPairs'
+                      ? ViewabilityConfigCallbackPair<ItemT>[]
+                      : P[K];
+      }
+    : P
+  : never;
+
+export type GetComponentProps<ItemT, LC> = LC extends React.ComponentType<any> ? InstantiateGeneric<ItemT, LC> : never;
+
+type ConditionalListProps<ItemT, LC> = LC extends typeof RNFlatList<ItemT>
+  ? React.ComponentProps<typeof RNFlatList<ItemT>>
+  : LC extends typeof GHFlatList<ItemT>
+    ? React.ComponentProps<typeof GHFlatList<ItemT>>
+    : LC extends typeof RNScrollView
+      ? React.ComponentProps<typeof RNScrollView>
+      : LC extends typeof GHScrollView
+        ? React.ComponentProps<typeof GHScrollView>
+        : GetComponentProps<ItemT, LC>;
 
 export type TriggerRect = {
   x: number;
@@ -38,7 +85,7 @@ export interface TriggerAnimationConfig extends WithTimingConfig {
   onAnimationComplete?: () => void;
 }
 
-export interface GestureViewerProps<T = any, LC = typeof RNScrollView> {
+export interface GestureViewerProps<ItemT, LC> {
   /**
    * When you want to efficiently manage multiple `GestureViewer` instances, you can use the `id` prop to use multiple `GestureViewer` components.
    * @remarks `GestureViewer` automatically removes instances from memory when components are unmounted, so no manual memory management is required.
@@ -48,7 +95,7 @@ export interface GestureViewerProps<T = any, LC = typeof RNScrollView> {
   /**
    * The data to display in the `GestureViewer`.
    */
-  data: T[];
+  data: ItemT[];
   /**
    * The index of the item to display in the `GestureViewer` when the component is mounted.
    * @defaultValue 0
@@ -66,7 +113,7 @@ export interface GestureViewerProps<T = any, LC = typeof RNScrollView> {
   /**
    * A callback function that is called to render the item.
    */
-  renderItem: (item: T, index: number) => React.ReactElement;
+  renderItem: (item: ItemT, index: number) => React.ReactElement;
   /**
    * A callback function that is called to render the container.
    * @remarks Useful for composing additional UI (e.g., close button, toolbars) around the viewer.
@@ -97,7 +144,7 @@ export interface GestureViewerProps<T = any, LC = typeof RNScrollView> {
    * The props to pass to the list component.
    * @remarks The `listProps` provides **type inference based on the selected list component**, ensuring accurate autocompletion and type safety in your IDE.
    */
-  listProps?: Partial<ConditionalListProps<LC>>;
+  listProps?: Partial<ConditionalListProps<ItemT, LC>>;
   /**
    * The style of the backdrop.
    */
