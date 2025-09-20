@@ -88,6 +88,12 @@ export interface GestureViewerProps<T = any, LC = typeof RNScrollView> {
    */
   width?: number;
   /**
+   * The height of the `GestureViewer`.
+   * @remarks If you don't set this prop, the height of the `GestureViewer` will be the same as the height of the screen.
+   * @defaultValue screen height
+   */
+  height?: number;
+  /**
    * The props to pass to the list component.
    * @remarks The `listProps` provides **type inference based on the selected list component**, ensuring accurate autocompletion and type safety in your IDE.
    */

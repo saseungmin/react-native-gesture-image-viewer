@@ -15,6 +15,7 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
   renderContainer,
   ListComponent,
   width: customWidth,
+  height: customHeight,
   listProps,
   backdropStyle: backdropStyleProps,
   containerStyle,
@@ -30,7 +31,8 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
 
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
-  const width = enableSnapMode ? customWidth || screenWidth : screenWidth;
+  const width = customWidth || screenWidth;
+  const height = customHeight || screenHeight;
 
   const loopData = useMemo(() => createLoopData(dataRef, enableLoop), [enableLoop]);
 
@@ -51,9 +53,9 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
     id,
     data,
     width,
+    height,
     initialIndex,
     itemSpacing,
-    enableSnapMode,
     enableLoop,
     ...props,
   });
@@ -77,7 +79,7 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
           style={[
             {
               width,
-              height: screenHeight,
+              height,
               marginHorizontal: itemSpacing / 2,
             },
             styles.item,
@@ -87,7 +89,7 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
         </View>
       );
     },
-    [width, itemSpacing, renderItemProp, keyExtractor, isScrollView, screenHeight],
+    [width, itemSpacing, renderItemProp, keyExtractor, isScrollView, height],
   );
 
   const getItemLayout = useCallback(
@@ -141,7 +143,7 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
   const listComponent = (
     <GestureHandlerRootView>
       <GestureDetector gesture={gesture}>
-        <View style={[styles.container, containerStyle]}>
+        <View style={[{ width, height }, containerStyle]}>
           <Animated.View style={[styles.background, backdropStyleProps, backdropStyle]} />
           <Animated.View
             style={[styles.content, animatedStyle]}
@@ -183,9 +185,6 @@ export function GestureViewer<T = any, LC = typeof ScrollView>({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   content: {
     flex: 1,
     width: '100%',
