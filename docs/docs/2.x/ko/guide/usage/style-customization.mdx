@@ -9,6 +9,7 @@ function App() {
  return (
    <GestureViewer
      width={400}
+     height={400}
      containerStyle={{ /* ... */ }}
      backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.90)' }}
      renderContainer={(children, { dismiss }) => <View style={{ flex: 1 }}>{children}</View>}
@@ -20,6 +21,7 @@ function App() {
 |속성|설명|기본값|
 |:--:|:-----|:--:|
 |`width`|콘텐츠 아이템의 너비입니다. 기본값은 화면 너비입니다.|`Dimensions width`|
+|`height`|콘텐츠 아이템의 높이입니다. 기본값은 화면 높이입니다.|`Dimensions height`|
 |`containerStyle`|리스트 컴포넌트를 감싸는 컨테이너의 커스텀 스타일을 지정할 수 있습니다.|`flex: 1`|
 |`backdropStyle`|뷰어의 배경 스타일을 커스터마이징할 수 있습니다.|`backgroundColor: black; StyleSheet.absoluteFill;`|
 |`renderContainer(children, helpers)`|`<GestureViewer />`를 레핑하는 커스텀 래퍼 컴포넌트를 지정할 수 있습니다.||

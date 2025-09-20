@@ -9,6 +9,7 @@ function App() {
   return (
     <GestureViewer
       width={400}
+      height={400}
       containerStyle={{ /* ... */ }}
       backdropStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.90)' }}
       renderContainer={(children, { dismiss }) => <View style={{ flex: 1 }}>{children}</View>}
@@ -20,6 +21,7 @@ function App() {
 |Property|Description|Default Value|
 |:--:|:-----|:--:|
 |`width`|The width of content items. Default is window width.|`Dimensions width`|
+|`height`|The height of content items. Default is window height.|`Dimensions height`|
 |`containerStyle`|Allows custom styling of the container that wraps the list component.|`flex: 1`|
 |`backdropStyle`|Allows customization of the viewer's background style.|`backgroundColor: black; StyleSheet.absoluteFill;`|
 |`renderContainer(children, helpers)`|Allows custom wrapper component around `<GestureViewer />`.||

@@ -72,6 +72,42 @@ function App() {
 }
 ```
 
+### `autoPlay` (default: `false`)
+Enables auto play mode. When `true`, the viewer will automatically play the next item after the specified interval.
+- When `enableLoop` is enabled, the viewer will loop back to the first item after the last item.
+- When `enableLoop` is disabled, the viewer will stop at the last item.
+- When there is only one item, auto-play is disabled.
+- When zoom or rotate gestures are detected, the auto-play will be paused.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  return (
+    <GestureViewer
+      autoPlay={true}
+    />
+  );
+}
+```
+
+### `autoPlayInterval` (default: `3000`)
+Sets the interval between auto play in milliseconds.  
+Must be a positive integer. Values below 250ms are clamped to 250ms at runtime.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  return (
+    <GestureViewer
+      autoPlay={true}
+      autoPlayInterval={3000}
+    />
+  );
+}
+```
+
 ### `initialIndex` (default: `0`)
 Sets the initial index value.
 
@@ -86,8 +122,10 @@ Controls the maximum zoom scale multiplier.
 
 ## `GestureViewerProps` interface
 
+[Go to source](https://github.com/saseungmin/react-native-gesture-image-viewer/blob/edafaf0346c3f922382cd1e5f8c5c30d49115ec7/src/types.ts#L76)
+
 ```tsx title="GestureViewerProps"
-export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
+export interface GestureViewerProps<ItemT, LC> {
   /**
    * When you want to efficiently manage multiple `GestureViewer` instances, you can use the `id` prop to use multiple `GestureViewer` components.
    * @remarks `GestureViewer` automatically removes instances from memory when components are unmounted, so no manual memory management is required.
@@ -97,7 +135,7 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
   /**
    * The data to display in the `GestureViewer`.
    */
-  data: T[];
+  data: ItemT[];
   /**
    * The index of the item to display in the `GestureViewer` when the component is mounted.
    * @defaultValue 0
@@ -119,7 +157,7 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
   /**
    * A callback function that is called to render the item.
    */
-  renderItem: (item: T, index: number) => React.ReactElement;
+  renderItem: (item: ItemT, index: number) => React.ReactElement;
   /**
    * A callback function that is called to render the container.
    * @remarks Useful for composing additional UI (e.g., close button, toolbars) around the viewer.
@@ -141,6 +179,31 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
    */
   width?: number;
   /**
+   * The height of the `GestureViewer`.
+   * @remarks If you don't set this prop, the height of the `GestureViewer` will be the same as the height of the screen.
+   * @defaultValue screen height
+   */
+  height?: number;
+  /**
+   * Auto play mode.
+   * @remarks
+   * - When `true`, the viewer will automatically play the next item after the specified interval.
+   * - When `enableLoop` is enabled, the viewer will loop back to the first item after the last item.
+   * - When `enableLoop` is disabled, the viewer will stop at the last item.
+   * - When there is only one item, auto-play is disabled.
+   * - When zoom or rotate gestures are detected, the auto-play will be paused.
+   * @defaultValue false
+   */
+  autoPlay?: boolean;
+  /**
+   * Auto play interval.
+   * @remarks
+   * - When `autoPlay` is enabled, the viewer advances to the next item after the specified interval (ms).
+   * - Must be a positive integer. Values below 250ms are clamped to 250ms at runtime.
+   * @defaultValue 3000
+   */
+  autoPlayInterval?: number;
+  /**
    * Enables snap scrolling mode.
    *
    * @remarks
@@ -159,8 +222,6 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
    * @defaultValue 80
    */
   dismissThreshold?: number;
-  // swipeThreshold?: number;
-  // velocityThreshold?: number;
   /**
    * Calls `onDismiss` function when swiping down.
    * @remarks Useful for closing modals with downward swipe gestures.
@@ -182,7 +243,7 @@ export interface GestureViewerProps<T = any, LC = typeof RNFlatList> {
    * The props to pass to the list component.
    * @remarks The `listProps` provides **type inference based on the selected list component**, ensuring accurate autocompletion and type safety in your IDE.
    */
-  listProps?: Partial<ConditionalListProps<LC>>;
+  listProps?: Partial<ConditionalListProps<ItemT, LC>>;
   /**
    * The style of the backdrop.
    */
