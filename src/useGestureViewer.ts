@@ -49,6 +49,8 @@ export const useGestureViewer = <ItemT, LC>({
   id = 'default',
   onDismissStart,
   triggerAnimation,
+  autoPlay = false,
+  autoPlayInterval = 3000,
 }: UseGestureViewerProps<ItemT, LC>) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const width = customWidth || screenWidth;
@@ -58,6 +60,7 @@ export const useGestureViewer = <ItemT, LC>({
   const [isRotated, setIsRotated] = useState(false);
   const [shouldStartTriggerAnimation, setShouldStartTriggerAnimation] = useState(false);
   const [manager, setManager] = useState<GestureViewerManager | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
   const listRef = useRef<any>(null);
   const triggerRectRef = useRef<TriggerRect | null>(null);
@@ -99,12 +102,12 @@ export const useGestureViewer = <ItemT, LC>({
   }, [dismiss?.enabled, dismiss?.threshold, dismiss?.resistance, dismiss?.fadeBackdrop]);
 
   const adjustedInitialIndex = useMemo(() => {
-    if (enableLoop && data.length > 1) {
+    if (enableLoop && dataLength > 1) {
       return initialIndex + 1;
     }
 
     return initialIndex;
-  }, [enableLoop, data.length, initialIndex]);
+  }, [enableLoop, dataLength, initialIndex]);
 
   const constrainTranslation = useMemo(() => createBoundsConstraint({ width, height }), [width, height]);
 
@@ -162,9 +165,17 @@ export const useGestureViewer = <ItemT, LC>({
   );
 
   useEffect(() => {
-    const unsubscribe = registry.subscribeToManager(id, setManager);
+    let unsubscribe: (() => void) | undefined;
 
-    return unsubscribe;
+    const unsubscribeFromRegistry = registry.subscribeToManager(id, (managerInstance) => {
+      setManager(managerInstance);
+      unsubscribe = managerInstance?.subscribe((state) => setCurrentIndex(state.currentIndex));
+    });
+
+    return () => {
+      unsubscribeFromRegistry();
+      unsubscribe?.();
+    };
   }, [id]);
 
   useEffect(() => {
@@ -225,6 +236,35 @@ export const useGestureViewer = <ItemT, LC>({
       runAfterInteractions?.cancel();
     };
   }, [adjustedInitialIndex, translateY, backdropOpacity, translateX, scale, startScale, rotation, scrollTo]);
+
+  useEffect(() => {
+    if (
+      !autoPlay ||
+      !manager ||
+      dataLength <= 1 ||
+      isZoomed ||
+      isRotated ||
+      (!enableLoop && currentIndex === dataLength - 1)
+    ) {
+      return;
+    }
+
+    const intervalMs = Math.max(250, Math.floor(autoPlayInterval || 0));
+
+    if (!Number.isFinite(intervalMs)) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      if (isZoomed || isRotated) {
+        return;
+      }
+
+      manager.goToNext();
+    }, intervalMs);
+
+    return () => clearInterval(interval);
+  }, [autoPlay, autoPlayInterval, manager, dataLength, currentIndex, enableLoop, isZoomed, isRotated]);
 
   useEffect(() => {
     onAnimationCompleteRef.current = triggerAnimation?.onAnimationComplete;
