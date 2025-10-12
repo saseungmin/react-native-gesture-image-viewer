@@ -26,7 +26,7 @@ function HomeLayout() {
               style={{ textAlign: 'center', paddingLeft: '0.5rem', paddingRight: '0.5rem', borderRadius: '0.5rem' }}
             >
               npm install{' '}
-              {version === '1.x' ? 'react-native-gesture-image-viewer' : 'react-native-gesture-image-viewer@beta'}
+              {version === '1.x' ? 'react-native-gesture-image-viewer@1.x' : 'react-native-gesture-image-viewer'}
             </Code>
           </PreWithCodeButtonGroup>
         </div>
