@@ -1,5 +1,324 @@
 # react-native-gesture-image-viewer
 
+## 2.0.0
+
+### Major Changes
+
+- db35df7: feat: upgraded react-native-reanimated v4
+
+  - Upgraded react-native-reanimated to version 4.x.
+  - Added react-native-worklets as a dependency.
+  - Enhanced `withSpring` animation responsiveness and behavior.
+  - https://docs.swmansion.com/react-native-reanimated/docs/guides/migration-from-3.x
+
+  Reanimated Configure Migration Guide:
+
+  ```bash
+  npm install react-native-worklets
+  ```
+
+  ```diff
+  // babel.config.js
+  module.exports = (api) => {
+    api.cache(true);
+
+    return getConfig(
+      {
+        presets: ['babel-preset-expo'],
+        plugins: [
+          // for web
+          '@babel/plugin-proposal-export-namespace-from',
+          // react-native-worklets/plugin has to be listed last.
+  -       'react-native-reanimated/plugin',
+  +       'react-native-worklets/plugin',
+        ],
+      },
+      { root, pkg },
+    );
+  };
+  ```
+
+  ```diff
+  // metro.config.js
+  const path = require('path');
+  const { getDefaultConfig } = require('@expo/metro-config');
+  const { withMetroConfig } = require('react-native-monorepo-config');
+  - const { wrapWithReanimatedMetroConfig } = require('react-native-reanimated/metro-config');
+
+  const root = path.resolve(__dirname, '..');
+
+  /**
+   * Metro configuration
+   * https://facebook.github.io/metro/docs/configuration
+   *
+   * @type {import('metro-config').MetroConfig}
+   */
+  const config = withMetroConfig(getDefaultConfig(__dirname), {
+    root,
+    dirname: __dirname,
+  });
+
+  config.resolver.unstable_enablePackageExports = true;
+
+  - module.exports = wrapWithReanimatedMetroConfig(config);
+  + module.exports = config
+  ```
+
+### Minor Changes
+
+- 193779d: feat: add customizable `width` and `height` props to `GestureViewer`
+
+  - Add `height` prop to enable custom viewer height
+  - Remove `useSnap` restriction for `width` customization
+  - Allow custom `width` in both snap and paging modes
+  - Maintain backward compatibility with screen dimensions as defaults
+  - Improve flexibility for different layout requirements
+
+  Example:
+
+  ```tsx
+  <GestureViewer width={400} height={600} />
+  ```
+
+- a7b58a5: feat: add auto-play functionality to gesture viewer with configurable interval
+
+  - add `autoPlay` and `autoPlayInterval` props
+  - when `autoPlay` is enabled, the viewer will automatically play the next item after the specified interval
+  - when `enableLoop` is enabled, the viewer will loop back to the first item after the last item
+  - when `enableLoop` is disabled, the viewer will stop at the last item
+  - when there is only one item, auto-play is disabled
+  - interval must be a positive integer in milliseconds (values < 250ms are clamped to 250ms)
+  - `autoPlayInterval` is optional and defaults to 3000ms
+  - `autoPlay` is optional and defaults to `false`
+  - when zoom or rotate gestures are detected, the auto-play will be paused
+
+  ```tsx
+  import { GestureViewer } from "react-native-gesture-image-viewer";
+
+  function App() {
+    return <GestureViewer autoPlay autoPlayInterval={3000} />;
+  }
+  ```
+
+- adfb590: feat: implement trigger-based modal animation system
+
+  - Add `GestureTrigger` component for registering trigger elements
+  - Implement trigger position-based modal open/close animations
+  - Add `GestureViewerRegistry` for managing trigger nodes
+  - Support customizable animation config (duration, easing, callbacks)
+  - Enable smooth transition from trigger element to full modal view
+
+  Example:
+
+  ```tsx
+  import { GestureTrigger, GestureViewer } from 'react-native-gesture-image-viewer';
+
+  // Wrap your thumbnail with GestureTrigger
+  <GestureTrigger id="gallery" onPress={() => openModal(index)}>
+    <Pressable style={styles.thumb}>
+      <Image source={{ uri }} style={styles.thumbImage} />
+    </Pressable>
+  </GestureTrigger>
+
+  // Configure GestureViewer with matching id
+  <GestureViewer
+    id="gallery"
+    data={images}
+    renderItem={renderImage}
+    triggerAnimation={{
+      duration: 300,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
+      onAnimationComplete: () => console.log('Animation finished!')
+    }}
+  />
+  ```
+
+### Patch Changes
+
+- b81f5a3: feat!: add `useGestureViewerState` hook and refactor controller
+
+  - Add `useGestureViewerState` hook to access `currentIndex` and `totalCount`
+  - Refactor `useGestureViewerController` to return control methods only
+  - Rename `GestureViewerControllerState` to `GestureViewerState`
+  - Update exports and type definitions
+
+  BREAKING CHANGE: `useGestureViewerController` no longer returns `currentIndex` and `totalCount`. Use `useGestureViewerState` instead.
+
+  Example:
+
+  ```diff
+  import {
+    GestureViewer,
+  -  GestureViewerControllerState,
+  +  GestureViewerState
+    useGestureViewerController,
+    useGestureViewerEvent,
+  +  useGestureViewerState,
+  } from 'react-native-gesture-image-viewer';
+
+  const {
+    goToIndex, goToPrevious, goToNext, zoomIn, zoomOut, resetZoom, rotate,
+  -  currentIndex, totalCount
+  } = useGestureViewerController();
+
+  + const { currentIndex, totalCount } = useGestureViewerState();
+  ```
+
+- 91320d6: fix(useGestureViewerController): Prevent tearing and optimize rendering
+
+  - Refactors `useGestureViewerController` to use [`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore).
+  - This change resolves a potential tearing bug that can occur in concurrent mode by ensuring the hook's state is always synchronized with the external store.
+  - Optimized the update logic to prevent unnecessary re-renders when currentIndex or totalCount remain unchanged, improving performance.
+
+- 8856347: fix: disable the dismiss pan gesture when `dismiss.enabled` is false
+- fae40a9: refactor!: remove `onIndexChange` prop in favor of state hook
+
+  - Remove `onIndexChange` prop from `GestureViewerProps`
+  - For current index: use `useGestureViewerState` hook
+  - For index changes: use `useGestureViewerState` with `useEffect`
+  - Update component implementation to remove prop handling
+
+  Example:
+
+  ```tsx
+  // Before
+  <GestureViewer onIndexChange={(index) => console.log(index)} />;
+
+  // After
+  const { currentIndex } = useGestureViewerState();
+
+  useEffect(() => {
+    console.log(currentIndex);
+  }, [currentIndex]);
+  ```
+
+  **❗ BREAKING CHANGE: onIndexChange prop removed. Use useGestureViewerState for current index and useEffect for change detection.**
+
+- 37087da: refactor!: improve props naming for better developer experience
+
+  - Replace ambiguous gesture props with clearer names
+  - Group dismiss-related options into single object
+  - Standardize `enable\*` pattern for gesture controls
+
+  **❗ BREAKING CHANGE:**
+
+  - `enableDismissGesture` → `dismiss.enabled`
+  - `dismissThreshold` → `dismiss.threshold`
+  - `resistance` → `dismiss.resistance`
+  - `animateBackdrop` → `dismiss.fadeBackdrop`
+  - `useSnap` → `enableSnapMode`
+  - `enableZoomPanGesture` → `enablePanWhenZoomed`
+  - `enableZoomGesture` → `enablePinchZoom`
+  - `enableSwipeGesture` → `enableHorizontalSwipe`
+
+  Example:
+
+  ```tsx
+  <GestureViewer
+    dismiss={{
+      enabled: true,
+      threshold: 80,
+      resistance: 2,
+      fadeBackdrop: true,
+    }}
+    enableSnapMode
+    enablePanWhenZoomed
+    enablePinchZoom
+    enableHorizontalSwipe
+  />
+  ```
+
+- e5f9744: fix: prevent multiple `onIndexChange` calls during initialization
+
+  - Remove redundant currentIndex state to avoid duplicate callbacks
+  - Use manager subscription as single source of truth for index changes
+  - Implement ref pattern for `onIndexChange` to prevent stale closures
+  - Ensure `onIndexChange` only fires on actual user interactions, not internal state changes
+
+  Now `onIndexChange` correctly fires only once during initialization.
+
+  Fixes #67
+
+- d32950f: docs: add trigger-based modal animations documentation
+- 9b006b7: fix: improve type inference for listProps with generic list components
+
+  - Add InstantiateGeneric helper type for better generic component props inference
+  - Change generic type parameter from T to ItemT for clarity
+  - Fix type inference issues with FlashList, FlatList keyExtractor and renderItem props
+  - Ensure all list component props receive correct ItemT type instead of unknown
+
+  **Before:**
+
+  ```tsx
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    ListComponent={FlashList}
+    // keyExtractor's item parameter was unknown type
+    listProps={{
+      keyExtractor: (item, index) => item.id, // ❌ item is unknown
+    }}
+  />
+  ```
+
+  **After:**
+
+  ```tsx
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    ListComponent={FlashList}
+    // keyExtractor's item parameter is now properly typed
+    listProps={{
+      keyExtractor: (item, index) => item.id, // ✅ item has correct type
+      // and other props...
+    }}
+  />
+  ```
+
+- 816ab00: docs: complete v2 documentation setup
+
+  - Add v2 guide pages and API documentation
+  - Create v2 home pages (en/ko) with feature highlights
+  - Add migration guide from 1.x to 2.x with breaking changes
+  - Add cross-version compatibility warnings for Reanimated v3/v4
+  - Complete API documentation translation (props, hooks, events)
+  - Set up v2 as default version in rspress config
+
+- 0c57539: fix(GestureViewer): resolve item visibility in FlashList v2 due to estimatedItemSize removal
+
+  - Explicitly set item height to screenHeight for FlashList v2 compatibility
+  - Fixes issue where items were not visible without explicit height
+  - [FlashList v2](https://shopify.github.io/flash-list/docs/v2-changes#deprecated) no longer supports `estimatedItemSize`, causing height: '100%' to not render correctly. Added explicit screen dimensions while maintaining v1 compatibility.
+  - Fix conditional rendering of list optimization props
+
+- 552516c: chore: upgrade dependencies to latest stable versions
+
+  - Upgrade expo to v54 (example)
+  - Upgrade react-native to 0.81.4 (example)
+  - Upgrade react to v19.1.0
+
+- 7632f33: docs(package.json): update project description for better clarity and add keywords
+- 929579f: fix: remove key prop from list item children for better performance
+
+  - Remove key prop from View children when using FlatList/FlashList
+  - Keep key prop only for ScrollView children
+  - Improves FlashList performance by allowing proper item reuse
+  - Follows FlashList official performance guidelines
+
+  Refs: https://shopify.github.io/flash-list/docs/fundamentals/performance#remove-key-prop
+
+- 6d5cdc7: chore(docs): replace `@remark` with `@remarks` per TSDoc spec
+
+  - TSDoc specifies the tag name as `@remarks` (not `@remark`).
+  - This aligns our comments with the spec and improves tooling support.
+  - No runtime behavior changes.
+  - Ref: https://tsdoc.org/pages/tags/remarks/
+
+- 9e3fcf1: fix(GestureTrigger): set `collapsable` prop to `false` for stable gesture handling
+
+  - Explicitly sets `collapsable` to `false` to prevent the view from being removed from the native hierarchy, ensuring consistent gesture recognition and layout stability.
+
 ## 2.0.0-beta.8
 
 ### Minor Changes
