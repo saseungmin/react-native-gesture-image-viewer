@@ -1,5 +1,17 @@
 # react-native-gesture-image-viewer
 
+## 1.9.1
+
+### Patch Changes
+
+- 9774327: fix: resolve Metro bundler error for optional FlashList dependency
+
+  - Separate optional library imports into dedicated file
+  - Fix "Requiring unknown module" error when FlashList is not installed
+  - Enable dynamic feature detection without breaking Metro static analysis
+
+  [Related issue](https://github.com/saseungmin/react-native-gesture-image-viewer/issues/120)
+
 ## 1.9.0
 
 ### Minor Changes
