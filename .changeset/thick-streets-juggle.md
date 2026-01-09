@@ -13,3 +13,8 @@ refactor: migrated from deprecated `runOnJS` to `scheduleOnRN` for react-native-
 ### Migration
 
 If you're using react-native-worklets < 0.5.0, you'll need to upgrade to 0.5.0 or higher.
+
+### Reference
+
+- [react-native-worklets 0.5.0 release notes](https://github.com/software-mansion/react-native-reanimated/releases/tag/worklets-0.5.0)
+- [react-native-worklets documentation](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnJS/)
