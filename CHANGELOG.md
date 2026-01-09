@@ -1,5 +1,15 @@
 # react-native-gesture-image-viewer
 
+## 1.9.2
+
+### Patch Changes
+
+- 243b3e9: fix(v1.x): prevent unintended horizontal scroll during pinch zoom
+
+  Fixed unintended horizontal scroll when starting pinch zoom gesture.
+
+  Previously, when initiating a pinch zoom with two fingers, the first finger touch could trigger horizontal scrolling before the second finger was detected. This caused unwanted page transitions while trying to zoom.
+
 ## 1.9.1
 
 ### Patch Changes
