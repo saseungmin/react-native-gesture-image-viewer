@@ -1,6 +1,6 @@
 {
   "name": "react-native-gesture-image-viewer",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "🖼️ React Native Image Viewer - Reanimated-powered image gestures with full control",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
