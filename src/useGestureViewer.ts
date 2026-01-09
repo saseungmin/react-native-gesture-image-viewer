@@ -15,7 +15,7 @@ import {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { runOnJS } from 'react-native-worklets';
+import { scheduleOnRN } from 'react-native-worklets';
 import type GestureViewerManager from './GestureViewerManager';
 import { registry } from './GestureViewerRegistry';
 import type { GestureViewerProps, TriggerRect } from './types';
@@ -147,10 +147,10 @@ export const useGestureViewer = <ItemT, LC>({
     () => scale.value,
     (currentScale, previousScale) => {
       if (currentScale !== previousScale) {
-        runOnJS(emitZoomChange)(currentScale, previousScale);
+        scheduleOnRN(emitZoomChange, currentScale, previousScale);
       }
 
-      runOnJS(setIsZoomed)(currentScale > 1);
+      scheduleOnRN(setIsZoomed, currentScale > 1);
     },
   );
 
@@ -158,10 +158,10 @@ export const useGestureViewer = <ItemT, LC>({
     () => rotation.value,
     (currentRotation, previousRotation) => {
       if (currentRotation !== previousRotation) {
-        runOnJS(emitRotationChange)(currentRotation, previousRotation);
+        scheduleOnRN(emitRotationChange, currentRotation, previousRotation);
       }
 
-      runOnJS(setIsRotated)(currentRotation % 360 !== 0);
+      scheduleOnRN(setIsRotated, currentRotation % 360 !== 0);
     },
   );
 
@@ -287,7 +287,7 @@ export const useGestureViewer = <ItemT, LC>({
 
       triggerScale.value = withTiming(1, animationConfig, (finished) => {
         if (finished) {
-          runOnJS(onAnimationComplete)();
+          scheduleOnRN(onAnimationComplete);
         }
       });
       triggerTranslateX.value = withTiming(0, animationConfig);
@@ -342,14 +342,14 @@ export const useGestureViewer = <ItemT, LC>({
       triggerTranslateY.value = withTiming(endY, animationConfig);
       triggerOpacity.value = withTiming(0, animationConfig, (finished) => {
         if (finished && onDismiss) {
-          runOnJS(onDismiss)();
+          scheduleOnRN(onDismiss);
         }
       });
       return;
     }
 
     if (onDismiss) {
-      runOnJS(onDismiss)();
+      scheduleOnRN(onDismiss);
     }
   }, [
     animationConfig,
@@ -434,7 +434,7 @@ export const useGestureViewer = <ItemT, LC>({
       })
       .onEnd((event) => {
         if (canDismiss && event.translationY > dismissOptions.threshold) {
-          runOnJS(handleDismiss)();
+          scheduleOnRN(handleDismiss);
           return;
         }
 
@@ -453,7 +453,7 @@ export const useGestureViewer = <ItemT, LC>({
       .enabled(enablePinchZoom)
       .onTouchesDown((event) => {
         if (event.numberOfTouches === 2) {
-          runOnJS(setIsPinching)(true);
+          scheduleOnRN(setIsPinching, true);
         }
       })
       .onBegin(() => {
@@ -530,10 +530,10 @@ export const useGestureViewer = <ItemT, LC>({
         translateY.value = withTiming(constrainedTranslateY);
       })
       .onTouchesUp(() => {
-        runOnJS(setIsPinching)(false);
+        scheduleOnRN(setIsPinching, false);
       })
       .onFinalize(() => {
-        runOnJS(setIsPinching)(false);
+        scheduleOnRN(setIsPinching, false);
       });
   }, [
     scale,

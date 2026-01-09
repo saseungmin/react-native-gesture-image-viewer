@@ -10932,7 +10932,7 @@ __metadata:
     react-native: ">=0.75.0"
     react-native-gesture-handler: ">=2.24.0"
     react-native-reanimated: ">=4.0.0"
-    react-native-worklets: "*"
+    react-native-worklets: ">=0.5.0"
   languageName: unknown
   linkType: soft
 
