@@ -42,6 +42,7 @@ export function GestureViewer<ItemT, LC>({
     listRef,
     isZoomed,
     isRotated,
+    isPinching,
     dismissGesture,
     zoomGesture,
     onMomentumScrollEnd,
@@ -119,7 +120,7 @@ export function GestureViewer<ItemT, LC>({
     () =>
       ({
         horizontal: true,
-        scrollEnabled: !isZoomed && !isRotated,
+        scrollEnabled: !isZoomed && !isRotated && !isPinching,
         showsHorizontalScrollIndicator: false,
         onMomentumScrollEnd: onMomentumScrollEnd,
         onScrollBeginDrag,
@@ -135,7 +136,7 @@ export function GestureViewer<ItemT, LC>({
         scrollEventThrottle: 16,
         removeClippedSubviews: true,
       }) satisfies ScrollViewProps,
-    [width, itemSpacing, isZoomed, isRotated, onMomentumScrollEnd, onScrollBeginDrag, enableSnapMode],
+    [width, itemSpacing, isZoomed, isRotated, isPinching, onMomentumScrollEnd, onScrollBeginDrag, enableSnapMode],
   );
 
   const control = useMemo(() => ({ dismiss: handleDismiss }), [handleDismiss]);

@@ -58,6 +58,7 @@ export const useGestureViewer = <ItemT, LC>({
 
   const [isZoomed, setIsZoomed] = useState(false);
   const [isRotated, setIsRotated] = useState(false);
+  const [isPinching, setIsPinching] = useState(false);
   const [shouldStartTriggerAnimation, setShouldStartTriggerAnimation] = useState(false);
   const [manager, setManager] = useState<GestureViewerManager | null>(null);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -450,6 +451,11 @@ export const useGestureViewer = <ItemT, LC>({
   const zoomPinchGesture = useMemo(() => {
     return Gesture.Pinch()
       .enabled(enablePinchZoom)
+      .onTouchesDown((event) => {
+        if (event.numberOfTouches === 2) {
+          runOnJS(setIsPinching)(true);
+        }
+      })
       .onBegin(() => {
         startScale.value = scale.value;
         initialTranslateX.value = translateX.value;
@@ -522,6 +528,12 @@ export const useGestureViewer = <ItemT, LC>({
 
         translateX.value = withTiming(constrainedTranslateX);
         translateY.value = withTiming(constrainedTranslateY);
+      })
+      .onTouchesUp(() => {
+        runOnJS(setIsPinching)(false);
+      })
+      .onFinalize(() => {
+        runOnJS(setIsPinching)(false);
       });
   }, [
     scale,
@@ -651,6 +663,7 @@ export const useGestureViewer = <ItemT, LC>({
     listRef,
     isZoomed,
     isRotated,
+    isPinching,
     dismissGesture,
     zoomGesture,
 
