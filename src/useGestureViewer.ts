@@ -466,6 +466,10 @@ export const useGestureViewer = <ItemT, LC>({
 
         scale.value = newScale;
 
+        if (event.numberOfPointers !== 2) {
+          return;
+        }
+
         if (newScale <= 1) {
           translateX.value = withTiming(0);
           translateY.value = withTiming(0);
