@@ -82,6 +82,9 @@ export const useGestureViewer = <ItemT, LC>({
   const triggerTranslateY = useSharedValue(0);
   const triggerOpacity = useSharedValue(1);
 
+  const lastFocalX = useSharedValue(0);
+  const lastFocalY = useSharedValue(0);
+
   const dataLength = data?.length || 0;
 
   const animationConfig = useMemo(
@@ -456,19 +459,17 @@ export const useGestureViewer = <ItemT, LC>({
           scheduleOnRN(setIsPinching, true);
         }
       })
-      .onBegin(() => {
+      .onBegin((event) => {
         startScale.value = scale.value;
         initialTranslateX.value = translateX.value;
         initialTranslateY.value = translateY.value;
+        lastFocalX.value = event.focalX;
+        lastFocalY.value = event.focalY;
       })
       .onUpdate((event) => {
         const newScale = startScale.value * event.scale;
 
         scale.value = newScale;
-
-        if (event.numberOfPointers !== 2) {
-          return;
-        }
 
         if (newScale <= 1) {
           translateX.value = withTiming(0);
@@ -476,9 +477,18 @@ export const useGestureViewer = <ItemT, LC>({
           return;
         }
 
+        const focalDeltaX = Math.abs(event.focalX - lastFocalX.value);
+        const focalDeltaY = Math.abs(event.focalY - lastFocalY.value);
+        const threshold = 50;
+
+        if (focalDeltaX < threshold && focalDeltaY < threshold) {
+          lastFocalX.value = event.focalX;
+          lastFocalY.value = event.focalY;
+        }
+
         const deltaScale = newScale - startScale.value;
-        const centerX = event.focalX - width / 2;
-        const centerY = event.focalY - height / 2;
+        const centerX = lastFocalX.value - width / 2;
+        const centerY = lastFocalY.value - height / 2;
 
         // NOTE 새로운 이동값 = 기존 이동값 - (중심점 거리 × 스케일 변화량) / 원래 스케일 (중심점이 화면 중심에서 멀수록, 확대 배율이 클수록 더 많이 이동)
         const newTranslateX = initialTranslateX.value - (centerX * deltaScale) / startScale.value;
@@ -551,6 +561,8 @@ export const useGestureViewer = <ItemT, LC>({
     width,
     height,
     constrainTranslation,
+    lastFocalX,
+    lastFocalY,
   ]);
 
   const zoomPanGesture = useMemo(() => {
