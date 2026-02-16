@@ -87,6 +87,7 @@
     "build": "bob build",
     "changeset": "changeset",
     "clean": "del-cli lib",
+    "example": "yarn workspace react-native-gesture-image-viewer-example run",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
