@@ -9,7 +9,10 @@ import type {
   ViewStyle,
   ViewToken,
 } from 'react-native';
-import type { FlatList as GHFlatList, ScrollView as GHScrollView } from 'react-native-gesture-handler';
+import type {
+  FlatList as GHFlatList,
+  ScrollView as GHScrollView,
+} from 'react-native-gesture-handler';
 import type { WithTimingConfig } from 'react-native-reanimated';
 
 export type FlatListComponent<ItemT> = typeof RNFlatList<ItemT> | typeof GHFlatList<ItemT>;
@@ -17,39 +20,43 @@ export type ScrollViewComponent = typeof RNScrollView | typeof GHScrollView;
 
 interface ViewabilityConfigCallbackPair<TItem> {
   viewabilityConfig: ViewabilityConfig;
-  onViewableItemsChanged: ((info: { viewableItems: ViewToken<TItem>[]; changed: ViewToken<TItem>[] }) => void) | null;
+  onViewableItemsChanged:
+    | ((info: { viewableItems: ViewToken<TItem>[]; changed: ViewToken<TItem>[] }) => void)
+    | null;
 }
 
 // Helper type to instantiate generic components with specific type parameter
-export type InstantiateGeneric<ItemT, LC> = LC extends React.ComponentType<infer P>
-  ? P extends Record<string, any>
-    ? {
-        [K in keyof P]: K extends 'data'
-          ? ArrayLike<ItemT> | null | undefined
-          : K extends 'renderItem'
-            ? ListRenderItem<ItemT>
-            : K extends 'keyExtractor'
-              ? (item: ItemT, index: number) => string
-              : K extends 'getItemType'
-                ? (item: ItemT, index: number, extraData?: any) => string | number | undefined
-                : K extends 'overrideItemLayout'
-                  ? (
-                      layout: { span?: number; size?: number },
-                      item: ItemT,
-                      index: number,
-                      maxColumns?: number,
-                      extraData?: any,
-                    ) => void
-                  : K extends 'onViewableItemsChanged'
-                    ? FlatListProps<ItemT>['onViewableItemsChanged']
-                    : K extends 'viewabilityConfigCallbackPairs'
-                      ? ViewabilityConfigCallbackPair<ItemT>[]
-                      : P[K];
-      }
-    : P
-  : never;
+export type InstantiateGeneric<ItemT, LC> =
+  LC extends React.ComponentType<infer P>
+    ? P extends Record<string, any>
+      ? {
+          [K in keyof P]: K extends 'data'
+            ? ArrayLike<ItemT> | null | undefined
+            : K extends 'renderItem'
+              ? ListRenderItem<ItemT>
+              : K extends 'keyExtractor'
+                ? (item: ItemT, index: number) => string
+                : K extends 'getItemType'
+                  ? (item: ItemT, index: number, extraData?: any) => string | number | undefined
+                  : K extends 'overrideItemLayout'
+                    ? (
+                        layout: { span?: number; size?: number },
+                        item: ItemT,
+                        index: number,
+                        maxColumns?: number,
+                        extraData?: any,
+                      ) => void
+                    : K extends 'onViewableItemsChanged'
+                      ? FlatListProps<ItemT>['onViewableItemsChanged']
+                      : K extends 'viewabilityConfigCallbackPairs'
+                        ? ViewabilityConfigCallbackPair<ItemT>[]
+                        : P[K];
+        }
+      : P
+    : never;
 
-export type GetComponentProps<ItemT, LC> = LC extends React.ComponentType<any> ? InstantiateGeneric<ItemT, LC> : never;
+export type GetComponentProps<ItemT, LC> =
+  LC extends React.ComponentType<any> ? InstantiateGeneric<ItemT, LC> : never;
 
 type ConditionalListProps<ItemT, LC> = LC extends typeof RNFlatList<ItemT>
   ? React.ComponentProps<typeof RNFlatList<ItemT>>
@@ -123,7 +130,10 @@ export interface GestureViewerProps<ItemT, LC> {
    * @param helpers - Control helpers for the viewer. Currently includes `dismiss()`.
    * @returns A React element that wraps and renders the provided `children`.
    */
-  renderContainer?: (children: React.ReactElement, helpers: { dismiss: () => void }) => React.ReactElement;
+  renderContainer?: (
+    children: React.ReactElement,
+    helpers: { dismiss: () => void },
+  ) => React.ReactElement;
   /**
    * Support for any list component like `ScrollView`, `FlatList`, `FlashList` through the `ListComponent` prop.
    */
@@ -422,4 +432,6 @@ export type GestureViewerEventData = {
   rotationChange: { rotation: number; previousRotation: number | null };
 };
 
-export type GestureViewerEventCallback<T extends GestureViewerEventType> = (data: GestureViewerEventData[T]) => void;
+export type GestureViewerEventCallback<T extends GestureViewerEventType> = (
+  data: GestureViewerEventData[T],
+) => void;

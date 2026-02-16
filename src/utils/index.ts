@@ -1,13 +1,21 @@
 import { FlatList as RNFlatList, ScrollView as RNScrollView } from 'react-native';
-import { FlatList as GestureFlatList, ScrollView as GestureScrollView } from 'react-native-gesture-handler';
+import {
+  FlatList as GestureFlatList,
+  ScrollView as GestureScrollView,
+} from 'react-native-gesture-handler';
+
 import type { FlatListComponent, ScrollViewComponent } from '../types';
+
 import { FlashList } from './FlashList';
 
-export const isScrollViewLike = (component: React.ComponentType<any>): component is ScrollViewComponent => {
-  return component === RNScrollView || component === GestureScrollView;
-};
+export const isScrollViewLike = (
+  component: React.ComponentType<any>,
+): component is ScrollViewComponent =>
+  component === RNScrollView || component === GestureScrollView;
 
-export const isFlatListLike = (component: React.ComponentType<any>): component is FlatListComponent<any> => {
+export const isFlatListLike = (
+  component: React.ComponentType<any>,
+): component is FlatListComponent<any> => {
   if (component === RNFlatList || component === GestureFlatList || isFlashListLike(component)) {
     return true;
   }
@@ -25,7 +33,15 @@ export const isFlashListLike = (component: React.ComponentType<any>): boolean =>
 
 export const createBoundsConstraint =
   ({ width, height }: { width: number; height: number }) =>
-  ({ scale, translateX, translateY }: { translateX: number; translateY: number; scale: number }) => {
+  ({
+    scale,
+    translateX,
+    translateY,
+  }: {
+    translateX: number;
+    translateY: number;
+    scale: number;
+  }) => {
     'worklet';
 
     if (scale <= 1) {
@@ -51,7 +67,7 @@ export const createLoopData = <T>(dataRef: React.RefObject<T[]>, enableLoop: boo
     return data;
   }
 
-  const lastItem = data[data.length - 1];
+  const lastItem = data.at(-1);
   const firstItem = data[0];
 
   if (lastItem === undefined || firstItem === undefined) {
@@ -67,32 +83,32 @@ export const getLoopAdjustedIndex = (
   enableLoop: boolean,
 ): { realIndex: number; needsJump: boolean; jumpToIndex?: number } => {
   if (!enableLoop || originalDataLength <= 1) {
-    return { realIndex: scrollIndex, needsJump: false };
+    return { needsJump: false, realIndex: scrollIndex };
   }
 
   if (scrollIndex === 0) {
     return {
-      realIndex: originalDataLength - 1,
-      needsJump: true,
       jumpToIndex: originalDataLength,
+      needsJump: true,
+      realIndex: originalDataLength - 1,
     };
   } else if (scrollIndex === originalDataLength + 1) {
     return {
-      realIndex: 0,
-      needsJump: true,
       jumpToIndex: 1,
+      needsJump: true,
+      realIndex: 0,
     };
   }
 
-  return { realIndex: scrollIndex - 1, needsJump: false };
+  return { needsJump: false, realIndex: scrollIndex - 1 };
 };
 
 export const createScrollAction = (listRef: any, width: number) => ({
   scrollTo: (index: number, animated: boolean) => {
     if (listRef?.scrollToIndex) {
-      listRef.scrollToIndex({ index, animated });
+      listRef.scrollToIndex({ animated, index });
     } else if (listRef?.scrollTo) {
-      listRef.scrollTo({ x: index * width, animated });
+      listRef.scrollTo({ animated, x: index * width });
     }
   },
 });

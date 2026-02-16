@@ -11,65 +11,65 @@ import { Steps, PackageManagerTabs } from '@rspress/core/theme';
 :::
 
 :::info 중요
-`react-native-gesture-image-viewer`는 [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated)와 [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler)를 기반으로 한 높은 성능의 뷰어 라이브러리입니다.   
+`react-native-gesture-image-viewer`는 [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated)와 [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler)를 기반으로 한 높은 성능의 뷰어 라이브러리입니다.  
 따라서 이 라이브러리를 사용하기 전에 React Native Reanimated와 Gesture Handler를 **반드시 설치**해야 합니다. 자세한 설정 가이드는 각 라이브러리의 공식 문서를 참고해주세요.
 :::
 
 #### 필수 요구사항
 
-|라이브러리|최소 버전|
-|:--|:--:|
-|`react`|`>=18.0.0`|
-|`react-native`|`>=0.75.0`|
-|`react-native-gesture-handler`|`>=2.24.0`|
-|`react-native-reanimated`|`>=4.0.0`|
-|`react-native-worklets`|`>=0.5.0`|
+| 라이브러리                     | 최소 버전  |
+| :----------------------------- | :--------: |
+| `react`                        | `>=18.0.0` |
+| `react-native`                 | `>=0.75.0` |
+| `react-native-gesture-handler` | `>=2.24.0` |
+| `react-native-reanimated`      | `>=4.0.0`  |
+| `react-native-worklets`        | `>=0.5.0`  |
 
 ## [React Native Reanimated 설정](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/)
-
 
 <Steps>
   ### `react-native-reanimated` 및 `react-native-worklets` 설치:
 
-  <PackageManagerTabs command="install react-native-reanimated" />
+<PackageManagerTabs command="install react-native-reanimated" />
 
-  - `react-native-worklets`는 더 나은 모듈성을 위해 `react-native-reanimated`에서 분리되었으며 별도로 설치해야 합니다.
+- `react-native-worklets`는 더 나은 모듈성을 위해 `react-native-reanimated`에서 분리되었으며 별도로 설치해야 합니다.
 
-  <PackageManagerTabs command="install react-native-worklets" />
+<PackageManagerTabs command="install react-native-worklets" />
 
-  ### Babel 설정
+### Babel 설정
 
-  #### Expo
+#### Expo
 
-  :::warning Expo Go 지원
-  Expo Go 환경에서 Reanimated 4를 사용하려면 [Expo SDK 54(beta)](https://expo.dev/go)를 사용해야 합니다.
-  :::
+:::warning Expo Go 지원
+Expo Go 환경에서 Reanimated 4를 사용하려면 [Expo SDK 54(beta)](https://expo.dev/go)를 사용해야 합니다.
+:::
 
-  Expo를 사용할 경우 `expo prebuild`를 실행하여 ios와 android 디렉토리의 네이티브 코드를 업데이트합니다.
+Expo를 사용할 경우 `expo prebuild`를 실행하여 ios와 android 디렉토리의 네이티브 코드를 업데이트합니다.
 
-  <PackageManagerTabs command="expo prebuild" />
+<PackageManagerTabs command="expo prebuild" />
 
-  끝입니다! 이제 Expo 프로젝트에서 Reanimated 4가 구성되었습니다.
-  Expo SDK 50부터는 Expo 스타터 템플릿에 기본적으로 Reanimated Babel 플러그인이 포함되어 있습니다.
+끝입니다! 이제 Expo 프로젝트에서 Reanimated 4가 구성되었습니다.
+Expo SDK 50부터는 Expo 스타터 템플릿에 기본적으로 Reanimated Babel 플러그인이 포함되어 있습니다.
 
-  #### React Native CLI
+#### React Native CLI
 
-  React Native Community CLI를 사용할 때는 `babel.config.js`에 `react-native-worklets/plugin` 플러그인을 수동으로 추가해야 합니다.
+React Native Community CLI를 사용할 때는 `babel.config.js`에 `react-native-worklets/plugin` 플러그인을 수동으로 추가해야 합니다.
 
-  ```js title="babel.config.js"
-  module.exports = {
-    presets: [
-      ... // don't add it here :)
-    ],
-    plugins: [
-      ...
-      // for web
-      '@babel/plugin-proposal-export-namespace-from', // [!code highlight]
-      // react-native-worklets/plugin has to be listed last.
-      'react-native-worklets/plugin', // [!code highlight]
-    ],
-  };
-  ```
+```js title="babel.config.js"
+module.exports = {
+  presets: [
+    ... // don't add it here :)
+  ],
+  plugins: [
+    ...
+    // for web
+    '@babel/plugin-proposal-export-namespace-from', // [!code highlight]
+    // react-native-worklets/plugin has to be listed last.
+    'react-native-worklets/plugin', // [!code highlight]
+  ],
+};
+```
+
 </Steps>
 
 ## [React Native Gesture Handler 설정](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/installation)
@@ -81,7 +81,7 @@ import { Steps, PackageManagerTabs } from '@rspress/core/theme';
 
 ## React Native Gesture Image Viewer 설치
 
-모든 설정이 끝났습니다! 🎉   
+모든 설정이 끝났습니다! 🎉  
 이제 `react-native-gesture-image-viewer`를 설치하면 됩니다.
 
 <PackageManagerTabs command="install react-native-gesture-image-viewer" />

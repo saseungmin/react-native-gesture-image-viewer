@@ -21,18 +21,13 @@ function App() {
     console.log(`갤러리 줌: ${data.scale}배`);
   });
 
-  return (
-    <GestureViewer
-      data={images}
-      renderItem={renderImage}
-    />
-  );
+  return <GestureViewer data={images} renderItem={renderImage} />;
 }
 ```
 
 #### 이벤트 타입
 
-| 이벤트 | 설명 | 데이터 |
-|:-----|:-----|:-----|
-| `zoomChange` | 핀치 제스처 중 줌 스케일이 변경될 때 발생 | `{ scale: number, previousScale: number }` |
+| 이벤트           | 설명                                      | 데이터                                           |
+| :--------------- | :---------------------------------------- | :----------------------------------------------- |
+| `zoomChange`     | 핀치 제스처 중 줌 스케일이 변경될 때 발생 | `{ scale: number, previousScale: number }`       |
 | `rotationChange` | 회전 제스처 중 회전 각도가 변경될 때 발생 | `{ rotation: number, previousRotation: number }` |

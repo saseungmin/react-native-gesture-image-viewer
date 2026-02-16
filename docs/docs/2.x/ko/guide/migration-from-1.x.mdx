@@ -18,6 +18,7 @@ import { Steps, PackageManagerTabs } from '@rspress/core/theme';
 ### 설정 업데이트
 
 #### Expo
+
 `ios` 및 `android` 디렉토리의 네이티브 코드를 업데이트하기 위해 prebuild를 실행합니다.
 
 <PackageManagerTabs command="expo prebuild" />
@@ -26,6 +27,7 @@ import { Steps, PackageManagerTabs } from '@rspress/core/theme';
 Expo SDK 50부터는 Expo 스타터 템플릿에 기본적으로 Reanimated Babel 플러그인이 포함되어 있습니다.
 
 #### React Native CLI
+
 React Native Community CLI를 사용할 때는 `babel.config.js`에 `react-native-worklets/plugin` 플러그인을 수동으로 추가해야 합니다.
 
 ```diff title="babel.config.js"
@@ -77,7 +79,7 @@ import {
 + useGestureViewerState,
 } from 'react-native-gesture-image-viewer';
 
-const { 
+const {
   goToIndex, goToPrevious, goToNext, zoomIn, zoomOut, resetZoom, rotate,
 - currentIndex, totalCount
 } = useGestureViewerController();
@@ -95,7 +97,7 @@ const {
 
 ```tsx
 // 이전
-<GestureViewer onIndexChange={(index) => console.log(index)} />
+<GestureViewer onIndexChange={(index) => console.log(index)} />;
 
 // 이후
 const { currentIndex } = useGestureViewerState();

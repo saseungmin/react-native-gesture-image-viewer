@@ -1,22 +1,29 @@
 # Multi-Instance Management
 
-When you want to efficiently manage multiple `GestureViewer` instances, you can use the `id` prop to use multiple `GestureViewer` components.   
+When you want to efficiently manage multiple `GestureViewer` instances, you can use the `id` prop to use multiple `GestureViewer` components.
 
-`GestureViewer` automatically removes instances from memory when components are unmounted, so no manual memory management is required.   
+`GestureViewer` automatically removes instances from memory when components are unmounted, so no manual memory management is required.
 
 :::note
 The default `id` value is `default`.
 :::
 
 ```tsx
-import { GestureViewer, GestureTrigger, useGestureViewerController, useGestureViewerEvent } from 'react-native-gesture-image-viewer';
+import {
+  GestureViewer,
+  GestureTrigger,
+  useGestureViewerController,
+  useGestureViewerEvent,
+} from 'react-native-gesture-image-viewer';
 
 const firstViewerId = 'firstViewerId';
 const secondViewerId = 'secondViewerId';
 
 function App() {
-  const { currentIndex: firstCurrentIndex, totalCount: firstTotalCount } = useGestureViewerController(firstViewerId);
-  const { currentIndex: secondCurrentIndex, totalCount: secondTotalCount } = useGestureViewerController(secondViewerId);
+  const { currentIndex: firstCurrentIndex, totalCount: firstTotalCount } =
+    useGestureViewerController(firstViewerId);
+  const { currentIndex: secondCurrentIndex, totalCount: secondTotalCount } =
+    useGestureViewerController(secondViewerId);
 
   useGestureViewerEvent(firstViewerId, 'zoomChange', (data) => {
     console.log(`Gallery zoom: ${data.scale}x`);
@@ -33,21 +40,13 @@ function App() {
           <Image source={{ uri }} />
         </Pressable>
       </GestureTrigger>
-      <GestureViewer
-        id={firstViewerId}
-        data={images}
-        renderItem={renderImage}
-      />
+      <GestureViewer id={firstViewerId} data={images} renderItem={renderImage} />
       <GestureTrigger id={secondViewerId}>
         <Pressable>
           <Image source={{ uri }} />
         </Pressable>
       </GestureTrigger>
-      <GestureViewer
-        id={secondViewerId}
-        data={images}
-        renderItem={renderImage}
-      />
+      <GestureViewer id={secondViewerId} data={images} renderItem={renderImage} />
     </View>
   );
 }

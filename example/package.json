@@ -1,11 +1,12 @@
 {
   "name": "react-native-gesture-image-viewer-example",
   "version": "1.0.0",
+  "private": true,
   "main": "index.js",
   "scripts": {
-    "start": "expo start --clear",
     "android": "expo run:android",
     "ios": "expo run:ios",
+    "start": "expo start --clear",
     "web": "expo start --web"
   },
   "dependencies": {
@@ -32,6 +33,5 @@
     "@babel/runtime": "^7.28.4",
     "react-native-builder-bob": "^0.40.13",
     "react-native-monorepo-config": "^0.1.10"
-  },
-  "private": true
+  }
 }

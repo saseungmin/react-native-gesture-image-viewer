@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+
 import { isFlashListLike, isFlatListLike } from './utils';
 
 type WebPagingFixStyleProps = {

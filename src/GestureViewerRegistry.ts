@@ -1,4 +1,5 @@
 import type { View } from 'react-native';
+
 import GestureViewerManager from './GestureViewerManager';
 
 class GestureViewerRegistry {

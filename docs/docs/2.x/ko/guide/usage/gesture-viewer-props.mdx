@@ -62,7 +62,9 @@ function App() {
 ```
 
 ### `autoPlay` (기본값: `false`)
+
 자동 재생 모드를 활성화합니다. `true`일 때 지정된 간격 후 다음 아이템으로 자동으로 재생됩니다.
+
 - `enableLoop`이 활성화되면 마지막 아이템에서 다음으로 가면 첫 번째로, 첫 번째에서 이전으로 가면 마지막으로 돌아갑니다.
 - `enableLoop`이 비활성화되면 마지막 아이템에서 정지됩니다.
 - 아이템이 하나만 있을 때 자동 재생이 비활성화됩니다.
@@ -82,6 +84,7 @@ function App() {
 ```
 
 ### `autoPlayInterval` (기본값: `3000`)
+
 자동 재생 간격을 밀리초 단위로 설정합니다.  
 양수 정수여야 합니다. 값이 250ms 미만이면 런타임에서 250ms로 제한됩니다.
 
@@ -100,16 +103,18 @@ function App() {
 ```
 
 ### `initialIndex` (기본값: `0`)
+
 초기 인덱스 값을 설정할 수 있습니다.
 
 ### `maxZoomScale` (기본값: `2`)
+
 최대 줌 배율을 제어할 수 있습니다.
 
 ## `GestureViewerProps` interface
 
 [Go to source](https://github.com/saseungmin/react-native-gesture-image-viewer/blob/a7b58a5fc9aa396e5b72ec1e6fe6ae27d94ed044/src/types.ts#L88)
 
-```tsx title="GestureViewerProps"
+````tsx title="GestureViewerProps"
 export interface GestureViewerProps<ItemT, LC> {
   /**
    * When you want to efficiently manage multiple `GestureViewer` instances, you can use the `id` prop to use multiple `GestureViewer` components.
@@ -148,7 +153,10 @@ export interface GestureViewerProps<ItemT, LC> {
    * @param helpers - Control helpers for the viewer. Currently includes `dismiss()`.
    * @returns A React element that wraps and renders the provided `children`.
    */
-  renderContainer?: (children: React.ReactElement, helpers: { dismiss: () => void }) => React.ReactElement;
+  renderContainer?: (
+    children: React.ReactElement,
+    helpers: { dismiss: () => void },
+  ) => React.ReactElement;
   /**
    * Support for any list component like `ScrollView`, `FlatList`, `FlashList` through the `ListComponent` prop.
    */
@@ -298,4 +306,4 @@ export interface GestureViewerProps<ItemT, LC> {
    */
   triggerAnimation?: TriggerAnimationConfig;
 }
-```
+````

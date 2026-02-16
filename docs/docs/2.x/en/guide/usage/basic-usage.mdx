@@ -35,22 +35,12 @@ You can programmatically control the `GestureViewer` using the `useGestureViewer
 import { GestureViewer, useGestureViewerController } from 'react-native-gesture-image-viewer';
 
 function App() {
-  const {
-    goToIndex,
-    goToPrevious,
-    goToNext,
-    zoomIn,
-    zoomOut,
-    resetZoom,
-    rotate
-  } = useGestureViewerController();
+  const { goToIndex, goToPrevious, goToNext, zoomIn, zoomOut, resetZoom, rotate } =
+    useGestureViewerController();
 
   return (
     <View>
-      <GestureViewer
-        data={images}
-        renderItem={renderImage}
-      />
+      <GestureViewer data={images} renderItem={renderImage} />
       <View>
         <Button title="Prev" onPress={goToPrevious} />
         <Button title="Jump to index 2" onPress={() => goToIndex(2)} />
@@ -73,10 +63,7 @@ function App() {
 
   return (
     <View>
-      <GestureViewer
-        data={images}
-        renderItem={renderImage}
-      />
+      <GestureViewer data={images} renderItem={renderImage} />
       <View>
         <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
       </View>
@@ -101,12 +88,7 @@ function App() {
     console.log(`Rotation changed from ${data.previousRotation}° to ${data.rotation}°`);
   });
 
-  return (
-    <GestureViewer
-      data={images}
-      renderItem={renderImage}
-    />
-  );
+  return <GestureViewer data={images} renderItem={renderImage} />;
 }
 ```
 
@@ -127,11 +109,7 @@ function App() {
           <Image source={{ uri }} />
         </Pressable>
       </GestureTrigger>
-      <GestureViewer
-        data={images}
-        renderItem={renderImage}
-        onDismiss={() => setVisible(false)}
-      />
+      <GestureViewer data={images} renderItem={renderImage} onDismiss={() => setVisible(false)} />
     </View>
   );
 }

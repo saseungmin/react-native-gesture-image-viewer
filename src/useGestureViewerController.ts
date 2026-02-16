@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
+
 import type GestureViewerManager from './GestureViewerManager';
 import { registry } from './GestureViewerRegistry';
 import type { GestureViewerController } from './types';

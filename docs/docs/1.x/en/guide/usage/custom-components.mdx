@@ -2,7 +2,7 @@ import { Tab, Tabs } from '@rspress/core/theme';
 
 # Custom Components
 
-`react-native-gesture-image-viewer` offers powerful complete component customization. You can create gesture-supported items with not only images but any component you want.   
+`react-native-gesture-image-viewer` offers powerful complete component customization. You can create gesture-supported items with not only images but any component you want.
 
 ## Modal Components
 
@@ -30,6 +30,7 @@ You can create a viewer using any `Modal` of your choice as shown below:
       );
     }
     ```
+
   </Tab>
   <Tab label="Use react-nativee-modal">
     ```tsx
@@ -63,12 +64,13 @@ You can create a viewer using any `Modal` of your choice as shown below:
       );
     }
     ```
+
   </Tab>
 </Tabs>
 
 ## List Components
 
-Support for any list component like `ScrollView`, `FlatList`, [`FlashList`](https://shopify.github.io/flash-list/) through the `ListComponent` prop.   
+Support for any list component like `ScrollView`, `FlatList`, [`FlashList`](https://shopify.github.io/flash-list/) through the `ListComponent` prop.  
 The `listProps` provides **type inference based on the selected list component**, ensuring accurate autocompletion and type safety in your IDE.
 
 ```tsx
@@ -79,9 +81,11 @@ function App() {
     <GestureViewer
       data={images}
       ListComponent={FlashList}
-      listProps={{
-        // ✅ FlashList props autocompletion
-      }}
+      listProps={
+        {
+          // ✅ FlashList props autocompletion
+        }
+      }
     />
   );
 }
@@ -97,14 +101,15 @@ import { Image } from 'expo-image';
 
 function App() {
   const renderImage = useCallback((imageUrl: string) => {
-    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} contentFit="contain" />;
+    return (
+      <Image
+        source={{ uri: imageUrl }}
+        style={{ width: '100%', height: '100%' }}
+        contentFit="contain"
+      />
+    );
   }, []);
 
-  return (
-    <GestureViewer
-      data={images}
-      renderItem={renderImage}
-    />
-  );
+  return <GestureViewer data={images} renderItem={renderImage} />;
 }
 ```

@@ -10,11 +10,7 @@ import { GestureViewer } from 'react-native-gesture-image-viewer';
 function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  return (
-    <GestureViewer
-      enableLoop={true}
-    />
-  );
+  return <GestureViewer enableLoop={true} />;
 }
 ```
 
@@ -28,11 +24,7 @@ import { GestureViewer } from 'react-native-gesture-image-viewer';
 function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  return (
-    <GestureViewer
-      onIndexChange={setCurrentIndex}
-    />
-  );
+  return <GestureViewer onIndexChange={setCurrentIndex} />;
 }
 ```
 
@@ -44,13 +36,7 @@ function App() {
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 
 function App() {
-  return (
-    <GestureViewer
-      data={data}
-      renderItem={renderItem}
-      useSnap={true}
-    />
-  );
+  return <GestureViewer data={data} renderItem={renderItem} useSnap={true} />;
 }
 ```
 
@@ -74,7 +60,9 @@ function App() {
 ```
 
 ### `autoPlay` (기본값: `false`)
+
 자동 재생 모드를 활성화합니다. `true`일 때 지정된 간격 후 다음 아이템으로 자동으로 재생됩니다.
+
 - `enableLoop`이 활성화되면 마지막 아이템에서 다음으로 가면 첫 번째로, 첫 번째에서 이전으로 가면 마지막으로 돌아갑니다.
 - `enableLoop`이 비활성화되면 마지막 아이템에서 정지됩니다.
 - 아이템이 하나만 있을 때 자동 재생이 비활성화됩니다.
@@ -84,15 +72,12 @@ function App() {
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 
 function App() {
-  return (
-    <GestureViewer
-      autoPlay={true}
-    />
-  );
+  return <GestureViewer autoPlay={true} />;
 }
 ```
 
 ### `autoPlayInterval` (기본값: `3000`)
+
 자동 재생 간격을 밀리초 단위로 설정합니다.  
 양수 정수여야 합니다. 값이 250ms 미만이면 런타임에서 250ms로 제한됩니다.
 
@@ -100,32 +85,31 @@ function App() {
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 
 function App() {
-  return (
-    <GestureViewer
-      autoPlay={true}
-      autoPlayInterval={3000}
-    />
-  );
+  return <GestureViewer autoPlay={true} autoPlayInterval={3000} />;
 }
 ```
 
 ### `initialIndex` (기본값: `0`)
+
 초기 인덱스 값을 설정할 수 있습니다.
 
 ### `dismissThreshold` (기본값: `80`)
+
 `dismissThreshold`는 수직 제스처 시 임계값을 적용하여 `onDismiss` 호출 시점을 제어할 수 있습니다.
 
 ### `resistance` (기본값: `2`)
+
 `resistance`는 수직 제스처 시 저항값을 적용하여 수직으로 이동하는 범위를 제어할 수 있습니다.
 
 ### `maxZoomScale` (기본값: `2`)
+
 최대 줌 배율을 제어할 수 있습니다.
 
 ## `GestureViewerProps` interface
 
 [Go to source](https://github.com/saseungmin/react-native-gesture-image-viewer/blob/edafaf0346c3f922382cd1e5f8c5c30d49115ec7/src/types.ts#L76)
 
-```tsx title="GestureViewerProps"
+````tsx title="GestureViewerProps"
 export interface GestureViewerProps<ItemT, LC> {
   /**
    * When you want to efficiently manage multiple `GestureViewer` instances, you can use the `id` prop to use multiple `GestureViewer` components.
@@ -168,7 +152,10 @@ export interface GestureViewerProps<ItemT, LC> {
    * @param helpers - Control helpers for the viewer. Currently includes `dismiss()`.
    * @returns A React element that wraps and renders the provided `children`.
    */
-  renderContainer?: (children: React.ReactElement, helpers: { dismiss: () => void }) => React.ReactElement;
+  renderContainer?: (
+    children: React.ReactElement,
+    helpers: { dismiss: () => void },
+  ) => React.ReactElement;
   /**
    * Support for any list component like `ScrollView`, `FlatList`, `FlashList` through the `ListComponent` prop.
    */
@@ -313,4 +300,4 @@ export interface GestureViewerProps<ItemT, LC> {
    */
   triggerAnimation?: TriggerAnimationConfig;
 }
-```
+````

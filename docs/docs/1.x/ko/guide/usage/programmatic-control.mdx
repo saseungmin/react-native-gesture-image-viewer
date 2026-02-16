@@ -15,15 +15,12 @@ function App() {
     zoomIn,
     zoomOut,
     resetZoom,
-    rotate
+    rotate,
   } = useGestureViewerController();
 
   return (
     <View>
-      <GestureViewer
-        data={images}
-        renderItem={renderImage}
-      />
+      <GestureViewer data={images} renderItem={renderImage} />
       {/* Zoom Controls & Rotation Controls */}
       <View>
         <Button title="Zoom In" onPress={() => zoomIn(0.25)} />
@@ -52,17 +49,17 @@ function App() {
 
 ## `useGestureViewerController` API Reference
 
-| 속성 | 설명 | 타입 | 기본값 |
-|:-----|:-----|:-----|:-----:|
-| `goToIndex` | 특정 인덱스로 이동합니다. | `(index: number) => void` | - |
-| `goToPrevious` | 이전 아이템으로 이동합니다. | `() => void` | - |
-| `goToNext` | 다음 아이템으로 이동합니다. | `() => void` | - |
-| `currentIndex` | 현재 표시 중인 아이템의 인덱스입니다. | `number` | `0` |
-| `totalCount` | 전체 아이템의 개수입니다. | `number` | `0` |
-| `zoomIn` | 지정된 배수만큼 확대합니다. | `(multiplier?: number) => void` | `0.25` |
-| `zoomOut` | 지정된 배수만큼 축소합니다. | `(multiplier?: number) => void` | `0.25` |
-| `resetZoom` | 지정된 스케일로 줌을 초기화합니다. | `(scale?: number) => void` | `1` |
-| `rotate` | 지정된 각도만큼 회전합니다. | `(angle?: RotationAngle, clockwise?: boolean) => void` | `90, true` |
+| 속성           | 설명                                  | 타입                                                   |   기본값   |
+| :------------- | :------------------------------------ | :----------------------------------------------------- | :--------: |
+| `goToIndex`    | 특정 인덱스로 이동합니다.             | `(index: number) => void`                              |     -      |
+| `goToPrevious` | 이전 아이템으로 이동합니다.           | `() => void`                                           |     -      |
+| `goToNext`     | 다음 아이템으로 이동합니다.           | `() => void`                                           |     -      |
+| `currentIndex` | 현재 표시 중인 아이템의 인덱스입니다. | `number`                                               |    `0`     |
+| `totalCount`   | 전체 아이템의 개수입니다.             | `number`                                               |    `0`     |
+| `zoomIn`       | 지정된 배수만큼 확대합니다.           | `(multiplier?: number) => void`                        |   `0.25`   |
+| `zoomOut`      | 지정된 배수만큼 축소합니다.           | `(multiplier?: number) => void`                        |   `0.25`   |
+| `resetZoom`    | 지정된 스케일로 줌을 초기화합니다.    | `(scale?: number) => void`                             |    `1`     |
+| `rotate`       | 지정된 각도만큼 회전합니다.           | `(angle?: RotationAngle, clockwise?: boolean) => void` | `90, true` |
 
 ### Parameters
 
@@ -70,7 +67,7 @@ function App() {
   - **multiplier**: 확대할 배수 (범위: `0.01 ~ 1`)
   - 예: `zoomIn(0.5)` → 현재 스케일의 50% 만큼 추가 확대
 - `zoomOut(multiplier?)`
-  - **multiplier**: 축소할 배수 (범위: `0.01 ~ 1`) 
+  - **multiplier**: 축소할 배수 (범위: `0.01 ~ 1`)
   - 예: `zoomOut(0.3)` → 현재 스케일을 1.3으로 나누어 축소
 - `resetZoom(scale?)`
   - **scale**: 초기화할 스케일 값

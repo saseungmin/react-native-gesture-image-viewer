@@ -2,14 +2,17 @@ pre-commit:
   parallel: true
   commands:
     lint:
-      glob: "*.{js,ts,jsx,tsx}"
-      run: npx biome format --write {staged_files}
+      glob: '*.{js,ts,jsx,tsx}'
+      run: yarn oxlint {staged_files}
+    fmt:
+      glob: '*.{js,ts,jsx,tsx}'
+      run: yarn oxfmt {staged_files}
     types:
-      glob: "*.{js,ts,jsx,tsx}"
-      exclude: "docs/"
-      run: npx tsc
+      glob: '*.{js,ts,jsx,tsx}'
+      exclude: 'docs/'
+      run: yarn tsc
 commit-msg:
   parallel: true
   commands:
     commitlint:
-      run: npx commitlint --edit
+      run: yarn commitlint --edit

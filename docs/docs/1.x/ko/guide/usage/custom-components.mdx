@@ -2,7 +2,7 @@ import { Tab, Tabs } from '@rspress/core/theme';
 
 # 커스텀 컴포넌트
 
-`react-native-gesture-image-viewer`는 강력한 기능으로 완벽한 컴포넌트 커스터마이징이 가능합니다. 이미지뿐만 아니라 원하는 컴포넌트로 제스처를 지원하는 아이템을 만들 수 있습니다.   
+`react-native-gesture-image-viewer`는 강력한 기능으로 완벽한 컴포넌트 커스터마이징이 가능합니다. 이미지뿐만 아니라 원하는 컴포넌트로 제스처를 지원하는 아이템을 만들 수 있습니다.
 
 ## 모달 컴포넌트
 
@@ -30,6 +30,7 @@ import { Tab, Tabs } from '@rspress/core/theme';
       );
     }
     ```
+
   </Tab>
   <Tab label="Use react-nativee-modal">
     ```tsx
@@ -63,12 +64,13 @@ import { Tab, Tabs } from '@rspress/core/theme';
       );
     }
     ```
+
   </Tab>
 </Tabs>
 
 ## 리스트 컴포넌트
 
-`ListComponent` props를 통해 `ScrollView`, `FlatList`, [`FlashList`](https://shopify.github.io/flash-list/) 등 원하는 리스트를 지원합니다.   
+`ListComponent` props를 통해 `ScrollView`, `FlatList`, [`FlashList`](https://shopify.github.io/flash-list/) 등 원하는 리스트를 지원합니다.  
 `listProps`는 **선택한 리스트 컴포넌트에 맞는 타입 추론**을 제공하여, IDE에서 정확한 자동완성과 타입 안전성을 보장합니다.
 
 ```tsx
@@ -79,9 +81,11 @@ function App() {
     <GestureViewer
       data={images}
       ListComponent={FlashList}
-      listProps={{
-        // ✅ FlashList props autocompletion
-      }}
+      listProps={
+        {
+          // ✅ FlashList props autocompletion
+        }
+      }
     />
   );
 }
@@ -97,14 +101,15 @@ import { Image } from 'expo-image';
 
 function App() {
   const renderImage = useCallback((imageUrl: string) => {
-    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} contentFit="contain" />;
+    return (
+      <Image
+        source={{ uri: imageUrl }}
+        style={{ width: '100%', height: '100%' }}
+        contentFit="contain"
+      />
+    );
   }, []);
 
-  return (
-    <GestureViewer
-      data={images}
-      renderItem={renderImage}
-    />
-  );
+  return <GestureViewer data={images} renderItem={renderImage} />;
 }
 ```

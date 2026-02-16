@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+
 import type GestureViewerManager from './GestureViewerManager';
 import { registry } from './GestureViewerRegistry';
 import type { GestureViewerEventCallback, GestureViewerEventType } from './types';
@@ -71,7 +72,10 @@ export function useGestureViewerEvent<T extends GestureViewerEventType>(
   callback?: GestureViewerEventCallback<T>,
 ) {
   const id = typeof idOrEventType === 'string' && callback ? idOrEventType : 'default';
-  const eventType = typeof idOrEventType === 'string' && callback ? (eventTypeOrCallback as T) : (idOrEventType as T);
+  const eventType =
+    typeof idOrEventType === 'string' && callback
+      ? (eventTypeOrCallback as T)
+      : (idOrEventType as T);
   const finalCallback = callback || (eventTypeOrCallback as GestureViewerEventCallback<T>);
 
   useEffect(() => {

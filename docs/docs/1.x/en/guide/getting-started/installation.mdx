@@ -12,18 +12,18 @@ While v1.x may work with Reanimated v4, it's optimized for v3 and you might enco
 :::
 
 :::info Important
-`react-native-gesture-image-viewer` is a high-performance viewer library built on [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated) and [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler).   
+`react-native-gesture-image-viewer` is a high-performance viewer library built on [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated) and [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler).  
 Therefore, you **must install** React Native Reanimated and Gesture Handler before using this library. Please refer to the official documentation of these libraries for detailed setup guides.
 :::
 
 #### Minimum Requirements
 
-|Library|Minimum Version|
-|:--|:--:|
-|`react`|`>=18.0.0`|
-|`react-native`|`>=0.75.0`|
-|`react-native-gesture-handler`|`>=2.24.0`|
-|`react-native-reanimated`|`>=3.0.0`|
+| Library                        | Minimum Version |
+| :----------------------------- | :-------------: |
+| `react`                        |   `>=18.0.0`    |
+| `react-native`                 |   `>=0.75.0`    |
+| `react-native-gesture-handler` |   `>=2.24.0`    |
+| `react-native-reanimated`      |    `>=3.0.0`    |
 
 ## [React Native Reanimated Setup](https://docs.swmansion.com/react-native-reanimated/docs/3.x/fundamentals/getting-started/)
 
@@ -52,9 +52,7 @@ module.exports = {
 
 ```js title="metro.config.js"
 // [!code highlight:3]
-const {
-  wrapWithReanimatedMetroConfig,
-} = require('react-native-reanimated/metro-config');
+const { wrapWithReanimatedMetroConfig } = require('react-native-reanimated/metro-config');
 
 const config = {
   // Your existing Metro configuration options
@@ -74,7 +72,7 @@ module.exports = wrapWithReanimatedMetroConfig(config); // [!code highlight]
 
 ## Install React Native Gesture Image Viewer
 
-You’re all set! 🎉   
+You’re all set! 🎉  
 Start by installing `react-native-gesture-image-viewer`
 
 <PackageManagerTabs command="install react-native-gesture-image-viewer@1.x" />

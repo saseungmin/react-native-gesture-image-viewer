@@ -7,7 +7,12 @@ type Props = {
   height?: number | `${number}px`;
 };
 
-export function ExpoSnackEmbed({ snackId, platform = 'web', preview = true, height = '505px' }: Props) {
+export function ExpoSnackEmbed({
+  snackId,
+  platform = 'web',
+  preview = true,
+  height = '505px',
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -20,8 +25,8 @@ export function ExpoSnackEmbed({ snackId, platform = 'web', preview = true, heig
           document.head.appendChild(script);
 
           await new Promise((resolve, reject) => {
-            script.onload = resolve;
-            script.onerror = reject;
+            script.addEventListener('load', resolve);
+            script.addEventListener('error', reject);
           });
         }
       } catch (error) {

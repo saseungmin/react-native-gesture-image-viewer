@@ -1,4 +1,5 @@
 import { type SharedValue, withTiming } from 'react-native-reanimated';
+
 import type {
   GestureViewerEventCallback,
   GestureViewerEventData,
@@ -41,7 +42,10 @@ class GestureViewerManager {
     };
   }
 
-  addEventListener<T extends GestureViewerEventType>(eventType: T, callback: GestureViewerEventCallback<T>) {
+  addEventListener<T extends GestureViewerEventType>(
+    eventType: T,
+    callback: GestureViewerEventCallback<T>,
+  ) {
     if (!this.eventListeners.has(eventType)) {
       this.eventListeners.set(eventType, new Set());
     }
@@ -61,7 +65,10 @@ class GestureViewerManager {
     };
   }
 
-  private emitEvent<T extends GestureViewerEventType>(eventType: T, data: GestureViewerEventData[T]) {
+  private emitEvent<T extends GestureViewerEventType>(
+    eventType: T,
+    data: GestureViewerEventData[T],
+  ) {
     const listeners = this.eventListeners.get(eventType);
 
     if (listeners) {
@@ -154,7 +161,9 @@ class GestureViewerManager {
     }
 
     if (angle === 360) {
-      this.rotation.value = withTiming(clockwise ? this.rotation.value + MAX_ANGLE : this.rotation.value - MAX_ANGLE);
+      this.rotation.value = withTiming(
+        clockwise ? this.rotation.value + MAX_ANGLE : this.rotation.value - MAX_ANGLE,
+      );
       return;
     }
 
@@ -164,7 +173,13 @@ class GestureViewerManager {
   };
 
   zoomIn = (multiplier = 0.25) => {
-    if (!this.scale || !this.translateX || !this.translateY || multiplier < 0.01 || multiplier > 1) {
+    if (
+      !this.scale ||
+      !this.translateX ||
+      !this.translateY ||
+      multiplier < 0.01 ||
+      multiplier > 1
+    ) {
       return;
     }
 
@@ -186,7 +201,13 @@ class GestureViewerManager {
   };
 
   zoomOut = (multiplier = 0.25) => {
-    if (!this.scale || !this.translateX || !this.translateY || multiplier < 0.01 || multiplier > 1) {
+    if (
+      !this.scale ||
+      !this.translateX ||
+      !this.translateY ||
+      multiplier < 0.01 ||
+      multiplier > 1
+    ) {
       return;
     }
 
@@ -214,7 +235,13 @@ class GestureViewerManager {
   };
 
   resetZoom = (scale = 1) => {
-    if (!this.scale || !this.translateX || !this.translateY || scale <= 0 || scale > this.maxZoomScale) {
+    if (
+      !this.scale ||
+      !this.translateX ||
+      !this.translateY ||
+      scale <= 0 ||
+      scale > this.maxZoomScale
+    ) {
       return;
     }
 

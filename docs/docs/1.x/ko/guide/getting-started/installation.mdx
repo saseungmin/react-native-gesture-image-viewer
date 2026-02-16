@@ -12,18 +12,18 @@ v1.x도 Reanimated v4에서 동작하겠지만, v3에 최적화되어 있어 dep
 :::
 
 :::info 중요
-`react-native-gesture-image-viewer`는 [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated)와 [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler)를 기반으로 한 높은 성능의 뷰어 라이브러리입니다.   
+`react-native-gesture-image-viewer`는 [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated)와 [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler)를 기반으로 한 높은 성능의 뷰어 라이브러리입니다.  
 따라서 이 라이브러리를 사용하기 전에 React Native Reanimated와 Gesture Handler를 **반드시 설치**해야 합니다. 자세한 설정 가이드는 각 라이브러리의 공식 문서를 참고해주세요.
 :::
 
 #### 필수 요구사항
 
-|라이브러리|최소 버전|
-|:--|:--:|
-|`react`|`>=18.0.0`|
-|`react-native`|`>=0.75.0`|
-|`react-native-gesture-handler`|`>=2.24.0`|
-|`react-native-reanimated`|`>=3.0.0`|
+| 라이브러리                     | 최소 버전  |
+| :----------------------------- | :--------: |
+| `react`                        | `>=18.0.0` |
+| `react-native`                 | `>=0.75.0` |
+| `react-native-gesture-handler` | `>=2.24.0` |
+| `react-native-reanimated`      | `>=3.0.0`  |
 
 ## [React Native Reanimated 설정](https://docs.swmansion.com/react-native-reanimated/docs/3.x/fundamentals/getting-started/)
 
@@ -52,9 +52,7 @@ module.exports = {
 
 ```js title="metro.config.js"
 // [!code highlight:3]
-const {
-  wrapWithReanimatedMetroConfig,
-} = require('react-native-reanimated/metro-config');
+const { wrapWithReanimatedMetroConfig } = require('react-native-reanimated/metro-config');
 
 const config = {
   // Your existing Metro configuration options
@@ -74,7 +72,7 @@ module.exports = wrapWithReanimatedMetroConfig(config); // [!code highlight]
 
 ## React Native Gesture Image Viewer 설치
 
-모든 설정이 끝났습니다! 🎉   
+모든 설정이 끝났습니다! 🎉  
 이제 `react-native-gesture-image-viewer`를 설치하면 됩니다.
 
 <PackageManagerTabs command="install react-native-gesture-image-viewer@1.x" />

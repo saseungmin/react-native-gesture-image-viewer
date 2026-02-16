@@ -18,14 +18,16 @@ import { Steps, PackageManagerTabs } from '@rspress/core/theme';
 ### Update Configuration
 
 #### Expo
+
 Run prebuild to update the native code in the `ios` and `android` directories.
 
 <PackageManagerTabs command="expo prebuild" />
 
-And that's it! Reanimated 4 is now configured in your Expo project.   
+And that's it! Reanimated 4 is now configured in your Expo project.  
 Since Expo SDK 50, the Expo starter template includes the Reanimated Babel plugin by default.
 
 #### React Native CLI
+
 When using the React Native Community CLI, you also need to manually add the `react-native-worklets/plugin` plugin to your `babel.config.js`.
 
 ```diff title="babel.config.js"
@@ -77,7 +79,7 @@ import {
 + useGestureViewerState,
 } from 'react-native-gesture-image-viewer';
 
-const { 
+const {
   goToIndex, goToPrevious, goToNext, zoomIn, zoomOut, resetZoom, rotate,
 - currentIndex, totalCount
 } = useGestureViewerController();
@@ -95,7 +97,7 @@ const {
 
 ```tsx
 // Before
-<GestureViewer onIndexChange={(index) => console.log(index)} />
+<GestureViewer onIndexChange={(index) => console.log(index)} />;
 
 // After
 const { currentIndex } = useGestureViewerState();

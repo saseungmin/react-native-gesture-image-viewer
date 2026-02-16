@@ -16,6 +16,7 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
+
 import type GestureViewerManager from './GestureViewerManager';
 import { registry } from './GestureViewerRegistry';
 import type { GestureViewerProps, TriggerRect } from './types';
@@ -90,20 +91,21 @@ export const useGestureViewer = <ItemT, LC>({
   const animationConfig = useMemo(
     () => ({
       duration: triggerAnimation?.duration ?? 300,
-      easing: triggerAnimation?.easing ?? Easing.bezier(0.25, 0.1, 0.25, 1.0),
+      easing: triggerAnimation?.easing ?? Easing.bezier(0.25, 0.1, 0.25, 1),
       reduceMotion: triggerAnimation?.reduceMotion,
     }),
     [triggerAnimation?.duration, triggerAnimation?.easing, triggerAnimation?.reduceMotion],
   );
 
-  const dismissOptions = useMemo(() => {
-    return {
+  const dismissOptions = useMemo(
+    () => ({
       enabled: dismiss?.enabled ?? true,
-      threshold: dismiss?.threshold ?? 80,
-      resistance: dismiss?.resistance ?? 2,
       fadeBackdrop: dismiss?.fadeBackdrop ?? true,
-    };
-  }, [dismiss?.enabled, dismiss?.threshold, dismiss?.resistance, dismiss?.fadeBackdrop]);
+      resistance: dismiss?.resistance ?? 2,
+      threshold: dismiss?.threshold ?? 80,
+    }),
+    [dismiss?.enabled, dismiss?.threshold, dismiss?.resistance, dismiss?.fadeBackdrop],
+  );
 
   const adjustedInitialIndex = useMemo(() => {
     if (enableLoop && dataLength > 1) {
@@ -113,7 +115,10 @@ export const useGestureViewer = <ItemT, LC>({
     return initialIndex;
   }, [enableLoop, dataLength, initialIndex]);
 
-  const constrainTranslation = useMemo(() => createBoundsConstraint({ width, height }), [width, height]);
+  const constrainTranslation = useMemo(
+    () => createBoundsConstraint({ height, width }),
+    [width, height],
+  );
 
   const scrollTo = useCallback(
     (index: number, animated: boolean) => {
@@ -239,7 +244,16 @@ export const useGestureViewer = <ItemT, LC>({
     return () => {
       runAfterInteractions?.cancel();
     };
-  }, [adjustedInitialIndex, translateY, backdropOpacity, translateX, scale, startScale, rotation, scrollTo]);
+  }, [
+    adjustedInitialIndex,
+    translateY,
+    backdropOpacity,
+    translateX,
+    scale,
+    startScale,
+    rotation,
+    scrollTo,
+  ]);
 
   useEffect(() => {
     if (
@@ -268,7 +282,16 @@ export const useGestureViewer = <ItemT, LC>({
     }, intervalMs);
 
     return () => clearInterval(interval);
-  }, [autoPlay, autoPlayInterval, manager, dataLength, currentIndex, enableLoop, isZoomed, isRotated]);
+  }, [
+    autoPlay,
+    autoPlayInterval,
+    manager,
+    dataLength,
+    currentIndex,
+    enableLoop,
+    isZoomed,
+    isRotated,
+  ]);
 
   useEffect(() => {
     onAnimationCompleteRef.current = triggerAnimation?.onAnimationComplete;
@@ -320,7 +343,7 @@ export const useGestureViewer = <ItemT, LC>({
 
     if (node && typeof node.measure === 'function') {
       node.measure((_x, _y, width, height, pageX, pageY) => {
-        triggerRectRef.current = { x: pageX, y: pageY, width, height };
+        triggerRectRef.current = { height, width, x: pageX, y: pageY };
         triggerOpacity.value = 0;
         setShouldStartTriggerAnimation(true);
         registry.clearTriggerNode(id);
@@ -338,7 +361,10 @@ export const useGestureViewer = <ItemT, LC>({
     if (triggerRectRef.current) {
       const endX = triggerRectRef.current.x + triggerRectRef.current.width / 2 - width / 2;
       const endY = triggerRectRef.current.y + triggerRectRef.current.height / 2 - height / 2;
-      const endScale = Math.min(triggerRectRef.current.width / width, triggerRectRef.current.height / height);
+      const endScale = Math.min(
+        triggerRectRef.current.width / width,
+        triggerRectRef.current.height / height,
+      );
 
       triggerScale.value = withTiming(endScale, animationConfig);
       triggerTranslateX.value = withTiming(endX, animationConfig);
@@ -372,7 +398,7 @@ export const useGestureViewer = <ItemT, LC>({
         return;
       }
 
-      const contentOffset = event.nativeEvent.contentOffset;
+      const { contentOffset } = event.nativeEvent;
       const scrollIndex = Math.round(contentOffset.x / (width + itemSpacing));
 
       const isLoopHandled = manager?.handleMomentumScrollEnd(scrollIndex);
@@ -381,7 +407,11 @@ export const useGestureViewer = <ItemT, LC>({
         return;
       }
 
-      const { realIndex, needsJump, jumpToIndex } = getLoopAdjustedIndex(scrollIndex, dataLength, enableLoop);
+      const { realIndex, needsJump, jumpToIndex } = getLoopAdjustedIndex(
+        scrollIndex,
+        dataLength,
+        enableLoop,
+      );
 
       if (needsJump && jumpToIndex !== undefined) {
         scrollTo(jumpToIndex, false);
@@ -442,221 +472,230 @@ export const useGestureViewer = <ItemT, LC>({
         }
 
         translateY.value = withSpring(0, {
-          stiffness: 600,
           damping: 50,
+          energyThreshold: 6e-9,
           mass: 4,
           overshootClamping: false,
-          energyThreshold: 6e-9,
+          stiffness: 600,
         });
       });
   }, [translateY, dismissOptions, handleDismiss, isZoomed]);
 
-  const zoomPinchGesture = useMemo(() => {
-    return Gesture.Pinch()
-      .enabled(enablePinchZoom)
-      .onTouchesDown((event) => {
-        if (event.numberOfTouches === 2) {
-          scheduleOnRN(setIsPinching, true);
-        }
-      })
-      .onBegin((event) => {
-        startScale.value = scale.value;
-        initialTranslateX.value = translateX.value;
-        initialTranslateY.value = translateY.value;
-        lastFocalX.value = event.focalX;
-        lastFocalY.value = event.focalY;
-      })
-      .onUpdate((event) => {
-        const newScale = startScale.value * event.scale;
-
-        scale.value = newScale;
-
-        if (newScale <= 1) {
-          translateX.value = withTiming(0);
-          translateY.value = withTiming(0);
-          return;
-        }
-
-        const focalDeltaX = Math.abs(event.focalX - lastFocalX.value);
-        const focalDeltaY = Math.abs(event.focalY - lastFocalY.value);
-        const threshold = 50;
-
-        if (focalDeltaX < threshold && focalDeltaY < threshold) {
+  const zoomPinchGesture = useMemo(
+    () =>
+      Gesture.Pinch()
+        .enabled(enablePinchZoom)
+        .onTouchesDown((event) => {
+          if (event.numberOfTouches === 2) {
+            scheduleOnRN(setIsPinching, true);
+          }
+        })
+        .onBegin((event) => {
+          startScale.value = scale.value;
+          initialTranslateX.value = translateX.value;
+          initialTranslateY.value = translateY.value;
           lastFocalX.value = event.focalX;
           lastFocalY.value = event.focalY;
-        }
+        })
+        .onUpdate((event) => {
+          const newScale = startScale.value * event.scale;
 
-        const deltaScale = newScale - startScale.value;
-        const centerX = lastFocalX.value - width / 2;
-        const centerY = lastFocalY.value - height / 2;
+          scale.value = newScale;
 
-        // NOTE 새로운 이동값 = 기존 이동값 - (중심점 거리 × 스케일 변화량) / 원래 스케일 (중심점이 화면 중심에서 멀수록, 확대 배율이 클수록 더 많이 이동)
-        const newTranslateX = initialTranslateX.value - (centerX * deltaScale) / startScale.value;
-        const newTranslateY = initialTranslateY.value - (centerY * deltaScale) / startScale.value;
+          if (newScale <= 1) {
+            translateX.value = withTiming(0);
+            translateY.value = withTiming(0);
+            return;
+          }
 
-        const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } = constrainTranslation({
-          translateX: newTranslateX,
-          translateY: newTranslateY,
-          scale: newScale,
-        });
+          const focalDeltaX = Math.abs(event.focalX - lastFocalX.value);
+          const focalDeltaY = Math.abs(event.focalY - lastFocalY.value);
+          const threshold = 50;
 
-        translateX.value = constrainedTranslateX;
-        translateY.value = constrainedTranslateY;
-      })
-      .onEnd(() => {
-        if (scale.value > maxZoomScale) {
-          scale.value = withTiming(maxZoomScale, {
-            duration: 300,
-            easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
-          });
+          if (focalDeltaX < threshold && focalDeltaY < threshold) {
+            lastFocalX.value = event.focalX;
+            lastFocalY.value = event.focalY;
+          }
 
-          const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } = constrainTranslation({
-            translateX: translateX.value,
-            translateY: translateY.value,
-            scale: maxZoomScale,
-          });
+          const deltaScale = newScale - startScale.value;
+          const centerX = lastFocalX.value - width / 2;
+          const centerY = lastFocalY.value - height / 2;
 
-          translateX.value = withTiming(constrainedTranslateX);
-          translateY.value = withTiming(constrainedTranslateY);
+          // NOTE 새로운 이동값 = 기존 이동값 - (중심점 거리 × 스케일 변화량) / 원래 스케일 (중심점이 화면 중심에서 멀수록, 확대 배율이 클수록 더 많이 이동)
+          const newTranslateX = initialTranslateX.value - (centerX * deltaScale) / startScale.value;
+          const newTranslateY = initialTranslateY.value - (centerY * deltaScale) / startScale.value;
 
-          return;
-        }
-
-        if (scale.value < 1) {
-          scale.value = withTiming(1, {
-            duration: 300,
-            easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
-          });
-          translateX.value = withTiming(0);
-          translateY.value = withTiming(0);
-          initialTranslateX.value = withTiming(0);
-          initialTranslateY.value = withTiming(0);
-          return;
-        }
-
-        const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } = constrainTranslation({
-          translateX: translateX.value,
-          translateY: translateY.value,
-          scale: scale.value,
-        });
-
-        translateX.value = withTiming(constrainedTranslateX);
-        translateY.value = withTiming(constrainedTranslateY);
-      })
-      .onTouchesUp(() => {
-        scheduleOnRN(setIsPinching, false);
-      })
-      .onFinalize(() => {
-        scheduleOnRN(setIsPinching, false);
-      });
-  }, [
-    scale,
-    enablePinchZoom,
-    maxZoomScale,
-    translateX,
-    translateY,
-    startScale,
-    initialTranslateX,
-    initialTranslateY,
-    width,
-    height,
-    constrainTranslation,
-    lastFocalX,
-    lastFocalY,
-  ]);
-
-  const zoomPanGesture = useMemo(() => {
-    return Gesture.Pan()
-      .enabled(enablePanWhenZoomed && isZoomed)
-      .activeCursor('grabbing')
-      .averageTouches(true)
-      .onBegin(() => {
-        initialTranslateX.value = translateX.value;
-        initialTranslateY.value = translateY.value;
-      })
-      .onUpdate((event) => {
-        if (scale.value > 1) {
-          const newTranslateX = initialTranslateX.value + event.translationX;
-          const newTranslateY = initialTranslateY.value + event.translationY;
-
-          const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } = constrainTranslation({
-            translateX: newTranslateX,
-            translateY: newTranslateY,
-            scale: scale.value,
-          });
+          const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } =
+            constrainTranslation({
+              scale: newScale,
+              translateX: newTranslateX,
+              translateY: newTranslateY,
+            });
 
           translateX.value = constrainedTranslateX;
           translateY.value = constrainedTranslateY;
-        }
-      });
-  }, [
-    translateX,
-    translateY,
-    enablePanWhenZoomed,
-    isZoomed,
-    scale,
-    initialTranslateX,
-    initialTranslateY,
-    constrainTranslation,
-  ]);
+        })
+        .onEnd(() => {
+          if (scale.value > maxZoomScale) {
+            scale.value = withTiming(maxZoomScale, {
+              duration: 300,
+              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+            });
 
-  const doubleTapGesture = useMemo(() => {
-    return Gesture.Tap()
-      .enabled(enableDoubleTapZoom)
-      .numberOfTaps(2)
-      .onEnd((event) => {
-        const nextScale = scale.value > 1 ? 1 : maxZoomScale;
+            const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } =
+              constrainTranslation({
+                scale: maxZoomScale,
+                translateX: translateX.value,
+                translateY: translateY.value,
+              });
 
-        if (nextScale > 1) {
-          const centerX = event.x - width / 2;
-          const centerY = event.y - height / 2;
+            translateX.value = withTiming(constrainedTranslateX);
+            translateY.value = withTiming(constrainedTranslateY);
 
-          // NOTE 확대로 밀려난 거리만큼 반대로 이동해서 탭 지점을 제자리에 유지
-          translateX.value = withTiming(-centerX * (nextScale - 1), {
+            return;
+          }
+
+          if (scale.value < 1) {
+            scale.value = withTiming(1, {
+              duration: 300,
+              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+            });
+            translateX.value = withTiming(0);
+            translateY.value = withTiming(0);
+            initialTranslateX.value = withTiming(0);
+            initialTranslateY.value = withTiming(0);
+            return;
+          }
+
+          const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } =
+            constrainTranslation({
+              scale: scale.value,
+              translateX: translateX.value,
+              translateY: translateY.value,
+            });
+
+          translateX.value = withTiming(constrainedTranslateX);
+          translateY.value = withTiming(constrainedTranslateY);
+        })
+        .onTouchesUp(() => {
+          scheduleOnRN(setIsPinching, false);
+        })
+        .onFinalize(() => {
+          scheduleOnRN(setIsPinching, false);
+        }),
+    [
+      scale,
+      enablePinchZoom,
+      maxZoomScale,
+      translateX,
+      translateY,
+      startScale,
+      initialTranslateX,
+      initialTranslateY,
+      width,
+      height,
+      constrainTranslation,
+      lastFocalX,
+      lastFocalY,
+    ],
+  );
+
+  const zoomPanGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .enabled(enablePanWhenZoomed && isZoomed)
+        .activeCursor('grabbing')
+        .averageTouches(true)
+        .onBegin(() => {
+          initialTranslateX.value = translateX.value;
+          initialTranslateY.value = translateY.value;
+        })
+        .onUpdate((event) => {
+          if (scale.value > 1) {
+            const newTranslateX = initialTranslateX.value + event.translationX;
+            const newTranslateY = initialTranslateY.value + event.translationY;
+
+            const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } =
+              constrainTranslation({
+                scale: scale.value,
+                translateX: newTranslateX,
+                translateY: newTranslateY,
+              });
+
+            translateX.value = constrainedTranslateX;
+            translateY.value = constrainedTranslateY;
+          }
+        }),
+    [
+      translateX,
+      translateY,
+      enablePanWhenZoomed,
+      isZoomed,
+      scale,
+      initialTranslateX,
+      initialTranslateY,
+      constrainTranslation,
+    ],
+  );
+
+  const doubleTapGesture = useMemo(
+    () =>
+      Gesture.Tap()
+        .enabled(enableDoubleTapZoom)
+        .numberOfTaps(2)
+        .onEnd((event) => {
+          const nextScale = scale.value > 1 ? 1 : maxZoomScale;
+
+          if (nextScale > 1) {
+            const centerX = event.x - width / 2;
+            const centerY = event.y - height / 2;
+
+            // NOTE 확대로 밀려난 거리만큼 반대로 이동해서 탭 지점을 제자리에 유지
+            translateX.value = withTiming(-centerX * (nextScale - 1), {
+              duration: 300,
+              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+            });
+            translateY.value = withTiming(-centerY * (nextScale - 1), {
+              duration: 300,
+              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+            });
+          } else {
+            translateX.value = withTiming(0, {
+              duration: 300,
+              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+            });
+            translateY.value = withTiming(0, {
+              duration: 300,
+              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+            });
+          }
+
+          scale.value = withTiming(nextScale, {
             duration: 300,
-            easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
+            easing: Easing.bezier(0.25, 0.1, 0.25, 1),
           });
-          translateY.value = withTiming(-centerY * (nextScale - 1), {
-            duration: 300,
-            easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
-          });
-        } else {
-          translateX.value = withTiming(0, {
-            duration: 300,
-            easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
-          });
-          translateY.value = withTiming(0, {
-            duration: 300,
-            easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
-          });
-        }
+        }),
+    [scale, enableDoubleTapZoom, maxZoomScale, translateX, translateY, width, height],
+  );
 
-        scale.value = withTiming(nextScale, {
-          duration: 300,
-          easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
-        });
-      });
-  }, [scale, enableDoubleTapZoom, maxZoomScale, translateX, translateY, width, height]);
+  const zoomGesture = useMemo(
+    () => Gesture.Race(zoomPinchGesture, Gesture.Exclusive(zoomPanGesture, doubleTapGesture)),
+    [zoomPinchGesture, zoomPanGesture, doubleTapGesture],
+  );
 
-  const zoomGesture = useMemo(() => {
-    return Gesture.Race(zoomPinchGesture, Gesture.Exclusive(zoomPanGesture, doubleTapGesture));
-  }, [zoomPinchGesture, zoomPanGesture, doubleTapGesture]);
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: triggerOpacity.value,
+    transform: [
+      { translateX: triggerTranslateX.value },
+      { translateY: triggerTranslateY.value },
+      { scale: triggerScale.value },
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: triggerOpacity.value,
-      transform: [
-        { translateX: triggerTranslateX.value },
-        { translateY: triggerTranslateY.value },
-        { scale: triggerScale.value },
-
-        { translateY: translateY.value },
-        { translateX: translateX.value },
-        { scale: scale.value },
-        { rotate: `${rotation.value}deg` },
-      ],
-    };
-  });
+      { translateY: translateY.value },
+      { translateX: translateX.value },
+      { scale: scale.value },
+      { rotate: `${rotation.value}deg` },
+    ],
+  }));
 
   const backdropStyle = useAnimatedStyle(() => {
     const baseOpacity = triggerOpacity.value;
@@ -675,19 +714,19 @@ export const useGestureViewer = <ItemT, LC>({
   }, [manager]);
 
   return {
-    dataLength,
-    listRef,
-    isZoomed,
-    isRotated,
-    isPinching,
-    dismissGesture,
-    zoomGesture,
-
-    onMomentumScrollEnd,
-    onScrollBeginDrag,
-    handleDismiss,
-
     animatedStyle,
     backdropStyle,
+    dataLength,
+    dismissGesture,
+    handleDismiss,
+    isPinching,
+    isRotated,
+
+    isZoomed,
+    listRef,
+    onMomentumScrollEnd,
+
+    onScrollBeginDrag,
+    zoomGesture,
   };
 };

@@ -42,22 +42,14 @@ function App() {
           <Image source={{ uri }} />
         </Pressable>
       </GestureTrigger>
-      <GestureViewer
-        id={firstViewerId}
-        data={images}
-        renderItem={renderImage}
-      />
+      <GestureViewer id={firstViewerId} data={images} renderItem={renderImage} />
       <Button title="Go to index 2 (first)" onPress={() => goToFirstIndex(2)} />
       <GestureTrigger id={secondViewerId}>
         <Pressable>
           <Image source={{ uri }} />
         </Pressable>
       </GestureTrigger>
-      <GestureViewer
-        id={secondViewerId}
-        data={images}
-        renderItem={renderImage}
-      />
+      <GestureViewer id={secondViewerId} data={images} renderItem={renderImage} />
       <Button title="Go to index 0 (second)" onPress={() => goToSecondIndex(0)} />
     </View>
   );

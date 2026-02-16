@@ -12,10 +12,7 @@ function App() {
 
   return (
     <View>
-      <GestureViewer
-        data={images}
-        renderItem={renderImage}
-      />
+      <GestureViewer data={images} renderItem={renderImage} />
       <View>
         <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
       </View>
@@ -32,7 +29,7 @@ function App() {
 
 ### API Reference
 
-| 속성 | 설명 | 타입 | 기본값 |
-|:---------|:------------|:-----|:-------:|
-| `currentIndex` | 현재 표시되고 있는 아이템의 인덱스입니다. | `number` | `0` |
-| `totalCount` | 전체 아이템의 개수입니다. | `number` | `0` |
+| 속성           | 설명                                      | 타입     | 기본값 |
+| :------------- | :---------------------------------------- | :------- | :----: |
+| `currentIndex` | 현재 표시되고 있는 아이템의 인덱스입니다. | `number` |  `0`   |
+| `totalCount`   | 전체 아이템의 개수입니다.                 | `number` |  `0`   |

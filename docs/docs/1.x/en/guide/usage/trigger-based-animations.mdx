@@ -4,7 +4,14 @@ import { normalizeImagePath } from '@rspress/core/runtime';
 
 `GestureTrigger` supports smooth trigger-based animations that create seamless transitions from trigger elements (like thumbnails) to the full modal view. This feature enhances user experience by maintaining visual continuity between the trigger and modal content.
 
-<video src={normalizeImagePath("/guide/usage/trigger-based-animations.mp4")} controls autoPlay loop muted style={{ maxHeight: 480, justifySelf: 'center' }} />
+<video
+  src={normalizeImagePath('/guide/usage/trigger-based-animations.mp4')}
+  controls
+  autoPlay
+  loop
+  muted
+  style={{ maxHeight: 480, justifySelf: 'center' }}
+/>
 
 ## GestureTrigger Usage
 
@@ -44,7 +51,7 @@ function Gallery() {
           triggerAnimation={{
             duration: 300,
             easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
-            onAnimationComplete: () => console.log('Animation finished!')
+            onAnimationComplete: () => console.log('Animation finished!'),
           }}
         />
       </Modal>
@@ -98,22 +105,18 @@ You can use any pressable component as a child, such as:
   <TouchableOpacity>
     <Text>View Image</Text>
   </TouchableOpacity>
-</GestureTrigger>
+</GestureTrigger>;
 
 // Using custom component
 function CustomButton({ onPress, children }) {
-  return (
-    <Pressable onPress={onPress}>
-      {children}
-    </Pressable>
-  );
+  return <Pressable onPress={onPress}>{children}</Pressable>;
 }
 
 <GestureTrigger>
   <CustomButton onPress={handlePress}>
     <Text>Custom Button</Text>
   </CustomButton>
-</GestureTrigger>
+</GestureTrigger>;
 ```
 
 :::
@@ -132,12 +135,13 @@ function App() {
         duration: 400, // Animation duration in ms
         easing: Easing.bezier(0.25, 0.1, 0.25, 1.0), // Custom easing function
         reduceMotion: ReduceMotion.System, // Respect system reduce motion
-        onAnimationComplete: () => { // Callback when animation finishes
+        onAnimationComplete: () => {
+          // Callback when animation finishes
           console.log('Modal animation completed');
-        }
+        },
       }}
     />
-  )
+  );
 }
 ```
 
@@ -204,9 +208,9 @@ You can dismiss the viewer programmatically using the `dismiss` helper from `ren
     <View>
       {children}
       <Pressable
-        {/* 
+        {/*
           This button will properly trigger the dismiss animation
-          back to the original thumbnail position 
+          back to the original thumbnail position
         */}
         onPress={dismiss} // [!code highlight]
       >
@@ -216,7 +220,6 @@ You can dismiss the viewer programmatically using the `dismiss` helper from `ren
   )}
 />
 ```
-
 
 :::note Why Use renderContainer's dismiss?
 
@@ -233,11 +236,11 @@ When using trigger-based animations, it's important to use the `dismiss` method 
 **How It Works:**
 
 1. With Trigger Animation:
-    - When `dismiss` is called, the viewer will animate back to the original trigger position
-    - `onDismissStart` is called at the start of the animation
-    - `onDismiss` is called after the animation completes
+   - When `dismiss` is called, the viewer will animate back to the original trigger position
+   - `onDismissStart` is called at the start of the animation
+   - `onDismiss` is called after the animation completes
 2. Without Trigger Animation:
-    - If no trigger animation is configured, `dismiss` will still work as a simple close
+   - If no trigger animation is configured, `dismiss` will still work as a simple close
 
 :::
 
@@ -353,12 +356,12 @@ interface TriggerAnimationConfig {
 }
 ```
 
-| Property | Type | Default | Description |
-|:---------|:-----|:--------|:------------|
-| `duration` | `number` | `300` | Animation duration in milliseconds |
-| `easing` | `EasingFunction` | `Easing.bezier(0.25, 0.1, 0.25, 1.0)` | Easing function for the animation |
-| `reduceMotion` | `ReduceMotion` | `undefined` | Whether to respect system reduce motion settings |
-| `onAnimationComplete` | `() => void` | `undefined` | Callback fired when the animation completes |
+| Property              | Type             | Default                               | Description                                      |
+| :-------------------- | :--------------- | :------------------------------------ | :----------------------------------------------- |
+| `duration`            | `number`         | `300`                                 | Animation duration in milliseconds               |
+| `easing`              | `EasingFunction` | `Easing.bezier(0.25, 0.1, 0.25, 1.0)` | Easing function for the animation                |
+| `reduceMotion`        | `ReduceMotion`   | `undefined`                           | Whether to respect system reduce motion settings |
+| `onAnimationComplete` | `() => void`     | `undefined`                           | Callback fired when the animation completes      |
 
 :::note
 The trigger animation works by measuring the trigger element's position when pressed and animating the modal from that position to full screen.

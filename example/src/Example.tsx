@@ -26,7 +26,8 @@ function Example() {
   const [showExternalUI, setShowExternalUI] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const { goToIndex, goToPrevious, goToNext, zoomIn, zoomOut, resetZoom, rotate } = useGestureViewerController();
+  const { goToIndex, goToPrevious, goToNext, zoomIn, zoomOut, resetZoom, rotate } =
+    useGestureViewerController();
 
   const { currentIndex, totalCount } = useGestureViewerState();
 
@@ -60,7 +61,10 @@ function Example() {
   return (
     <View style={styles.container}>
       <View style={styles.buttonWrapper}>
-        <Button title={`Loop: ${enableLoop ? 'ON' : 'OFF'}`} onPress={() => setEnableLoop(!enableLoop)} />
+        <Button
+          title={`Loop: ${enableLoop ? 'ON' : 'OFF'}`}
+          onPress={() => setEnableLoop(!enableLoop)}
+        />
         <Text style={styles.text}>Click on thumbnail to open!</Text>
         <View style={styles.galleryContainer}>
           {images.map((uri, index) => (
@@ -72,7 +76,12 @@ function Example() {
           ))}
         </View>
       </View>
-      <Modal visible={visible} transparent onRequestClose={() => setVisible(false)} animationType="none">
+      <Modal
+        visible={visible}
+        transparent
+        onRequestClose={() => setVisible(false)}
+        animationType="none"
+      >
         <View style={{ flex: 1 }}>
           <GestureViewer
             data={images}
@@ -178,7 +187,14 @@ function Example() {
                   flexDirection: 'column',
                 }}
               >
-                <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'space-around', alignItems: 'center' }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    gap: 10,
+                    justifyContent: 'space-around',
+                    alignItems: 'center',
+                  }}
+                >
                   <Feather.Button
                     backgroundColor="transparent"
                     name="chevron-left"
@@ -197,7 +213,9 @@ function Example() {
                     onPress={goToNext}
                   />
                 </View>
-                <Text style={{ textAlign: 'center', color: 'white' }}>{`${currentIndex + 1} / ${totalCount}`}</Text>
+                <Text
+                  style={{ textAlign: 'center', color: 'white' }}
+                >{`${currentIndex + 1} / ${totalCount}`}</Text>
               </View>
             </>
           )}

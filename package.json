@@ -2,16 +2,55 @@
   "name": "react-native-gesture-image-viewer",
   "version": "2.1.2",
   "description": "🖼️ React Native Image Viewer - Reanimated-powered image gestures with full control",
-  "main": "./lib/module/index.js",
-  "types": "./lib/typescript/src/index.d.ts",
-  "exports": {
-    ".": {
-      "source": "./src/index.tsx",
-      "types": "./lib/typescript/src/index.d.ts",
-      "default": "./lib/module/index.js"
-    },
-    "./package.json": "./package.json"
+  "keywords": [
+    "android",
+    "carousel",
+    "customizable",
+    "double-tap",
+    "expo",
+    "gallery",
+    "gesture",
+    "image viewer",
+    "image-carousel",
+    "image-gallery",
+    "image-viewer",
+    "ios",
+    "lightbox",
+    "modal",
+    "photo-viewer",
+    "pinch-to-zoom",
+    "react native image viewer",
+    "react-native",
+    "react-native-gesture-handler",
+    "react-native-image-gallery",
+    "react-native-image-viewer",
+    "react-native-image-zoom-viewer",
+    "react-native-reanimated",
+    "react-native-reanimated-image-viewer",
+    "react-native-viewer",
+    "slider",
+    "swipe",
+    "touch-gestures",
+    "viewer",
+    "web",
+    "zoom",
+    "zoomable"
+  ],
+  "homepage": "https://react-native-gesture-image-viewer.pages.dev",
+  "bugs": {
+    "url": "https://github.com/saseungmin/react-native-gesture-image-viewer/issues"
   },
+  "license": "MIT",
+  "author": "saseungmin <dbd02169@naver.com> (https://github.com/saseungmin)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saseungmin/react-native-gesture-image-viewer.git"
+  },
+  "workspaces": [
+    ".",
+    "example",
+    "docs"
+  ],
   "files": [
     "lib",
     "src",
@@ -31,65 +70,33 @@
     "!**/__mocks__",
     "!**/.*"
   ],
-  "scripts": {
-    "example": "yarn workspace react-native-gesture-image-viewer-example run",
-    "test": "jest",
-    "typecheck": "tsc",
-    "lint": "biome format --write",
-    "clean": "del-cli lib",
-    "build": "bob build",
-    "changeset": "changeset"
+  "main": "./lib/module/index.js",
+  "types": "./lib/typescript/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/typescript/src/index.d.ts",
+      "source": "./src/index.tsx",
+      "default": "./lib/module/index.js"
+    },
+    "./package.json": "./package.json"
   },
-  "keywords": [
-    "react-native",
-    "ios",
-    "android",
-    "web",
-    "expo",
-    "image-viewer",
-    "image-gallery",
-    "gesture",
-    "pinch-to-zoom",
-    "swipe",
-    "zoom",
-    "customizable",
-    "modal",
-    "carousel",
-    "slider",
-    "photo-viewer",
-    "image-carousel",
-    "touch-gestures",
-    "lightbox",
-    "gallery",
-    "viewer",
-    "zoomable",
-    "double-tap",
-    "image viewer",
-    "react native image viewer",
-    "react-native-reanimated",
-    "react-native-gesture-handler",
-    "react-native-viewer",
-    "react-native-image-viewer",
-    "react-native-image-gallery",
-    "react-native-reanimated-image-viewer",
-    "react-native-image-zoom-viewer"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/saseungmin/react-native-gesture-image-viewer.git"
-  },
-  "author": "saseungmin <dbd02169@naver.com> (https://github.com/saseungmin)",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/saseungmin/react-native-gesture-image-viewer/issues"
-  },
-  "homepage": "https://react-native-gesture-image-viewer.pages.dev",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
+  "scripts": {
+    "build": "bob build",
+    "changeset": "changeset",
+    "clean": "del-cli lib",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint": "oxlint",
+    "lint:ci": "oxlint --format=github",
+    "lint:fix": "oxlint --fix",
+    "test": "jest",
+    "typecheck": "tsc"
+  },
   "devDependencies": {
     "@babel/core": "^7.27.7",
-    "@biomejs/biome": "^2.0.6",
     "@changesets/cli": "^2.29.5",
     "@commitlint/config-conventional": "^19.6.0",
     "@evilmartians/lefthook": "^1.5.0",
@@ -100,6 +107,8 @@
     "commitlint": "^19.6.1",
     "del-cli": "^5.1.0",
     "jest": "^29.7.0",
+    "oxfmt": "^0.32.0",
+    "oxlint": "^1.47.0",
     "react": "19.1.0",
     "react-native": "0.81.4",
     "react-native-builder-bob": "^0.40.13",
@@ -115,23 +124,23 @@
     "react-native-reanimated": ">=4.0.0",
     "react-native-worklets": ">=0.5.0"
   },
-  "workspaces": [
-    ".",
-    "example",
-    "docs"
-  ],
-  "packageManager": "yarn@4.12.0",
-  "jest": {
-    "preset": "react-native",
-    "modulePathIgnorePatterns": [
-      "<rootDir>/example/node_modules",
-      "<rootDir>/lib/"
-    ]
-  },
   "commitlint": {
     "extends": [
       "@commitlint/config-conventional"
     ]
+  },
+  "jest": {
+    "modulePathIgnorePatterns": [
+      "<rootDir>/example/node_modules",
+      "<rootDir>/lib/"
+    ],
+    "preset": "react-native"
+  },
+  "packageManager": "yarn@4.12.0",
+  "create-react-native-library": {
+    "languages": "js",
+    "type": "library",
+    "version": "0.51.1"
   },
   "react-native-builder-bob": {
     "source": "src",
@@ -150,10 +159,5 @@
         }
       ]
     ]
-  },
-  "create-react-native-library": {
-    "languages": "js",
-    "type": "library",
-    "version": "0.51.1"
   }
 }

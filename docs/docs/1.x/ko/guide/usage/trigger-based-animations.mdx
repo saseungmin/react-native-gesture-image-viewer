@@ -4,7 +4,14 @@ import { normalizeImagePath } from '@rspress/core/runtime';
 
 `GestureTrigger`는 썸네일과 같은 트리거 요소에서 전체 모달 뷰로의 원활한 전환을 생성하는 부드러운 트리거 기반 애니메이션을 지원합니다. 이 기능은 트리거와 모달 콘텐츠 간의 시각적 연속성을 유지하여 사용자 경험을 향상시킵니다.
 
-<video src={normalizeImagePath("/guide/usage/trigger-based-animations.mp4")} controls autoPlay loop muted style={{ maxHeight: 480, justifySelf: 'center' }} />
+<video
+  src={normalizeImagePath('/guide/usage/trigger-based-animations.mp4')}
+  controls
+  autoPlay
+  loop
+  muted
+  style={{ maxHeight: 480, justifySelf: 'center' }}
+/>
 
 ## GestureTrigger 사용법
 
@@ -44,7 +51,7 @@ function Gallery() {
           triggerAnimation={{
             duration: 300,
             easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
-            onAnimationComplete: () => console.log('애니메이션 완료!')
+            onAnimationComplete: () => console.log('애니메이션 완료!'),
           }}
         />
       </Modal>
@@ -98,23 +105,20 @@ function Gallery() {
   <TouchableOpacity>
     <Text>이미지 보기</Text>
   </TouchableOpacity>
-</GestureTrigger>
+</GestureTrigger>;
 
 // 커스텀 컴포넌트 사용
 function CustomButton({ onPress, children }) {
-  return (
-    <Pressable onPress={onPress}>
-      {children}
-    </Pressable>
-  );
+  return <Pressable onPress={onPress}>{children}</Pressable>;
 }
 
 <GestureTrigger>
   <CustomButton onPress={handlePress}>
     <Text>커스텀 버튼</Text>
   </CustomButton>
-</GestureTrigger>
+</GestureTrigger>;
 ```
+
 :::
 
 ## 애니메이션 구성
@@ -131,12 +135,13 @@ function App() {
         duration: 400, // 애니메이션 지속 시간(밀리초)
         easing: Easing.bezier(0.25, 0.1, 0.25, 1.0), // 사용자 정의 이징 함수
         reduceMotion: ReduceMotion.System, // 시스템 감소 모션 설정 준수
-        onAnimationComplete: () => { // 애니메이션 완료 시 콜백
+        onAnimationComplete: () => {
+          // 애니메이션 완료 시 콜백
           console.log('모달 애니메이션 완료');
-        }
+        },
       }}
     />
-  )
+  );
 }
 ```
 
@@ -177,10 +182,7 @@ function App() {
 
   return (
     <Modal visible={visible} transparent>
-      <GestureViewer
-        onDismissStart={handleDismissStart}
-        {...modalProps}
-      />
+      <GestureViewer onDismissStart={handleDismissStart} {...modalProps} />
       {showExternalUI && (
         <View>
           <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
@@ -226,11 +228,11 @@ function App() {
 **작동 방식:**
 
 1. 트리거 애니메이션 사용 시:
-    - `dismiss`가 호출되면 뷰어가 원래 트리거 위치로 애니메이션되며 돌아갑니다
-    - 애니메이션 시작 시 `onDismissStart`가 호출됩니다
-    - 애니메이션 완료 후 `onDismiss`가 호출됩니다
+   - `dismiss`가 호출되면 뷰어가 원래 트리거 위치로 애니메이션되며 돌아갑니다
+   - 애니메이션 시작 시 `onDismissStart`가 호출됩니다
+   - 애니메이션 완료 후 `onDismiss`가 호출됩니다
 2. 트리거 애니메이션 없이 사용 시:
-    - 트리거 애니메이션이 구성되지 않은 경우에도 `dismiss`는 간단한 닫기로 작동합니다
+   - 트리거 애니메이션이 구성되지 않은 경우에도 `dismiss`는 간단한 닫기로 작동합니다
 
 :::
 
@@ -346,12 +348,12 @@ interface TriggerAnimationConfig {
 }
 ```
 
-| 속성 | 타입 | 기본값 | 설명 |
-|:-----|:-----|:-------|:------|
-| `duration` | `number` | `300` | 밀리초 단위의 애니메이션 지속 시간 |
-| `easing` | `EasingFunction` | `Easing.bezier(0.25, 0.1, 0.25, 1.0)` | 애니메이션을 위한 이징 함수 |
-| `reduceMotion` | `ReduceMotion` | `undefined` | 시스템 감소 모션 설정 준수 여부 |
-| `onAnimationComplete` | `() => void` | `undefined` | 애니메이션이 완료될 때 호출되는 콜백 |
+| 속성                  | 타입             | 기본값                                | 설명                                 |
+| :-------------------- | :--------------- | :------------------------------------ | :----------------------------------- |
+| `duration`            | `number`         | `300`                                 | 밀리초 단위의 애니메이션 지속 시간   |
+| `easing`              | `EasingFunction` | `Easing.bezier(0.25, 0.1, 0.25, 1.0)` | 애니메이션을 위한 이징 함수          |
+| `reduceMotion`        | `ReduceMotion`   | `undefined`                           | 시스템 감소 모션 설정 준수 여부      |
+| `onAnimationComplete` | `() => void`     | `undefined`                           | 애니메이션이 완료될 때 호출되는 콜백 |
 
 :::note
 트리거 애니메이션은 누를 때 트리거 요소의 위치를 측정하고 해당 위치에서 전체 화면으로 모달을 애니메이션하는 방식으로 작동합니다.

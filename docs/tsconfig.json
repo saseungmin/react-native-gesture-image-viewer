@@ -14,8 +14,8 @@
     "allowImportingTsExtensions": true,
     "paths": {
       "@components": ["./components"],
-      "@theme": ["./theme"],
-    },
+      "@theme": ["./theme"]
+    }
   },
   "include": ["docs/**/*", "theme/**/*", "rspress.config.ts", "components/**/*", "expo-snack.d.ts"],
   "mdx": {

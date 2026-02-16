@@ -21,7 +21,7 @@ function App() {
       enableDoubleTapZoom={true}
       enablePanWhenZoomed={true}
     />
-  )
+  );
 }
 ```
 
@@ -31,11 +31,11 @@ function App() {
 
 아래로 스와이프할 때 `onDismiss` 함수를 호출하는 제스처 옵션입니다. 모달을 아래로 스와이프해서 닫는 제스처에 유용합니다.
 
-| 속성 | 설명 | 타입 | 기본값 |
-|:---------|:------------|:-----|:-------:|
-| `enabled` | `false`일 때 dismiss 제스처가 비활성화됩니다. | `boolean` | `true` |
-| `threshold` | `threshold`는 수직 제스처 중에 임계값을 적용하여 `onDismiss`가 호출되는 시점을 제어합니다. | `number` | `80` |
-| `resistance` | `resistance`는 dismiss 제스처 중에 저항을 적용하여 수직 이동 범위를 제어합니다. | `number` | `2` |
+| 속성           | 설명                                                                                           | 타입      | 기본값 |
+| :------------- | :--------------------------------------------------------------------------------------------- | :-------- | :----: |
+| `enabled`      | `false`일 때 dismiss 제스처가 비활성화됩니다.                                                  | `boolean` | `true` |
+| `threshold`    | `threshold`는 수직 제스처 중에 임계값을 적용하여 `onDismiss`가 호출되는 시점을 제어합니다.     | `number`  |  `80`  |
+| `resistance`   | `resistance`는 dismiss 제스처 중에 저항을 적용하여 수직 이동 범위를 제어합니다.                | `number`  |  `2`   |
 | `fadeBackdrop` | 기본적으로 아래로 스와이프하는 제스처 중에 배경 `opacity`가 1에서 0으로 점진적으로 감소합니다. | `boolean` | `true` |
 
 ### `enableHorizontalSwipe` (기본값: `true`)

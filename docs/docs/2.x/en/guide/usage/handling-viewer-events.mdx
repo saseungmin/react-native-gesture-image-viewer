@@ -16,12 +16,7 @@ function App() {
     console.log(`Rotation changed from ${data.previousRotation}° to ${data.rotation}°`);
   });
 
-  return (
-    <GestureViewer
-      data={images}
-      renderItem={renderImage}
-    />
-  );
+  return <GestureViewer data={images} renderItem={renderImage} />;
 }
 ```
 
@@ -57,7 +52,7 @@ function useGestureViewerEvent<T extends GestureViewerEventType>(
 ): void;
 ```
 
-| Event Type | Description | Callback Data |
-|:-----|:-----|:-----|
-| `zoomChange` | Fired when the zoom scale changes during pinch gestures | `{ scale: number, previousScale: number }` |
+| Event Type       | Description                                                    | Callback Data                                    |
+| :--------------- | :------------------------------------------------------------- | :----------------------------------------------- |
+| `zoomChange`     | Fired when the zoom scale changes during pinch gestures        | `{ scale: number, previousScale: number }`       |
 | `rotationChange` | Fired when the rotation angle changes during rotation gestures | `{ rotation: number, previousRotation: number }` |

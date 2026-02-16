@@ -21,18 +21,13 @@ function App() {
     console.log(`Gallery zoom: ${data.scale}x`);
   });
 
-  return (
-    <GestureViewer
-      data={images}
-      renderItem={renderImage}
-    />
-  );
+  return <GestureViewer data={images} renderItem={renderImage} />;
 }
 ```
 
 #### Event Types
 
-| Event | Description | Data |
-|:-----|:-----|:-----|
-| `zoomChange` | Fired when the zoom scale changes during pinch gestures | `{ scale: number, previousScale: number }` |
+| Event            | Description                                                    | Data                                             |
+| :--------------- | :------------------------------------------------------------- | :----------------------------------------------- |
+| `zoomChange`     | Fired when the zoom scale changes during pinch gestures        | `{ scale: number, previousScale: number }`       |
 | `rotationChange` | Fired when the rotation angle changes during rotation gestures | `{ rotation: number, previousRotation: number }` |

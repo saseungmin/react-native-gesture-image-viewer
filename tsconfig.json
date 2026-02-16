@@ -26,7 +26,5 @@
     "target": "ESNext",
     "verbatimModuleSyntax": true
   },
-  "exclude": [
-    "docs/**/*",
-  ]
+  "exclude": ["docs/**/*"]
 }

@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { Children, cloneElement, isValidElement, useMemo, useRef } from 'react';
 import { View } from 'react-native';
+
 import { registry } from './GestureViewerRegistry';
 
 /**
@@ -54,7 +55,11 @@ export type GestureTriggerProps<T extends WithOnPress> = {
  * </GestureTrigger>
  * ```
  */
-export function GestureTrigger<T extends WithOnPress>({ id = 'default', children, onPress }: GestureTriggerProps<T>) {
+export function GestureTrigger<T extends WithOnPress>({
+  id = 'default',
+  children,
+  onPress,
+}: GestureTriggerProps<T>) {
   const ref = useRef<View>(null);
 
   const wrapped = useMemo(() => {
@@ -72,7 +77,9 @@ export function GestureTrigger<T extends WithOnPress>({ id = 'default', children
       onPress?.(...args);
 
       if (__DEV__ && !originalOnPress && !onPress) {
-        console.warn('[GestureTrigger] No onPress found on child or props. Nothing will happen on press.');
+        console.warn(
+          '[GestureTrigger] No onPress found on child or props. Nothing will happen on press.',
+        );
       }
     };
 

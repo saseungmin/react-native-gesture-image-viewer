@@ -41,7 +41,7 @@ Full documentation is available at: <https://react-native-gesture-image-viewer.p
 
 ### Basic Usage
 
-`react-native-gesture-image-viewer` is a library focused purely on gesture interactions for complete customization.  
+`react-native-gesture-image-viewer` is a library focused purely on gesture interactions for complete customization.
 
 ```tsx
 import { useCallback, useState } from 'react';

@@ -16,12 +16,7 @@ function App() {
     console.log(`회전 변경: ${data.previousRotation}° → ${data.rotation}°`);
   });
 
-  return (
-    <GestureViewer
-      data={images}
-      renderItem={renderImage}
-    />
-  );
+  return <GestureViewer data={images} renderItem={renderImage} />;
 }
 ```
 
@@ -57,7 +52,7 @@ function useGestureViewerEvent<T extends GestureViewerEventType>(
 ): void;
 ```
 
-| 이벤트 타입 | 설명 | 콜백 데이터 |
-|:-----|:-----|:-----|
-| `zoomChange` | 핀치 제스처 중 줌 스케일이 변경될 때 발생 | `{ scale: number, previousScale: number }` |
+| 이벤트 타입      | 설명                                      | 콜백 데이터                                      |
+| :--------------- | :---------------------------------------- | :----------------------------------------------- |
+| `zoomChange`     | 핀치 제스처 중 줌 스케일이 변경될 때 발생 | `{ scale: number, previousScale: number }`       |
 | `rotationChange` | 회전 제스처 중 회전 각도가 변경될 때 발생 | `{ rotation: number, previousRotation: number }` |

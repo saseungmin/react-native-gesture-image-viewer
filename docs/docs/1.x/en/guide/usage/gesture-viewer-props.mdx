@@ -10,11 +10,7 @@ import { GestureViewer } from 'react-native-gesture-image-viewer';
 function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  return (
-    <GestureViewer
-      enableLoop={true}
-    />
-  );
+  return <GestureViewer enableLoop={true} />;
 }
 ```
 
@@ -28,11 +24,7 @@ import { GestureViewer } from 'react-native-gesture-image-viewer';
 function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  return (
-    <GestureViewer
-      onIndexChange={setCurrentIndex}
-    />
-  );
+  return <GestureViewer onIndexChange={setCurrentIndex} />;
 }
 ```
 
@@ -44,17 +36,12 @@ Sets the scroll behavior mode. `false` (default) uses paging mode, `true` uses s
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 
 function App() {
-  return (
-    <GestureViewer
-      data={data}
-      renderItem={renderItem}
-      useSnap={true}
-    />
-  );
+  return <GestureViewer data={data} renderItem={renderItem} useSnap={true} />;
 }
 ```
 
 ### `itemSpacing` (default: `0`)
+
 Sets the spacing between items in pixels. Only applied when `useSnap` is `true`.
 
 ```tsx
@@ -73,7 +60,9 @@ function App() {
 ```
 
 ### `autoPlay` (default: `false`)
+
 Enables auto play mode. When `true`, the viewer will automatically play the next item after the specified interval.
+
 - When `enableLoop` is enabled, the viewer will loop back to the first item after the last item.
 - When `enableLoop` is disabled, the viewer will stop at the last item.
 - When there is only one item, auto-play is disabled.
@@ -83,15 +72,12 @@ Enables auto play mode. When `true`, the viewer will automatically play the next
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 
 function App() {
-  return (
-    <GestureViewer
-      autoPlay={true}
-    />
-  );
+  return <GestureViewer autoPlay={true} />;
 }
 ```
 
 ### `autoPlayInterval` (default: `3000`)
+
 Sets the interval between auto play in milliseconds.  
 Must be a positive integer. Values below 250ms are clamped to 250ms at runtime.
 
@@ -99,32 +85,31 @@ Must be a positive integer. Values below 250ms are clamped to 250ms at runtime.
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 
 function App() {
-  return (
-    <GestureViewer
-      autoPlay={true}
-      autoPlayInterval={3000}
-    />
-  );
+  return <GestureViewer autoPlay={true} autoPlayInterval={3000} />;
 }
 ```
 
 ### `initialIndex` (default: `0`)
+
 Sets the initial index value.
 
 ### `dismissThreshold` (default: `80`)
+
 `dismissThreshold` controls when `onDismiss` is called by applying a threshold value during vertical gestures.
 
 ### `resistance` (default: `2`)
+
 `resistance` controls the range of vertical movement by applying resistance during vertical gestures.
 
 ### `maxZoomScale` (default: `2`)
+
 Controls the maximum zoom scale multiplier.
 
 ## `GestureViewerProps` interface
 
 [Go to source](https://github.com/saseungmin/react-native-gesture-image-viewer/blob/edafaf0346c3f922382cd1e5f8c5c30d49115ec7/src/types.ts#L76)
 
-```tsx title="GestureViewerProps"
+````tsx title="GestureViewerProps"
 export interface GestureViewerProps<ItemT, LC> {
   /**
    * When you want to efficiently manage multiple `GestureViewer` instances, you can use the `id` prop to use multiple `GestureViewer` components.
@@ -167,7 +152,10 @@ export interface GestureViewerProps<ItemT, LC> {
    * @param helpers - Control helpers for the viewer. Currently includes `dismiss()`.
    * @returns A React element that wraps and renders the provided `children`.
    */
-  renderContainer?: (children: React.ReactElement, helpers: { dismiss: () => void }) => React.ReactElement;
+  renderContainer?: (
+    children: React.ReactElement,
+    helpers: { dismiss: () => void },
+  ) => React.ReactElement;
   /**
    * Support for any list component like `ScrollView`, `FlatList`, `FlashList` through the `ListComponent` prop.
    */
@@ -312,4 +300,4 @@ export interface GestureViewerProps<ItemT, LC> {
    */
   triggerAnimation?: TriggerAnimationConfig;
 }
-```
+````

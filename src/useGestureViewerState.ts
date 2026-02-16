@@ -1,4 +1,5 @@
 import { useCallback, useRef, useSyncExternalStore } from 'react';
+
 import { registry } from './GestureViewerRegistry';
 import type { GestureViewerState } from './types';
 
