@@ -4,12 +4,15 @@ import { useVersion } from '@rspress/core/runtime';
 import {
   HomeLayout as BasicHomeLayout,
   getCustomMDXComponent as basicGetCustomMDXComponent,
-} from '@rspress/core/theme';
+} from '@rspress/core/theme-original';
+import { useRef } from 'react';
 
 function HomeLayout() {
   const version = useVersion();
 
   const { pre: PreWithCodeButtonGroup, code: Code } = basicGetCustomMDXComponent();
+
+  const copyElementRef = useRef<HTMLDivElement>(null);
 
   return (
     <BasicHomeLayout
@@ -21,7 +24,8 @@ function HomeLayout() {
           <PreWithCodeButtonGroup
             containerElementClassName="language-bash"
             codeButtonGroupProps={{
-              showCodeWrapButton: false,
+              showCodeWrapButton: true,
+              copyElementRef,
             }}
           >
             <Code
@@ -46,4 +50,4 @@ function HomeLayout() {
 }
 
 export { HomeLayout };
-export * from '@rspress/core/theme';
+export * from '@rspress/core/theme-original';

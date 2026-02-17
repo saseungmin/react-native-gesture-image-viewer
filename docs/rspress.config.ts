@@ -10,6 +10,7 @@ export default defineConfig({
   icon: '/logo.png',
   logo: '/logo.png',
   logoText: 'React Native Gesture Image Viewer',
+  llms: true,
   multiVersion: {
     default: '2.x',
     versions: ['1.x', '2.x'],
@@ -45,21 +46,15 @@ export default defineConfig({
       {
         lang: 'en',
         label: 'English',
-        editLink: {
-          docRepoBaseUrl:
-            'https://github.com/saseungmin/react-native-gesture-image-viewer/tree/main/docs/docs',
-          text: '📝 Edit this page on GitHub',
-        },
       },
       {
         lang: 'ko',
         label: '한국어',
-        editLink: {
-          docRepoBaseUrl:
-            'https://github.com/saseungmin/react-native-gesture-image-viewer/tree/main/docs/docs',
-          text: '📝 GitHub에서 이 페이지 편집하기',
-        },
       },
     ],
+    editLink: {
+      docRepoBaseUrl:
+        'https://github.com/saseungmin/react-native-gesture-image-viewer/tree/main/docs/docs',
+    },
   },
 });
