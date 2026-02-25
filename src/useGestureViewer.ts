@@ -57,6 +57,8 @@ export const useGestureViewer = <ItemT, LC>({
   const width = customWidth || screenWidth;
   const height = customHeight || screenHeight;
 
+  const dismissGestureRef = useRef<any>(undefined);
+
   const [isZoomed, setIsZoomed] = useState(false);
   const [isRotated, setIsRotated] = useState(false);
   const [isPinching, setIsPinching] = useState(false);
@@ -461,6 +463,7 @@ export const useGestureViewer = <ItemT, LC>({
       .activeCursor('grabbing')
       .activeOffsetY([-10, 10])
       .failOffsetX([-10, 10])
+      .withRef(dismissGestureRef)
       .enabled(canDismiss)
       .onUpdate((event) => {
         translateY.value = event.translationY / dismissOptions.resistance;
@@ -709,6 +712,10 @@ export const useGestureViewer = <ItemT, LC>({
     return { opacity: baseOpacity * dismissOpacity };
   }, [dismissOptions.fadeBackdrop]);
 
+  const nativeScrollGesture = useMemo(() => {
+    return Gesture.Native().requireExternalGestureToFail(dismissGestureRef);
+  }, []);
+
   const onScrollBeginDrag = useCallback(() => {
     manager?.handleScrollBeginDrag();
   }, [manager]);
@@ -724,6 +731,7 @@ export const useGestureViewer = <ItemT, LC>({
 
     isZoomed,
     listRef,
+    nativeScrollGesture,
     onMomentumScrollEnd,
 
     onScrollBeginDrag,

@@ -52,6 +52,7 @@ export function GestureViewer<ItemT, LC>({
     isPinching,
     dismissGesture,
     zoomGesture,
+    nativeScrollGesture,
     onMomentumScrollEnd,
     onScrollBeginDrag,
     animatedStyle,
@@ -168,9 +169,11 @@ export function GestureViewer<ItemT, LC>({
               isFlashListLike(Component) && { dataSet: { 'flash-list-paging-enabled-fix': true } })}
           >
             {isScrollView ? (
-              <Component ref={listRef} {...commonProps} {...listProps}>
-                {loopData.map((item, index) => renderItem({ item, index }))}
-              </Component>
+              <GestureDetector gesture={nativeScrollGesture}>
+                <Component ref={listRef} {...commonProps} {...listProps}>
+                  {loopData.map((item, index) => renderItem({ item, index }))}
+                </Component>
+              </GestureDetector>
             ) : (
               isFlatListLike(Component) && (
                 <Component
