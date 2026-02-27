@@ -1,14 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import {
-  Platform,
-  type ScrollViewProps,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Platform, type ScrollViewProps, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
-
 import { registry } from './GestureViewerRegistry';
 import type { GestureViewerProps } from './types';
 import { useGestureViewer } from './useGestureViewer';
@@ -144,16 +137,7 @@ export function GestureViewer<ItemT, LC>({
         scrollEventThrottle: 16,
         removeClippedSubviews: true,
       }) satisfies ScrollViewProps,
-    [
-      width,
-      itemSpacing,
-      isZoomed,
-      isRotated,
-      isPinching,
-      onMomentumScrollEnd,
-      onScrollBeginDrag,
-      enableSnapMode,
-    ],
+    [width, itemSpacing, isZoomed, isRotated, isPinching, onMomentumScrollEnd, onScrollBeginDrag, enableSnapMode],
   );
 
   const control = useMemo(() => ({ dismiss: handleDismiss }), [handleDismiss]);
@@ -176,26 +160,24 @@ export function GestureViewer<ItemT, LC>({
               </GestureDetector>
             ) : (
               isFlatListLike(Component) && (
-                <Component
-                  ref={listRef}
-                  {...commonProps}
-                  data={loopData}
-                  renderItem={renderItem}
-                  initialScrollIndex={
-                    enableLoop && data.length > 1 ? initialIndex + 1 : initialIndex
-                  }
-                  keyExtractor={keyExtractor}
-                  {...(isFlashListLike(Component)
-                    ? // NOTE - Deprecated estimatedItemSize for FlashList V2 (https://shopify.github.io/flash-list/docs/v2-changes#deprecated)
-                      { estimatedItemSize: width + itemSpacing }
-                    : { windowSize: 3, maxToRenderPerBatch: 3, getItemLayout })}
-                  // NOTE - https://github.com/necolas/react-native-web/issues/1299
-                  {...(Platform.OS === 'web' &&
-                    isFlatListLike(Component) && {
-                      dataSet: { 'flat-list-paging-enabled-fix': true },
-                    })}
-                  {...listProps}
-                />
+                <GestureDetector gesture={nativeScrollGesture}>
+                  <Component
+                    ref={listRef}
+                    {...commonProps}
+                    data={loopData}
+                    renderItem={renderItem}
+                    initialScrollIndex={enableLoop && data.length > 1 ? initialIndex + 1 : initialIndex}
+                    keyExtractor={keyExtractor}
+                    {...(isFlashListLike(Component)
+                      ? // NOTE - Deprecated estimatedItemSize for FlashList V2 (https://shopify.github.io/flash-list/docs/v2-changes#deprecated)
+                        { estimatedItemSize: width + itemSpacing }
+                      : { windowSize: 3, maxToRenderPerBatch: 3, getItemLayout })}
+                    // NOTE - https://github.com/necolas/react-native-web/issues/1299
+                    {...(Platform.OS === 'web' &&
+                      isFlatListLike(Component) && { dataSet: { 'flat-list-paging-enabled-fix': true } })}
+                    {...listProps}
+                  />
+                </GestureDetector>
               )
             )}
           </Animated.View>
