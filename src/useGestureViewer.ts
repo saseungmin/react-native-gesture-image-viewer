@@ -5,7 +5,7 @@ import {
   type NativeSyntheticEvent,
   useWindowDimensions,
 } from 'react-native';
-import { Gesture } from 'react-native-gesture-handler';
+import { Gesture, type GestureType } from 'react-native-gesture-handler';
 import {
   Easing,
   interpolate,
@@ -57,7 +57,7 @@ export const useGestureViewer = <ItemT, LC>({
   const width = customWidth || screenWidth;
   const height = customHeight || screenHeight;
 
-  const dismissGestureRef = useRef<any>(undefined);
+  const dismissGestureRef = useRef<GestureType>(undefined);
 
   const [isZoomed, setIsZoomed] = useState(false);
   const [isRotated, setIsRotated] = useState(false);
