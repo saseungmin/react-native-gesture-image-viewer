@@ -31,6 +31,7 @@
     "@babel/core": "^7.27.7",
     "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
     "@babel/runtime": "^7.28.4",
+    "@changesets/changelog-github": "^0.6.0",
     "react-native-builder-bob": "^0.40.13",
     "react-native-monorepo-config": "^0.1.10"
   }

@@ -1645,6 +1645,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@changesets/changelog-github@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "@changesets/changelog-github@npm:0.6.0"
+  dependencies:
+    "@changesets/get-github-info": "npm:^0.8.0"
+    "@changesets/types": "npm:^6.1.0"
+    dotenv: "npm:^8.1.0"
+  checksum: 10/a9d105e5b260461c1803a14ed74b5a54ace83bea23284e7ad680ff8e755146336190e840eb797b2bd6d5bc1a4c78a3bed2046604028b1790c4e7e5162a0a9e4d
+  languageName: node
+  linkType: hard
+
 "@changesets/cli@npm:^2.29.5":
   version: 2.29.5
   resolution: "@changesets/cli@npm:2.29.5"
@@ -1716,6 +1727,16 @@ __metadata:
     picocolors: "npm:^1.1.0"
     semver: "npm:^7.5.3"
   checksum: 10/33f2bb5dc88443b68fd796fd3b019a553fb3e21cb957a8a117db2a6770ad81f7c156ebdc3b12cfa75169de918f11271a71f61034aec48a53bf1a936d6d783e3d
+  languageName: node
+  linkType: hard
+
+"@changesets/get-github-info@npm:^0.8.0":
+  version: 0.8.0
+  resolution: "@changesets/get-github-info@npm:0.8.0"
+  dependencies:
+    dataloader: "npm:^1.4.0"
+    node-fetch: "npm:^2.5.0"
+  checksum: 10/2bbb3d8e47ba7195327751db7bd5358d12ae4c03bc4270d1ab7286f973110cec73608f6a556af8657bebd676dce0256550a946b0ad2c4f4631934763f5b7a05b
   languageName: node
   linkType: hard
 
@@ -5458,6 +5479,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dataloader@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "dataloader@npm:1.4.0"
+  checksum: 10/8dc2181f7fc243f657aa97b5aa51b9e0da88dee9a59a689bab50d4bac826c27ae0457db8d9a5d59559d636f6b997f419303ccfde595cc26191f37ab9c792fe01
+  languageName: node
+  linkType: hard
+
 "debug@npm:2.6.9, debug@npm:^2.6.9":
   version: 2.6.9
   resolution: "debug@npm:2.6.9"
@@ -5715,6 +5743,13 @@ __metadata:
   version: 16.6.1
   resolution: "dotenv@npm:16.6.1"
   checksum: 10/1d1897144344447ffe62aa1a6d664f4cd2e0784e0aff787eeeec1940ded32f8e4b5b506d665134fc87157baa086fce07ec6383970a2b6d2e7985beaed6a4cc14
+  languageName: node
+  linkType: hard
+
+"dotenv@npm:^8.1.0":
+  version: 8.6.0
+  resolution: "dotenv@npm:8.6.0"
+  checksum: 10/31d7b5c010cebb80046ba6853d703f9573369b00b15129536494f04b0af4ea0060ce8646e3af58b455af2f6f1237879dd261a5831656410ec92561ae1ea44508
   languageName: node
   linkType: hard
 
@@ -9835,7 +9870,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:^2.7.0":
+"node-fetch@npm:^2.5.0, node-fetch@npm:^2.7.0":
   version: 2.7.0
   resolution: "node-fetch@npm:2.7.0"
   dependencies:
@@ -10850,6 +10885,7 @@ __metadata:
     "@babel/core": "npm:^7.27.7"
     "@babel/plugin-proposal-export-namespace-from": "npm:^7.18.9"
     "@babel/runtime": "npm:^7.28.4"
+    "@changesets/changelog-github": "npm:^0.6.0"
     "@expo/metro-runtime": "npm:~6.1.2"
     "@expo/vector-icons": "npm:^15.0.2"
     "@shopify/flash-list": "npm:2.0.2"
