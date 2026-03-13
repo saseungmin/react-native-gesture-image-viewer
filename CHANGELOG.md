@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- [#147](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/147) [`5398c0d`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/5398c0d110b08fc8afe9cab8278782ec5a94ebfa) Thanks [@saseungmin](https://github.com/saseungmin)! - fix(ios): prevent ScrollView from stealing dismiss gesture in carousels
+- [#147](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/147) [`5398c0d`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/5398c0d110b08fc8afe9cab8278782ec5a94ebfa) Thanks [@bhamiltoncx](https://github.com/bhamiltoncx)! - fix(ios): prevent ScrollView from stealing dismiss gesture in carousels
 
   On iOS, horizontal paging ScrollView with 4+ items would steal touch ownership, preventing the vertical dismiss gesture from activating.
   Fixed by wrapping ScrollView with Gesture.Native() and requireExternalGestureToFail to ensure the dismiss gesture resolves before ScrollView claims the touch.
