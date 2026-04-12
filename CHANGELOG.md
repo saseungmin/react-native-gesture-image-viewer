@@ -1,5 +1,24 @@
 # react-native-gesture-image-viewer
 
+## 2.1.4
+
+### Patch Changes
+
+- [#153](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/153) [`0bb80ef`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/0bb80ef9c9fc5d9ebe8856a571bde9a93010e333) Thanks [@saseungmin](https://github.com/saseungmin)! - docs(rspress): update docs config and add versioned AI guide
+
+  Update the Rspress docs setup and add versioned AI guide pages for both 1.x and 2.x documentation. This includes guidance for using llms.txt, llms-full.txt, and Markdown doc links with AI tools, and adjusts the docs build config to avoid the experimental worker build issue after the Rspress upgrade.
+
+- [#152](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/152) [`bf06a80`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/bf06a80e17be01dc2ecbf3b955c4d1274d31dc29) Thanks [@saseungmin](https://github.com/saseungmin)! - fix(web): stabilize paging sync for autoplay, controller, and double-click zoom
+
+  Fix several web-specific paging and interaction issues in `GestureViewer`.
+
+  This improves loop and autoplay index synchronization on web, keeps controller-driven navigation in sync, restores double-click zoom, and refines web paging behavior so settled pages match the browser's final scroll position more naturally.
+
+- [#150](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/150) [`9e78690`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/9e78690da9d08d142e16b0438b65d0c508ebfd7a) Thanks [@saseungmin](https://github.com/saseungmin)! - fix(android): restore horizontal swipe by scoping native scroll workaround to iOS
+
+  Fix an Android regression where horizontal swiping could stop working after the iOS native scroll gesture
+  workaround was introduced. The workaround is now scoped to iOS scrollables only, while still preserving the iOS dismiss behavior.
+
 ## 2.1.3
 
 ### Patch Changes
