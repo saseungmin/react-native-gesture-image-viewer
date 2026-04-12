@@ -1,0 +1,38 @@
+# AI
+
+To help AI better understand this library's features, versioned documentation, and project conventions so it can provide more accurate help during development and troubleshooting, this project provides the following capabilities:
+
+## llms.txt
+
+[`llms.txt`](https://llmstxt.org/) helps LLMs discover and use project documentation. This site publishes the following files.
+
+- [llms.txt](https://react-native-gesture-image-viewer.pages.dev/llms.txt): The structured index file for the current `2.x` docs.
+
+```txt
+https://react-native-gesture-image-viewer.pages.dev/llms.txt
+```
+
+- [llms-full.txt](https://react-native-gesture-image-viewer.pages.dev/llms-full.txt): The full-content file that concatenates the complete `2.x` documentation into a single file.
+
+```txt
+https://react-native-gesture-image-viewer.pages.dev/llms-full.txt
+```
+
+Choose the file that best fits your use case:
+
+- `llms.txt` is smaller and consumes fewer tokens, so it works well when AI should fetch specific pages on demand.
+- `llms-full.txt` contains the complete documentation for the current version, so AI does not need to follow individual links. This is useful for broader understanding or larger refactors, but it consumes more tokens.
+
+## Markdown docs
+
+Every documentation page also has a corresponding Markdown version that can be passed directly to AI.
+
+Examples:
+
+```txt
+https://react-native-gesture-image-viewer.pages.dev/guide/getting-started/overview.md
+https://react-native-gesture-image-viewer.pages.dev/guide/getting-started/quick-start.md
+https://react-native-gesture-image-viewer.pages.dev/guide/usage/programmatic-control.md
+```
+
+Providing a single Markdown page is often the most efficient option when you want help with one specific feature.

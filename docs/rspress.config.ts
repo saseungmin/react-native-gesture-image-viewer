@@ -18,9 +18,7 @@ export default defineConfig({
   search: {
     versioned: true,
   },
-  ssg: {
-    experimentalWorker: true,
-  },
+  ssg: true,
   markdown: {
     showLineNumbers: true,
     defaultWrapCode: false,

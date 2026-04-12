@@ -9,8 +9,8 @@
     "preview": "rspress preview"
   },
   "devDependencies": {
-    "@rspress/core": "^2.0.3",
-    "@shikijs/transformers": "^3.22.0",
+    "@rspress/core": "^2.0.9",
+    "@shikijs/transformers": "^4.0.2",
     "@types/node": "^22.16.0",
     "typescript": "^5.8.3"
   }

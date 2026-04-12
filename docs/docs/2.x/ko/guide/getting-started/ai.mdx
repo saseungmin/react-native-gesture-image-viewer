@@ -1,0 +1,38 @@
+# AI
+
+AI가 이 라이브러리의 기능, 버전별 문서, 프로젝트 규칙을 더 잘 이해해서 개발이나 트러블슈팅 과정에서 더 정확한 도움을 줄 수 있도록, 이 프로젝트는 다음 기능들을 제공합니다.
+
+## llms.txt
+
+[`llms.txt`](https://llmstxt.org/)는 LLM이 프로젝트 문서를 더 쉽게 탐색하고 활용할 수 있도록 돕는 표준입니다. 이 사이트는 다음 파일들을 제공합니다.
+
+- [llms.txt](https://react-native-gesture-image-viewer.pages.dev/llms.txt): `2.x` 문서용 구조화된 인덱스 파일
+
+```txt
+https://react-native-gesture-image-viewer.pages.dev/llms.txt
+```
+
+- [llms-full.txt](https://react-native-gesture-image-viewer.pages.dev/llms-full.txt): `2.x` 문서 전체를 하나로 합친 파일
+
+```txt
+https://react-native-gesture-image-viewer.pages.dev/llms-full.txt
+```
+
+사용 목적에 따라 적절한 파일을 선택하면 됩니다.
+
+- `llms.txt`는 더 작고 가벼워서 필요한 문서만 선택적으로 가져올 때 적합합니다.
+- `llms-full.txt`는 해당 버전 문서 전체를 한 번에 제공하므로, 넓은 범위의 이해나 큰 리팩터링 작업에 적합합니다.
+
+## Markdown docs
+
+모든 문서 페이지는 AI에게 직접 전달할 수 있는 Markdown 버전도 함께 제공합니다.
+
+예시:
+
+```txt
+https://react-native-gesture-image-viewer.pages.dev/guide/getting-started/overview.md
+https://react-native-gesture-image-viewer.pages.dev/guide/getting-started/quick-start.md
+https://react-native-gesture-image-viewer.pages.dev/guide/usage/programmatic-control.md
+```
+
+특정 기능 하나만 물어볼 때는 전체 문서보다 관련 Markdown 페이지 하나를 제공하는 편이 더 효율적입니다.
