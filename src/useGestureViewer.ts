@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { InteractionManager, useWindowDimensions } from 'react-native';
+import { InteractionManager, Platform, useWindowDimensions } from 'react-native';
 import { Gesture, type GestureType } from 'react-native-gesture-handler';
 import {
   Easing,
@@ -572,7 +572,7 @@ export const useGestureViewer = <ItemT, LC>({
   const doubleTapGesture = useMemo(
     () =>
       Gesture.Tap()
-        .enabled(enableDoubleTapZoom)
+        .enabled(enableDoubleTapZoom && Platform.OS !== 'web')
         .numberOfTaps(2)
         .onEnd((event) => {
           applyTapZoomAtPoint({

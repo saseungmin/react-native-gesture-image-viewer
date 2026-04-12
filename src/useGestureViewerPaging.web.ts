@@ -6,7 +6,11 @@ import type {
   UseGestureViewerPagingResult,
 } from './useGestureViewerPaging.types';
 import { applyTapZoomAtPoint } from './utils/tapZoom';
-import { getWebAutoPlayTargetPhysicalIndex, resolveWebScrollFinalState } from './utils/webScroll';
+import {
+  getWebAutoPlayTargetPhysicalIndex,
+  getWebScrollPhysicalIndex,
+  resolveWebScrollFinalState,
+} from './utils/webScroll';
 
 type WebScrollActor = 'idle' | 'user' | 'autoplay';
 
@@ -79,7 +83,15 @@ export function useGestureViewerPaging({
     runtime.resumeAutoplayTimer = setTimeout(() => {
       runtime.isAutoplayPausedByUser = false;
       runtime.resumeAutoplayTimer = null;
-    }, 1200);
+    }, 800);
+  }, [clearWebAutoplayResumeTimer]);
+
+  const pauseWebAutoplayWithoutPagingInteraction = useCallback(() => {
+    const runtime = webScrollRuntimeRef.current;
+
+    runtime.isAutoplayPausedByUser = true;
+    runtime.actor = 'idle';
+    clearWebAutoplayResumeTimer();
   }, [clearWebAutoplayResumeTimer]);
 
   const beginWebUserInteraction = useCallback(
@@ -121,7 +133,7 @@ export function useGestureViewerPaging({
   }, [clearWebAutoplayResumeTimer, manager]);
 
   const finalizeWebScroll = useCallback(
-    (offsetX: number) => {
+    (offsetX: number, source: 'scroll' | 'momentum' = 'scroll') => {
       if (!enableHorizontalSwipe || dataLength <= 0) {
         return;
       }
@@ -146,7 +158,7 @@ export function useGestureViewerPaging({
 
       const { logicalIndex, rawPhysicalIndex, settledPhysicalIndex } = settledState;
 
-      if (runtime.latestRawPhysicalIndex !== rawPhysicalIndex) {
+      if (source === 'scroll' && runtime.latestRawPhysicalIndex !== rawPhysicalIndex) {
         return;
       }
 
@@ -188,10 +200,10 @@ export function useGestureViewerPaging({
       const runtime = webScrollRuntimeRef.current;
 
       runtime.latestOffsetX = offsetX;
-      runtime.latestRawPhysicalIndex = Math.round(offsetX / (width + itemSpacing));
+      runtime.latestRawPhysicalIndex = getWebScrollPhysicalIndex(offsetX, width + itemSpacing);
       clearWebSettleTimer();
       runtime.settleTimer = setTimeout(() => {
-        finalizeWebScroll(runtime.latestOffsetX);
+        finalizeWebScroll(runtime.latestOffsetX, 'scroll');
       }, 180);
     },
     [clearWebSettleTimer, finalizeWebScroll, itemSpacing, width],
@@ -308,7 +320,7 @@ export function useGestureViewerPaging({
         return;
       }
 
-      finalizeWebScroll(event.nativeEvent.contentOffset.x);
+      finalizeWebScroll(event.nativeEvent.contentOffset.x, 'momentum');
     },
     [enableHorizontalSwipe, finalizeWebScroll],
   );
@@ -325,15 +337,29 @@ export function useGestureViewerPaging({
         return;
       }
 
-      beginWebUserInteraction(true);
+      pauseWebAutoplayWithoutPagingInteraction();
       scheduleWebAutoplayResume();
 
-      const locationX = event?.nativeEvent?.locationX ?? width / 2;
-      const locationY = event?.nativeEvent?.locationY ?? height / 2;
+      const nativeEvent = event?.nativeEvent;
+      const eventTarget = event?.currentTarget ?? nativeEvent?.currentTarget ?? nativeEvent?.target;
+      let locationX = nativeEvent?.locationX;
+      let locationY = nativeEvent?.locationY;
+
+      if (
+        (!Number.isFinite(locationX) || !Number.isFinite(locationY)) &&
+        typeof eventTarget?.getBoundingClientRect === 'function' &&
+        Number.isFinite(nativeEvent?.clientX) &&
+        Number.isFinite(nativeEvent?.clientY)
+      ) {
+        const rect = eventTarget.getBoundingClientRect();
+
+        locationX = nativeEvent.clientX - rect.left;
+        locationY = nativeEvent.clientY - rect.top;
+      }
 
       applyTapZoomAtPoint({
-        x: locationX,
-        y: locationY,
+        x: Number.isFinite(locationX) ? locationX : width / 2,
+        y: Number.isFinite(locationY) ? locationY : height / 2,
         width,
         height,
         maxZoomScale,
@@ -343,10 +369,10 @@ export function useGestureViewerPaging({
       });
     },
     [
-      beginWebUserInteraction,
       enableDoubleTapZoom,
       height,
       maxZoomScale,
+      pauseWebAutoplayWithoutPagingInteraction,
       scheduleWebAutoplayResume,
       scale,
       translateX,

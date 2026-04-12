@@ -260,7 +260,6 @@ class GestureViewerManager {
       return;
     }
 
-    this.programmaticScrollVersion += 1;
     this.cancelPendingLoopTransition();
 
     const { scrollTo } = createScrollAction(this.listRef, this.width);
@@ -273,6 +272,7 @@ class GestureViewerManager {
           this.loopCallback = null;
         };
 
+        this.programmaticScrollVersion += 1;
         scrollTo(0, true);
         return;
       }
@@ -284,10 +284,12 @@ class GestureViewerManager {
           this.loopCallback = null;
         };
 
+        this.programmaticScrollVersion += 1;
         scrollTo(this.dataLength + 1, true);
         return;
       }
 
+      this.programmaticScrollVersion += 1;
       scrollTo(index + 1, true);
       this.updateCurrentIndex(index);
 
@@ -298,6 +300,7 @@ class GestureViewerManager {
       return;
     }
 
+    this.programmaticScrollVersion += 1;
     scrollTo(index, true);
     this.updateCurrentIndex(index);
   };

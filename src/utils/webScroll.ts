@@ -19,7 +19,7 @@ export const resolveWebScrollFinalState = ({
   dataLength: number;
   enableLoop: boolean;
 }): { logicalIndex: number; rawPhysicalIndex: number; settledPhysicalIndex: number } | null => {
-  if (dataLength <= 0) {
+  if (dataLength <= 0 || !Number.isFinite(pageWidth) || pageWidth <= 0) {
     return null;
   }
 
