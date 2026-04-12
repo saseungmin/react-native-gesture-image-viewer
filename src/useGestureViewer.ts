@@ -226,6 +226,7 @@ export const useGestureViewer = <ItemT, LC>({
     manager.setWidth(width + itemSpacing);
     manager.setHeight(height);
     manager.setZoomSharedValues(scale, translateX, translateY, maxZoomScale);
+    manager.setResetTransformCallback(resetTransformState);
     manager.setRotation(rotation);
     manager.setEnableLoop(enableLoop);
     manager.notifyStateChange();
@@ -240,6 +241,7 @@ export const useGestureViewer = <ItemT, LC>({
     enableLoop,
     scale,
     height,
+    resetTransformState,
     translateX,
     translateY,
     rotation,

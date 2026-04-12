@@ -22,6 +22,7 @@ class GestureViewerManager {
   private rotation: SharedValue<number> | null = null;
   private translateX: SharedValue<number> | null = null;
   private translateY: SharedValue<number> | null = null;
+  private resetTransformCallback: (() => void) | null = null;
 
   private loopCallback: (() => void) | null = null;
   private programmaticScrollVersion = 0;
@@ -136,6 +137,10 @@ class GestureViewerManager {
     this.translateX = translateX;
     this.translateY = translateY;
     this.maxZoomScale = maxZoomScale;
+  }
+
+  setResetTransformCallback(callback: (() => void) | null) {
+    this.resetTransformCallback = callback;
   }
 
   notifyStateChange() {
@@ -272,6 +277,7 @@ class GestureViewerManager {
           this.cancelPendingLoopTransition();
         };
 
+        this.resetTransformCallback?.();
         this.programmaticScrollVersion += 1;
         scrollTo(0, true);
         return;
@@ -284,11 +290,13 @@ class GestureViewerManager {
           this.cancelPendingLoopTransition();
         };
 
+        this.resetTransformCallback?.();
         this.programmaticScrollVersion += 1;
         scrollTo(this.dataLength + 1, true);
         return;
       }
 
+      this.resetTransformCallback?.();
       this.programmaticScrollVersion += 1;
       scrollTo(index + 1, true);
       this.updateCurrentIndex(index);
@@ -300,6 +308,7 @@ class GestureViewerManager {
       return;
     }
 
+    this.resetTransformCallback?.();
     this.programmaticScrollVersion += 1;
     scrollTo(index, true);
     this.updateCurrentIndex(index);
@@ -343,11 +352,11 @@ class GestureViewerManager {
     this.currentIndex = 0;
     this.dataLength = 0;
     this.maxZoomScale = 2;
-    this.programmaticScrollVersion = 0;
     this.scale = null;
     this.translateX = null;
     this.translateY = null;
     this.rotation = null;
+    this.resetTransformCallback = null;
     this.eventListeners.clear();
   }
 
