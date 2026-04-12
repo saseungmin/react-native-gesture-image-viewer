@@ -24,6 +24,7 @@ class GestureViewerManager {
   private translateY: SharedValue<number> | null = null;
 
   private loopCallback: (() => void) | null = null;
+  private programmaticScrollVersion = 0;
 
   private listeners = new Set<(state: GestureViewerState) => void>();
   private eventListeners = new Map<GestureViewerEventType, Set<(data: any) => void>>();
@@ -89,6 +90,10 @@ class GestureViewerManager {
       currentIndex: this.currentIndex,
       totalCount: this.dataLength,
     };
+  }
+
+  getProgrammaticScrollVersion() {
+    return this.programmaticScrollVersion;
   }
 
   setEnableLoop(enabled: boolean) {
@@ -255,7 +260,8 @@ class GestureViewerManager {
       return;
     }
 
-    this.loopCallback = null;
+    this.programmaticScrollVersion += 1;
+    this.cancelPendingLoopTransition();
 
     const { scrollTo } = createScrollAction(this.listRef, this.width);
 
@@ -306,12 +312,16 @@ class GestureViewerManager {
       return true;
     }
 
-    this.loopCallback = null;
+    this.cancelPendingLoopTransition();
     return true;
   };
 
-  handleScrollBeginDrag = () => {
+  cancelPendingLoopTransition = () => {
     this.loopCallback = null;
+  };
+
+  handleScrollBeginDrag = () => {
+    this.cancelPendingLoopTransition();
   };
 
   goToPrevious = () => {
@@ -323,13 +333,14 @@ class GestureViewerManager {
   };
 
   cleanUp() {
-    this.loopCallback = null;
+    this.cancelPendingLoopTransition();
     this.listeners.clear();
     this.listRef = null;
     this.enableHorizontalSwipe = true;
     this.currentIndex = 0;
     this.dataLength = 0;
     this.maxZoomScale = 2;
+    this.programmaticScrollVersion = 0;
     this.scale = null;
     this.translateX = null;
     this.translateY = null;

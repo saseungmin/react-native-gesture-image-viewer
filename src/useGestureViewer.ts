@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  InteractionManager,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  useWindowDimensions,
-} from 'react-native';
+import { InteractionManager, useWindowDimensions } from 'react-native';
 import { Gesture, type GestureType } from 'react-native-gesture-handler';
 import {
   Easing,
@@ -20,7 +15,9 @@ import { scheduleOnRN } from 'react-native-worklets';
 import type GestureViewerManager from './GestureViewerManager';
 import { registry } from './GestureViewerRegistry';
 import type { GestureViewerProps, TriggerRect } from './types';
-import { createBoundsConstraint, createScrollAction, getLoopAdjustedIndex } from './utils';
+import { useGestureViewerPaging } from './useGestureViewerPaging';
+import { createBoundsConstraint, createScrollAction } from './utils';
+import { applyTapZoomAtPoint } from './utils/tapZoom';
 
 type UseGestureViewerProps<ItemT, LC> = Omit<
   GestureViewerProps<ItemT, LC>,
@@ -129,6 +126,35 @@ export const useGestureViewer = <ItemT, LC>({
       return scrollAction.scrollTo(index, animated);
     },
     [width, itemSpacing],
+  );
+
+  const resetTransformState = useCallback(() => {
+    translateX.value = withTiming(0);
+    translateY.value = withTiming(0);
+    initialTranslateX.value = withTiming(0);
+    initialTranslateY.value = withTiming(0);
+    startScale.value = withTiming(1);
+    scale.value = withTiming(1);
+    rotation.value = 0;
+  }, [initialTranslateX, initialTranslateY, rotation, scale, startScale, translateX, translateY]);
+
+  const syncCurrentIndex = useCallback(
+    (nextIndex: number) => {
+      if (!manager || nextIndex < 0 || nextIndex >= dataLength) {
+        return;
+      }
+
+      const currentIndex = manager.getState().currentIndex;
+
+      if (nextIndex === currentIndex) {
+        return;
+      }
+
+      manager.setCurrentIndex(nextIndex);
+      manager.notifyStateChange();
+      resetTransformState();
+    },
+    [dataLength, manager, resetTransformState],
   );
 
   const emitZoomChange = useCallback(
@@ -258,44 +284,6 @@ export const useGestureViewer = <ItemT, LC>({
   ]);
 
   useEffect(() => {
-    if (
-      !autoPlay ||
-      !manager ||
-      dataLength <= 1 ||
-      isZoomed ||
-      isRotated ||
-      (!enableLoop && currentIndex === dataLength - 1)
-    ) {
-      return;
-    }
-
-    const intervalMs = Math.max(250, Math.floor(autoPlayInterval || 0));
-
-    if (!Number.isFinite(intervalMs)) {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      if (isZoomed || isRotated) {
-        return;
-      }
-
-      manager.goToNext();
-    }, intervalMs);
-
-    return () => clearInterval(interval);
-  }, [
-    autoPlay,
-    autoPlayInterval,
-    manager,
-    dataLength,
-    currentIndex,
-    enableLoop,
-    isZoomed,
-    isRotated,
-  ]);
-
-  useEffect(() => {
     onAnimationCompleteRef.current = triggerAnimation?.onAnimationComplete;
   }, [triggerAnimation?.onAnimationComplete]);
 
@@ -393,66 +381,6 @@ export const useGestureViewer = <ItemT, LC>({
     triggerTranslateY,
     triggerOpacity,
   ]);
-
-  const onMomentumScrollEnd = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (!enableHorizontalSwipe) {
-        return;
-      }
-
-      const { contentOffset } = event.nativeEvent;
-      const scrollIndex = Math.round(contentOffset.x / (width + itemSpacing));
-
-      const isLoopHandled = manager?.handleMomentumScrollEnd(scrollIndex);
-
-      if (isLoopHandled) {
-        return;
-      }
-
-      const { realIndex, needsJump, jumpToIndex } = getLoopAdjustedIndex(
-        scrollIndex,
-        dataLength,
-        enableLoop,
-      );
-
-      if (needsJump && jumpToIndex !== undefined) {
-        scrollTo(jumpToIndex, false);
-      }
-
-      const currentIndex = manager?.getState()?.currentIndex;
-
-      if (realIndex !== currentIndex && realIndex >= 0 && realIndex < dataLength) {
-        if (manager) {
-          manager.setCurrentIndex(realIndex);
-          manager.notifyStateChange();
-        }
-
-        translateX.value = withTiming(0);
-        translateY.value = withTiming(0);
-        initialTranslateX.value = withTiming(0);
-        initialTranslateY.value = withTiming(0);
-        startScale.value = withTiming(1);
-        scale.value = withTiming(1);
-        rotation.value = 0;
-      }
-    },
-    [
-      scrollTo,
-      manager,
-      dataLength,
-      width,
-      itemSpacing,
-      enableHorizontalSwipe,
-      enableLoop,
-      translateX,
-      translateY,
-      scale,
-      initialTranslateX,
-      initialTranslateY,
-      startScale,
-      rotation,
-    ],
-  );
 
   const dismissGesture = useMemo(() => {
     const canDismiss = !isZoomed && dismissOptions.enabled;
@@ -647,38 +575,18 @@ export const useGestureViewer = <ItemT, LC>({
         .enabled(enableDoubleTapZoom)
         .numberOfTaps(2)
         .onEnd((event) => {
-          const nextScale = scale.value > 1 ? 1 : maxZoomScale;
-
-          if (nextScale > 1) {
-            const centerX = event.x - width / 2;
-            const centerY = event.y - height / 2;
-
-            // NOTE 확대로 밀려난 거리만큼 반대로 이동해서 탭 지점을 제자리에 유지
-            translateX.value = withTiming(-centerX * (nextScale - 1), {
-              duration: 300,
-              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-            });
-            translateY.value = withTiming(-centerY * (nextScale - 1), {
-              duration: 300,
-              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-            });
-          } else {
-            translateX.value = withTiming(0, {
-              duration: 300,
-              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-            });
-            translateY.value = withTiming(0, {
-              duration: 300,
-              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-            });
-          }
-
-          scale.value = withTiming(nextScale, {
-            duration: 300,
-            easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+          applyTapZoomAtPoint({
+            x: event.x,
+            y: event.y,
+            width,
+            height,
+            maxZoomScale,
+            scale,
+            translateX,
+            translateY,
           });
         }),
-    [scale, enableDoubleTapZoom, maxZoomScale, translateX, translateY, width, height],
+    [enableDoubleTapZoom, height, maxZoomScale, scale, translateX, translateY, width],
   );
 
   const zoomGesture = useMemo(
@@ -716,9 +624,29 @@ export const useGestureViewer = <ItemT, LC>({
     return Gesture.Native().requireExternalGestureToFail(dismissGestureRef);
   }, []);
 
-  const onScrollBeginDrag = useCallback(() => {
-    manager?.handleScrollBeginDrag();
-  }, [manager]);
+  const { onMomentumScrollEnd, onScroll, onScrollBeginDrag, onWebDoubleClick } =
+    useGestureViewerPaging({
+      adjustedInitialIndex,
+      autoPlay,
+      autoPlayInterval,
+      currentIndex,
+      dataLength,
+      enableDoubleTapZoom,
+      enableHorizontalSwipe,
+      enableLoop,
+      height,
+      isRotated,
+      isZoomed,
+      itemSpacing,
+      manager,
+      maxZoomScale,
+      scale,
+      scrollTo,
+      syncCurrentIndex,
+      translateX,
+      translateY,
+      width,
+    });
 
   return {
     animatedStyle,
@@ -732,7 +660,9 @@ export const useGestureViewer = <ItemT, LC>({
     isZoomed,
     listRef,
     nativeScrollGesture,
+    onWebDoubleClick,
     onMomentumScrollEnd,
+    onScroll,
 
     onScrollBeginDrag,
     zoomGesture,

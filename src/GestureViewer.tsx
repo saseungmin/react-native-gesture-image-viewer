@@ -59,7 +59,9 @@ export function GestureViewer<ItemT, LC>({
     dismissGesture,
     zoomGesture,
     nativeScrollGesture,
+    onWebDoubleClick,
     onMomentumScrollEnd,
+    onScroll,
     onScrollBeginDrag,
     animatedStyle,
     backdropStyle,
@@ -136,7 +138,8 @@ export function GestureViewer<ItemT, LC>({
         horizontal: true,
         scrollEnabled: !isZoomed && !isRotated && !isPinching,
         showsHorizontalScrollIndicator: false,
-        onMomentumScrollEnd: onMomentumScrollEnd,
+        onMomentumScrollEnd,
+        onScroll,
         onScrollBeginDrag,
         ...(enableSnapMode
           ? {
@@ -157,6 +160,7 @@ export function GestureViewer<ItemT, LC>({
       isRotated,
       isPinching,
       onMomentumScrollEnd,
+      onScroll,
       onScrollBeginDrag,
       enableSnapMode,
     ],
@@ -187,6 +191,7 @@ export function GestureViewer<ItemT, LC>({
           <Animated.View style={[styles.background, backdropStyleProps, backdropStyle]} />
           <Animated.View
             style={[styles.content, animatedStyle]}
+            {...(Platform.OS === 'web' && { onClick: onWebDoubleClick })}
             {...(Platform.OS === 'web' &&
               isFlashListLike(Component) && { dataSet: { 'flash-list-paging-enabled-fix': true } })}
           >
