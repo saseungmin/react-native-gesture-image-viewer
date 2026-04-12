@@ -19,7 +19,12 @@ export const resolveWebScrollFinalState = ({
   dataLength: number;
   enableLoop: boolean;
 }): { logicalIndex: number; rawPhysicalIndex: number; settledPhysicalIndex: number } | null => {
-  if (dataLength <= 0 || !Number.isFinite(pageWidth) || pageWidth <= 0) {
+  if (
+    dataLength <= 0 ||
+    !Number.isFinite(offsetX) ||
+    !Number.isFinite(pageWidth) ||
+    pageWidth <= 0
+  ) {
     return null;
   }
 
@@ -38,7 +43,7 @@ export const resolveWebScrollFinalState = ({
       };
     }
 
-    if (isWrappingForward || rawPhysicalIndex === dataLength + 1) {
+    if (isWrappingForward || rawPhysicalIndex >= dataLength + 1) {
       return {
         logicalIndex: 0,
         rawPhysicalIndex,

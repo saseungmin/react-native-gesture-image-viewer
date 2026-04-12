@@ -144,9 +144,9 @@ export const useGestureViewer = <ItemT, LC>({
         return;
       }
 
-      const currentIndex = manager.getState().currentIndex;
+      const managerCurrentIndex = manager.getState().currentIndex;
 
-      if (nextIndex === currentIndex) {
+      if (nextIndex === managerCurrentIndex) {
         return;
       }
 

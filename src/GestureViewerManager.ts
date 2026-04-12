@@ -269,7 +269,7 @@ class GestureViewerManager {
         this.loopCallback = () => {
           scrollTo(this.dataLength, false);
           this.updateCurrentIndex(this.dataLength - 1);
-          this.loopCallback = null;
+          this.cancelPendingLoopTransition();
         };
 
         this.programmaticScrollVersion += 1;
@@ -281,7 +281,7 @@ class GestureViewerManager {
         this.loopCallback = () => {
           scrollTo(1, false);
           this.updateCurrentIndex(0);
-          this.loopCallback = null;
+          this.cancelPendingLoopTransition();
         };
 
         this.programmaticScrollVersion += 1;
