@@ -12,7 +12,13 @@ import Animated from 'react-native-reanimated';
 import { registry } from './GestureViewerRegistry';
 import type { GestureViewerProps } from './types';
 import { useGestureViewer } from './useGestureViewer';
-import { createLoopData, isFlashListLike, isFlatListLike, isScrollViewLike } from './utils';
+import {
+  createLoopData,
+  isFlashListLike,
+  isFlatListLike,
+  isScrollViewLike,
+  shouldUseNativeScrollGesture,
+} from './utils';
 import WebPagingFixStyle from './WebPagingFixStyle';
 
 export function GestureViewer<ItemT, LC>({
@@ -158,6 +164,22 @@ export function GestureViewer<ItemT, LC>({
 
   const control = useMemo(() => ({ dismiss: handleDismiss }), [handleDismiss]);
 
+  const shouldWrapScrollableWithNativeGesture = shouldUseNativeScrollGesture(
+    Platform.OS,
+    Component,
+  );
+
+  const maybeWrapWithNativeScrollGesture = useCallback(
+    (children: React.ReactNode) => {
+      if (!shouldWrapScrollableWithNativeGesture) {
+        return children;
+      }
+
+      return <GestureDetector gesture={nativeScrollGesture}>{children}</GestureDetector>;
+    },
+    [nativeScrollGesture, shouldWrapScrollableWithNativeGesture],
+  );
+
   const listComponent = (
     <GestureHandlerRootView>
       <GestureDetector gesture={gesture}>
@@ -168,15 +190,14 @@ export function GestureViewer<ItemT, LC>({
             {...(Platform.OS === 'web' &&
               isFlashListLike(Component) && { dataSet: { 'flash-list-paging-enabled-fix': true } })}
           >
-            {isScrollView ? (
-              <GestureDetector gesture={nativeScrollGesture}>
-                <Component ref={listRef} {...commonProps} {...listProps}>
-                  {loopData.map((item, index) => renderItem({ item, index }))}
-                </Component>
-              </GestureDetector>
-            ) : (
-              isFlatListLike(Component) && (
-                <GestureDetector gesture={nativeScrollGesture}>
+            {isScrollView
+              ? maybeWrapWithNativeScrollGesture(
+                  <Component ref={listRef} {...commonProps} {...listProps}>
+                    {loopData.map((item, index) => renderItem({ item, index }))}
+                  </Component>,
+                )
+              : isFlatListLike(Component) &&
+                maybeWrapWithNativeScrollGesture(
                   <Component
                     ref={listRef}
                     {...commonProps}
@@ -196,10 +217,8 @@ export function GestureViewer<ItemT, LC>({
                         dataSet: { 'flat-list-paging-enabled-fix': true },
                       })}
                     {...listProps}
-                  />
-                </GestureDetector>
-              )
-            )}
+                  />,
+                )}
           </Animated.View>
           <WebPagingFixStyle Component={Component} />
         </View>

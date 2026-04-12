@@ -1,4 +1,8 @@
-import { FlatList as RNFlatList, ScrollView as RNScrollView } from 'react-native';
+import {
+  FlatList as RNFlatList,
+  ScrollView as RNScrollView,
+  type PlatformOSType,
+} from 'react-native';
 import {
   FlatList as GestureFlatList,
   ScrollView as GestureScrollView,
@@ -29,6 +33,18 @@ export const isFlashListLike = (component: React.ComponentType<any>): boolean =>
   }
 
   return component?.displayName === 'FlashList' || component?.name === 'FlashList';
+};
+
+/**
+ * iOS needs the extra Native gesture wrapper so the dismiss pan can resolve before the scrollable claims touches.
+ * We intentionally skip Android because the same require-to-fail relation regressed horizontal paging there,
+ * and we also avoid wrapping RNGH-provided scrollables to prevent double-applying Gesture.Native() to components that already participate in RNGH.
+ */
+export const shouldUseNativeScrollGesture = (
+  platformOS: PlatformOSType,
+  component: React.ComponentType<any>,
+): boolean => {
+  return platformOS === 'ios' && component !== GestureScrollView && component !== GestureFlatList;
 };
 
 export const createBoundsConstraint =
