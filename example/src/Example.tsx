@@ -91,7 +91,6 @@ function Example() {
             enableLoop={enableLoop}
             ListComponent={FlashList}
             renderItem={renderImage}
-            autoPlay
             backdropStyle={{ backgroundColor: '#181818' }}
             renderContainer={(children, helpers) => (
               <View style={{ flex: 1 }}>
