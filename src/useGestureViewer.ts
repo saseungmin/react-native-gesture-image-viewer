@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { InteractionManager, Platform, useWindowDimensions } from 'react-native';
+import { InteractionManager, Platform, type View, useWindowDimensions } from 'react-native';
 import { Gesture, type GestureType } from 'react-native-gesture-handler';
 import {
   Easing,
@@ -62,10 +62,16 @@ export const useGestureViewer = <ItemT, LC>({
   const [shouldStartTriggerAnimation, setShouldStartTriggerAnimation] = useState(false);
   const [manager, setManager] = useState<GestureViewerManager | null>(null);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [activeTriggerNode, setActiveTriggerNode] = useState<View | null>(null);
 
   const listRef = useRef<any>(null);
   const triggerRectRef = useRef<TriggerRect | null>(null);
+  const pendingIndexRef = useRef(initialIndex);
   const onAnimationCompleteRef = useRef(triggerAnimation?.onAnimationComplete);
+
+  const isValidTriggerRect = useCallback((rect: TriggerRect | null): rect is TriggerRect => {
+    return !!rect && rect.width > 0 && rect.height > 0;
+  }, []);
 
   const initialTranslateY = useSharedValue(0);
   const initialTranslateX = useSharedValue(0);
@@ -138,11 +144,24 @@ export const useGestureViewer = <ItemT, LC>({
     rotation.value = 0;
   }, [initialTranslateX, initialTranslateY, rotation, scale, startScale, translateX, translateY]);
 
+  const syncPendingIndex = useCallback(
+    (nextIndex: number) => {
+      if (nextIndex < 0 || nextIndex >= dataLength) {
+        return;
+      }
+
+      pendingIndexRef.current = nextIndex;
+    },
+    [dataLength],
+  );
+
   const syncCurrentIndex = useCallback(
     (nextIndex: number) => {
       if (!manager || nextIndex < 0 || nextIndex >= dataLength) {
         return;
       }
+
+      pendingIndexRef.current = nextIndex;
 
       const managerCurrentIndex = manager.getState().currentIndex;
 
@@ -206,7 +225,10 @@ export const useGestureViewer = <ItemT, LC>({
 
     const unsubscribeFromRegistry = registry.subscribeToManager(id, (managerInstance) => {
       setManager(managerInstance);
-      unsubscribe = managerInstance?.subscribe((state) => setCurrentIndex(state.currentIndex));
+      unsubscribe = managerInstance?.subscribe((state) => {
+        pendingIndexRef.current = state.currentIndex;
+        setCurrentIndex(state.currentIndex);
+      });
     });
 
     return () => {
@@ -216,6 +238,12 @@ export const useGestureViewer = <ItemT, LC>({
   }, [id]);
 
   useEffect(() => {
+    return registry.subscribeToActiveTrigger(id, setActiveTriggerNode);
+  }, [id]);
+
+  useEffect(() => {
+    pendingIndexRef.current = initialIndex;
+
     if (!manager) {
       return;
     }
@@ -331,32 +359,41 @@ export const useGestureViewer = <ItemT, LC>({
   ]);
 
   useEffect(() => {
-    const node = registry.getTriggerNode(id);
-
-    if (node && typeof node.measure === 'function') {
-      node.measure((_x, _y, width, height, pageX, pageY) => {
-        triggerRectRef.current = { height, width, x: pageX, y: pageY };
-        triggerOpacity.value = 0;
-        setShouldStartTriggerAnimation(true);
-        registry.clearTriggerNode(id);
-      });
+    if (!activeTriggerNode || typeof activeTriggerNode.measure !== 'function') {
+      return;
     }
 
+    activeTriggerNode.measure((_x, _y, measuredWidth, measuredHeight, pageX, pageY) => {
+      const nextTriggerRect = {
+        height: measuredHeight,
+        width: measuredWidth,
+        x: pageX,
+        y: pageY,
+      } satisfies TriggerRect;
+
+      if (!isValidTriggerRect(nextTriggerRect)) {
+        registry.clearActiveTriggerNode(id);
+        return;
+      }
+
+      triggerRectRef.current = nextTriggerRect;
+      triggerOpacity.value = 0;
+      setShouldStartTriggerAnimation(true);
+      registry.clearActiveTriggerNode(id);
+    });
+  }, [activeTriggerNode, id, isValidTriggerRect, triggerOpacity]);
+
+  useEffect(() => {
     return () => {
       triggerRectRef.current = null;
     };
-  }, [id, triggerOpacity]);
+  }, []);
 
-  const handleDismiss = useCallback(() => {
-    onDismissStart?.();
-
-    if (triggerRectRef.current) {
-      const endX = triggerRectRef.current.x + triggerRectRef.current.width / 2 - width / 2;
-      const endY = triggerRectRef.current.y + triggerRectRef.current.height / 2 - height / 2;
-      const endScale = Math.min(
-        triggerRectRef.current.width / width,
-        triggerRectRef.current.height / height,
-      );
+  const animateDismissToRect = useCallback(
+    (rect: TriggerRect) => {
+      const endX = rect.x + rect.width / 2 - width / 2;
+      const endY = rect.y + rect.height / 2 - height / 2;
+      const endScale = Math.min(rect.width / width, rect.height / height);
 
       triggerScale.value = withTiming(endScale, animationConfig);
       triggerTranslateX.value = withTiming(endX, animationConfig);
@@ -366,23 +403,62 @@ export const useGestureViewer = <ItemT, LC>({
           scheduleOnRN(onDismiss);
         }
       });
-      return;
-    }
+    },
+    [
+      animationConfig,
+      height,
+      onDismiss,
+      triggerOpacity,
+      triggerScale,
+      triggerTranslateX,
+      triggerTranslateY,
+      width,
+    ],
+  );
 
+  const dismissWithoutTrigger = useCallback(() => {
     if (onDismiss) {
       scheduleOnRN(onDismiss);
     }
-  }, [
-    animationConfig,
-    onDismiss,
-    onDismissStart,
-    width,
-    height,
-    triggerTranslateX,
-    triggerScale,
-    triggerTranslateY,
-    triggerOpacity,
-  ]);
+  }, [onDismiss]);
+
+  const handleDismiss = useCallback(() => {
+    onDismissStart?.();
+
+    const dismissTargetIndex = pendingIndexRef.current;
+    const indexedTriggerNode = registry.getIndexedTriggerNode(id, dismissTargetIndex);
+
+    if (indexedTriggerNode && typeof indexedTriggerNode.measure === 'function') {
+      indexedTriggerNode.measure((_x, _y, measuredWidth, measuredHeight, pageX, pageY) => {
+        const currentTriggerRect = {
+          height: measuredHeight,
+          width: measuredWidth,
+          x: pageX,
+          y: pageY,
+        } satisfies TriggerRect;
+
+        if (isValidTriggerRect(currentTriggerRect)) {
+          animateDismissToRect(currentTriggerRect);
+          return;
+        }
+
+        if (isValidTriggerRect(triggerRectRef.current)) {
+          animateDismissToRect(triggerRectRef.current);
+          return;
+        }
+
+        dismissWithoutTrigger();
+      });
+      return;
+    }
+
+    if (isValidTriggerRect(triggerRectRef.current)) {
+      animateDismissToRect(triggerRectRef.current);
+      return;
+    }
+
+    dismissWithoutTrigger();
+  }, [animateDismissToRect, dismissWithoutTrigger, id, isValidTriggerRect, onDismissStart]);
 
   const dismissGesture = useMemo(() => {
     const canDismiss = !isZoomed && dismissOptions.enabled;
@@ -645,6 +721,7 @@ export const useGestureViewer = <ItemT, LC>({
       scale,
       scrollTo,
       syncCurrentIndex,
+      syncPendingIndex,
       translateX,
       translateY,
       width,

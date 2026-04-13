@@ -33,7 +33,7 @@ function Gallery() {
     <View>
       {/* Gallery Grid */}
       {images.map((uri, index) => (
-        <GestureTrigger key={uri} id="gallery" onPress={() => openModal(index)}>
+        <GestureTrigger key={uri} id="gallery" index={index} onPress={() => openModal(index)}>
           <Pressable>
             <Image source={{ uri }} />
           </Pressable>
@@ -151,19 +151,46 @@ You can have multiple trigger instances by using different IDs:
 
 ```tsx
 // Photo gallery triggers
-<GestureTrigger id="photos" onPress={() => openPhotoModal(index)}>
+<GestureTrigger id="photos" index={index} onPress={() => openPhotoModal(index)}>
   <Image source={photo} />
 </GestureTrigger>
 
 // Video gallery triggers
-<GestureTrigger id="videos" onPress={() => openVideoModal(index)}>
+<GestureTrigger id="videos" index={index} onPress={() => openVideoModal(index)}>
   <Video source={video} />
 </GestureTrigger>
 ```
 
 :::tip
 Make sure the `id` prop matches between `GestureTrigger` and `GestureViewer` components for the animation to work properly. (default value: `default`)
+
+If you want the dismiss animation to return to the thumbnail for the **currently visible item**, also pass `index={index}` to each `GestureTrigger`.
 :::
+
+### Dismissing to the Current Item
+
+In galleries where users can swipe to a different item after opening the modal, passing `index` lets the dismiss animation target the trigger for the **current viewer index** instead of always returning to the opening trigger.
+
+```tsx
+{
+  images.map((uri, index) => (
+    <GestureTrigger key={uri} id="gallery" index={index} onPress={() => openModal(index)}>
+      <Pressable>
+        <Image source={{ uri }} />
+      </Pressable>
+    </GestureTrigger>
+  ));
+}
+```
+
+If `index` is omitted, the dismiss animation falls back to the trigger that originally opened the viewer.
+
+:::note Fallback behavior
+If the trigger for the current index cannot be found (for example, because the thumbnail was unmounted by list virtualization), dismissal falls back in this order:
+
+1. the trigger used to open the current modal session
+2. a normal dismiss without trigger targeting
+   :::
 
 ## Handling Dismissal Animations
 
@@ -341,6 +368,7 @@ This pattern ensures that your trigger-based animations work consistently and pr
 ```ts
 interface GestureTriggerProps<T extends WithOnPress> {
   id?: string; // Identifier to associate with GestureViewer (default: "default")
+  index?: number; // Item index used for current-item dismiss targeting
   children: ReactElement<T>; // Single pressable child element
   onPress?: (...args: unknown[]) => void; // Additional onPress handler
 }

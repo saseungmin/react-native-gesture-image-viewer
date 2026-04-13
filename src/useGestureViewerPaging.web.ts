@@ -43,6 +43,7 @@ export function useGestureViewerPaging({
   scale,
   scrollTo,
   syncCurrentIndex,
+  syncPendingIndex,
   translateX,
   translateY,
   width,
@@ -302,15 +303,34 @@ export function useGestureViewerPaging({
         return;
       }
 
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const runtime = webScrollRuntimeRef.current;
+      const pendingState = resolveWebScrollFinalState({
+        dataLength,
+        enableLoop,
+        lastSettledPhysicalIndex: runtime.lastSettledPhysicalIndex,
+        offsetX,
+        pageWidth: width + itemSpacing,
+      });
+
+      if (pendingState) {
+        syncPendingIndex(pendingState.logicalIndex);
+      }
+
       syncProgrammaticActorFromManager();
       beginWebUserInteraction();
-      scheduleWebScrollSettle(event.nativeEvent.contentOffset.x);
+      scheduleWebScrollSettle(offsetX);
     },
     [
       beginWebUserInteraction,
+      dataLength,
       enableHorizontalSwipe,
+      enableLoop,
+      itemSpacing,
       scheduleWebScrollSettle,
+      syncPendingIndex,
       syncProgrammaticActorFromManager,
+      width,
     ],
   );
 

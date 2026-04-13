@@ -20,6 +20,7 @@ export function useGestureViewerPaging({
   manager,
   scrollTo,
   syncCurrentIndex,
+  syncPendingIndex,
   width,
 }: UseGestureViewerPagingArgs): UseGestureViewerPagingResult {
   useEffect(() => {
@@ -99,13 +100,28 @@ export function useGestureViewerPaging({
     ],
   );
 
+  const onScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (!enableHorizontalSwipe) {
+        return;
+      }
+
+      const { contentOffset } = event.nativeEvent;
+      const scrollIndex = Math.round(contentOffset.x / (width + itemSpacing));
+      const { realIndex } = getLoopAdjustedIndex(scrollIndex, dataLength, enableLoop);
+
+      syncPendingIndex(realIndex);
+    },
+    [dataLength, enableHorizontalSwipe, enableLoop, itemSpacing, syncPendingIndex, width],
+  );
+
   const onScrollBeginDrag = useCallback(() => {
     manager?.handleScrollBeginDrag();
   }, [manager]);
 
   return {
     onMomentumScrollEnd,
-    onScroll: undefined,
+    onScroll,
     onScrollBeginDrag,
     onWebDoubleClick: undefined,
   };

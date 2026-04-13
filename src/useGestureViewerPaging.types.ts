@@ -21,6 +21,7 @@ export type UseGestureViewerPagingArgs = {
   scale: SharedValue<number>;
   scrollTo: (index: number, animated: boolean) => void;
   syncCurrentIndex: (nextIndex: number) => void;
+  syncPendingIndex: (nextIndex: number) => void;
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
   width: number;
