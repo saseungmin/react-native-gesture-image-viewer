@@ -1,5 +1,25 @@
 # react-native-gesture-image-viewer
 
+## 2.2.0
+
+### Minor Changes
+
+- [#154](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/154) [`d7e5bd0`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/d7e5bd091e0bd551ad2dad7b2e15ee9d942871b2) Thanks [@saseungmin](https://github.com/saseungmin)! - feat(trigger): dismiss to current item thumbnail
+
+  Adds an optional `index` prop to `GestureTrigger` to support dismiss animations that return to the currently visible item.
+
+  This improves trigger-based gallery flows after swiping, fast swiping, autoplay, and programmatic navigation. If the current trigger cannot be resolved, dismissal falls back to the opening trigger.
+
+  Example:
+
+  ```tsx
+  <GestureTrigger id="gallery" index={index} onPress={() => openModal(index)}>
+    <Pressable>
+      <Image source={{ uri }} />
+    </Pressable>
+  </GestureTrigger>
+  ```
+
 ## 2.1.4
 
 ### Patch Changes
