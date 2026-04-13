@@ -186,11 +186,13 @@ In galleries where users can swipe to a different item after opening the modal, 
 If `index` is omitted, the dismiss animation falls back to the trigger that originally opened the viewer.
 
 :::note Fallback behavior
+
 If the trigger for the current index cannot be found (for example, because the thumbnail was unmounted by list virtualization), dismissal falls back in this order:
 
 1. the trigger used to open the current modal session
 2. a normal dismiss without trigger targeting
-   :::
+
+:::
 
 ## Handling Dismissal Animations
 
