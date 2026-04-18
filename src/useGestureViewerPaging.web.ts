@@ -370,12 +370,18 @@ export function useGestureViewerPaging({
       const resolvedX = event.clientX - rect.left;
       const resolvedY = event.clientY - rect.top;
 
-      if (detail === 2) {
-        clearWebSingleTapTimer();
-
-        if (!enableDoubleTapZoom) {
+      if (!enableDoubleTapZoom) {
+        if (!onSingleTap) {
           return;
         }
+
+        clearWebSingleTapTimer();
+        onSingleTap(resolvedX, resolvedY);
+        return;
+      }
+
+      if (detail === 2) {
+        clearWebSingleTapTimer();
 
         pauseWebAutoplayWithoutPagingInteraction();
         scheduleWebAutoplayResume();
@@ -398,11 +404,6 @@ export function useGestureViewerPaging({
       }
 
       clearWebSingleTapTimer();
-
-      if (!enableDoubleTapZoom) {
-        onSingleTap(resolvedX, resolvedY);
-        return;
-      }
 
       webSingleTapTimerRef.current = setTimeout(() => {
         onSingleTap(resolvedX, resolvedY);
