@@ -1,6 +1,6 @@
 # 뷰어 이벤트 처리하기
 
-`useGestureViewerEvent` 훅을 사용하여 `GestureViewer`의 특정 이벤트를 구독할 수 있습니다. 줌이나 회전과 같은 실시간 제스처 변화에 반응할 수 있습니다.
+`useGestureViewerEvent` 훅을 사용하여 `GestureViewer`의 특정 이벤트를 구독할 수 있습니다. 줌, 회전, 탭과 같은 뷰어 상호작용에 반응할 수 있습니다.
 
 ## useGestureViewerEvent
 
@@ -14,6 +14,12 @@ function App() {
 
   useGestureViewerEvent('rotationChange', (data) => {
     console.log(`회전 변경: ${data.previousRotation}° → ${data.rotation}°`);
+  });
+
+  useGestureViewerEvent('tap', (data) => {
+    if (data.kind === 'single') {
+      console.log(`아이템 ${data.index} 탭: (${data.x}, ${data.y})`);
+    }
   });
 
   return <GestureViewer data={images} renderItem={renderImage} />;
@@ -52,7 +58,12 @@ function useGestureViewerEvent<T extends GestureViewerEventType>(
 ): void;
 ```
 
-| 이벤트 타입      | 설명                                      | 콜백 데이터                                      |
-| :--------------- | :---------------------------------------- | :----------------------------------------------- |
-| `zoomChange`     | 핀치 제스처 중 줌 스케일이 변경될 때 발생 | `{ scale: number, previousScale: number }`       |
-| `rotationChange` | 회전 제스처 중 회전 각도가 변경될 때 발생 | `{ rotation: number, previousRotation: number }` |
+| 이벤트 타입      | 설명                                                                   | 콜백 데이터                                               |
+| :--------------- | :--------------------------------------------------------------------- | :-------------------------------------------------------- |
+| `zoomChange`     | 핀치 제스처 중 줌 스케일이 변경될 때 발생                              | `{ scale: number, previousScale: number }`                |
+| `rotationChange` | 회전 제스처 중 회전 각도가 변경될 때 발생                              | `{ rotation: number, previousRotation: number }`          |
+| `tap`            | 뷰어에서 탭이 확정되면 발생합니다. 현재는 확정된 싱글 탭만 emit합니다. | `{ kind: 'single', x: number, y: number, index: number }` |
+
+:::tip
+`tap` 이벤트를 `GestureViewer` prop로 직접 처리하고 싶다면 [`onSingleTap`](/ko/guide/usage/gesture-viewer-props.html#onsingletap)을 사용할 수 있습니다.
+:::

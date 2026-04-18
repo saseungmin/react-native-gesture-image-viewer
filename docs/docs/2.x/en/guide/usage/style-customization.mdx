@@ -29,3 +29,7 @@ function App() {
 |           `containerStyle`           | Allows custom styling of the container that wraps the list component. |                     `flex: 1`                      |
 |           `backdropStyle`            | Allows customization of the viewer's background style.                | `backgroundColor: black; StyleSheet.absoluteFill;` |
 | `renderContainer(children, helpers)` | Allows custom wrapper component around `<GestureViewer />`.           |                                                    |
+
+:::tip
+Use `onSingleTap` for fullscreen tap handling. `renderContainer` is best for composing surrounding UI such as headers, close buttons, and toolbars.
+:::

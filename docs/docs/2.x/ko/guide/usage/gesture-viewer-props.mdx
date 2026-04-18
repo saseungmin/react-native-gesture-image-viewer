@@ -102,6 +102,29 @@ function App() {
 }
 ```
 
+### `onSingleTap`
+
+뷰어에서 싱글 탭이 확정되면 실행됩니다. 헤더, 푸터, 캡션, 액션 버튼처럼 뷰어 컨트롤 UI를 토글할 때 유용하며, 뷰어 위에 별도의 pressable을 덮지 않아도 됩니다.
+
+- 더블 탭 줌이 활성화되어 있으면 더블 탭이 아닌지 확인한 뒤 실행되므로 약간 늦게 호출될 수 있습니다
+- 스와이프, 핀치, dismiss, 더블 탭 줌 제스처에서는 호출되지 않습니다
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const [showControls, setShowControls] = useState(true);
+
+  return (
+    <GestureViewer
+      data={images}
+      renderItem={renderImage}
+      onSingleTap={() => setShowControls((prev) => !prev)} // [!code highlight]
+    />
+  );
+}
+```
+
 ### `initialIndex` (기본값: `0`)
 
 초기 인덱스 값을 설정할 수 있습니다.
@@ -145,8 +168,17 @@ export interface GestureViewerProps<ItemT, LC> {
    */
   renderItem: (item: ItemT, index: number) => React.ReactElement;
   /**
+   * A callback function that is called when a single tap is confirmed on the viewer content.
+   * @remarks
+   * - The callback runs only after the tap is resolved as a single tap, so it may be slightly delayed when double-tap zoom is enabled.
+   * - It is not called for swipe, pinch, dismiss, or double-tap zoom gestures.
+   * - Prefer this callback over overlaying a pressable in `renderContainer` for fullscreen tap handling.
+   */
+  onSingleTap?: (event: GestureViewerSingleTapEvent<ItemT>) => void;
+  /**
    * A callback function that is called to render the container.
    * @remarks Useful for composing additional UI (e.g., close button, toolbars) around the viewer.
+   * Prefer `onSingleTap` for fullscreen tap handling instead of overlaying a pressable over the viewer content.
    * The second argument provides control helpers such as `dismiss()` to close the viewer.
    *
    * @param children - The viewer content to be rendered inside your container.

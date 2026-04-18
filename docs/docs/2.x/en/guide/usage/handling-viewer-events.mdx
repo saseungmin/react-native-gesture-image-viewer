@@ -1,6 +1,6 @@
 # Handling Viewer Events
 
-`GestureViewer` provides a way to subscribe to specific events from the viewer using the `useGestureViewerEvent` hook. This allows you to respond to real-time gesture changes like zoom and rotation.
+`GestureViewer` provides a way to subscribe to specific events from the viewer using the `useGestureViewerEvent` hook. This allows you to respond to viewer interactions such as zoom, rotation, and taps.
 
 ## useGestureViewerEvent
 
@@ -14,6 +14,12 @@ function App() {
 
   useGestureViewerEvent('rotationChange', (data) => {
     console.log(`Rotation changed from ${data.previousRotation}° to ${data.rotation}°`);
+  });
+
+  useGestureViewerEvent('tap', (data) => {
+    if (data.kind === 'single') {
+      console.log(`Tapped item ${data.index} at (${data.x}, ${data.y})`);
+    }
   });
 
   return <GestureViewer data={images} renderItem={renderImage} />;
@@ -52,7 +58,12 @@ function useGestureViewerEvent<T extends GestureViewerEventType>(
 ): void;
 ```
 
-| Event Type       | Description                                                    | Callback Data                                    |
-| :--------------- | :------------------------------------------------------------- | :----------------------------------------------- |
-| `zoomChange`     | Fired when the zoom scale changes during pinch gestures        | `{ scale: number, previousScale: number }`       |
-| `rotationChange` | Fired when the rotation angle changes during rotation gestures | `{ rotation: number, previousRotation: number }` |
+| Event Type       | Description                                                                              | Callback Data                                             |
+| :--------------- | :--------------------------------------------------------------------------------------- | :-------------------------------------------------------- |
+| `zoomChange`     | Fired when the zoom scale changes during pinch gestures                                  | `{ scale: number, previousScale: number }`                |
+| `rotationChange` | Fired when the rotation angle changes during rotation gestures                           | `{ rotation: number, previousRotation: number }`          |
+| `tap`            | Fired when a tap is confirmed by the viewer. Currently emits confirmed single taps only. | `{ kind: 'single', x: number, y: number, index: number }` |
+
+:::tip
+If you want to handle the `tap` event directly from a `GestureViewer` prop, you can use [`onSingleTap`](/guide/usage/gesture-viewer-props.html#onsingletap).
+:::

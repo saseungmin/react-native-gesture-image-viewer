@@ -102,6 +102,29 @@ function App() {
 }
 ```
 
+### `onSingleTap`
+
+Runs when the viewer confirms a single tap. This is useful for toggling viewer chrome such as headers, footers, captions, and action buttons without overlaying another pressable on top of the viewer.
+
+- May resolve slightly later when double-tap zoom is enabled because the viewer waits to confirm it is not a double tap
+- Does not fire for swipe, pinch, dismiss, or double-tap zoom gestures
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const [showControls, setShowControls] = useState(true);
+
+  return (
+    <GestureViewer
+      data={images}
+      renderItem={renderImage}
+      onSingleTap={() => setShowControls((prev) => !prev)} // [!code highlight]
+    />
+  );
+}
+```
+
 ### `initialIndex` (default: `0`)
 
 Sets the initial index value.
@@ -145,8 +168,17 @@ export interface GestureViewerProps<ItemT, LC> {
    */
   renderItem: (item: ItemT, index: number) => React.ReactElement;
   /**
+   * A callback function that is called when a single tap is confirmed on the viewer content.
+   * @remarks
+   * - The callback runs only after the tap is resolved as a single tap, so it may be slightly delayed when double-tap zoom is enabled.
+   * - It is not called for swipe, pinch, dismiss, or double-tap zoom gestures.
+   * - Prefer this callback over overlaying a pressable in `renderContainer` for fullscreen tap handling.
+   */
+  onSingleTap?: (event: GestureViewerSingleTapEvent<ItemT>) => void;
+  /**
    * A callback function that is called to render the container.
    * @remarks Useful for composing additional UI (e.g., close button, toolbars) around the viewer.
+   * Prefer `onSingleTap` for fullscreen tap handling instead of overlaying a pressable over the viewer content.
    * The second argument provides control helpers such as `dismiss()` to close the viewer.
    *
    * @param children - The viewer content to be rendered inside your container.

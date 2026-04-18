@@ -29,3 +29,7 @@ function App() {
 |           `containerStyle`           | 리스트 컴포넌트를 감싸는 컨테이너의 커스텀 스타일을 지정할 수 있습니다.   |                     `flex: 1`                      |
 |           `backdropStyle`            | 뷰어의 배경 스타일을 커스터마이징할 수 있습니다.                          | `backgroundColor: black; StyleSheet.absoluteFill;` |
 | `renderContainer(children, helpers)` | `<GestureViewer />`를 레핑하는 커스텀 래퍼 컴포넌트를 지정할 수 있습니다. |                                                    |
+
+:::tip
+전체 화면 탭 처리는 `onSingleTap` 사용을 권장합니다. `renderContainer`는 헤더, 닫기 버튼, 툴바처럼 주변 UI를 구성할 때 가장 잘 맞습니다.
+:::

@@ -89,6 +89,12 @@ function App() {
     console.log(`Rotation changed from ${data.previousRotation}° to ${data.rotation}°`);
   });
 
+  useGestureViewerEvent('tap', (data) => {
+    if (data.kind === 'single') {
+      console.log(`Tapped item ${data.index} at (${data.x}, ${data.y})`);
+    }
+  });
+
   return <GestureViewer data={images} renderItem={renderImage} />;
 }
 ```
