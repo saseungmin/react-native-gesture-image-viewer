@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, type MouseEvent } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 import type {
   UseGestureViewerPagingArgs,
   UseGestureViewerPagingResult,
+  WebClickTarget,
 } from './useGestureViewerPaging.types';
 import { applyTapZoomAtPoint } from './utils/tapZoom';
 import {
@@ -35,6 +36,7 @@ export function useGestureViewerPaging({
   enableHorizontalSwipe,
   enableLoop,
   height,
+  onSingleTap,
   isRotated,
   isZoomed,
   itemSpacing,
@@ -48,6 +50,8 @@ export function useGestureViewerPaging({
   translateY,
   width,
 }: UseGestureViewerPagingArgs): UseGestureViewerPagingResult {
+  const webSingleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const webScrollRuntimeRef = useRef<WebScrollRuntime>({
     actor: 'idle',
     isAutoplayPausedByUser: false,
@@ -58,6 +62,13 @@ export function useGestureViewerPaging({
     settleTimer: null,
     resumeAutoplayTimer: null,
   });
+
+  const clearWebSingleTapTimer = useCallback(() => {
+    if (webSingleTapTimerRef.current) {
+      clearTimeout(webSingleTapTimerRef.current);
+      webSingleTapTimerRef.current = null;
+    }
+  }, []);
 
   const clearWebSettleTimer = useCallback(() => {
     const runtime = webScrollRuntimeRef.current;
@@ -232,10 +243,11 @@ export function useGestureViewerPaging({
 
   useEffect(() => {
     return () => {
+      clearWebSingleTapTimer();
       clearWebSettleTimer();
       clearWebAutoplayResumeTimer();
     };
-  }, [clearWebAutoplayResumeTimer, clearWebSettleTimer]);
+  }, [clearWebAutoplayResumeTimer, clearWebSettleTimer, clearWebSingleTapTimer]);
 
   useEffect(() => {
     if (
@@ -351,50 +363,61 @@ export function useGestureViewerPaging({
     manager?.handleScrollBeginDrag();
   }, [beginWebUserInteraction, clearWebSettleTimer, manager]);
 
-  const onWebDoubleClick = useCallback(
-    (event: any) => {
-      if (!enableDoubleTapZoom || event?.nativeEvent?.detail !== 2) {
+  const onWebClick = useCallback(
+    (event: MouseEvent<WebClickTarget>) => {
+      const detail = event.detail;
+      const rect = event.currentTarget.getBoundingClientRect();
+      const resolvedX = event.clientX - rect.left;
+      const resolvedY = event.clientY - rect.top;
+
+      if (detail === 2) {
+        clearWebSingleTapTimer();
+
+        if (!enableDoubleTapZoom) {
+          return;
+        }
+
+        pauseWebAutoplayWithoutPagingInteraction();
+        scheduleWebAutoplayResume();
+
+        applyTapZoomAtPoint({
+          x: resolvedX,
+          y: resolvedY,
+          width,
+          height,
+          maxZoomScale,
+          scale,
+          translateX,
+          translateY,
+        });
         return;
       }
 
-      pauseWebAutoplayWithoutPagingInteraction();
-      scheduleWebAutoplayResume();
-
-      const nativeEvent = event?.nativeEvent;
-      const eventTarget = event?.currentTarget ?? nativeEvent?.currentTarget ?? nativeEvent?.target;
-      let locationX = nativeEvent?.locationX;
-      let locationY = nativeEvent?.locationY;
-
-      if (
-        (!Number.isFinite(locationX) || !Number.isFinite(locationY)) &&
-        typeof eventTarget?.getBoundingClientRect === 'function' &&
-        Number.isFinite(nativeEvent?.clientX) &&
-        Number.isFinite(nativeEvent?.clientY)
-      ) {
-        const rect = eventTarget.getBoundingClientRect();
-
-        locationX = nativeEvent.clientX - rect.left;
-        locationY = nativeEvent.clientY - rect.top;
+      if (detail !== 1 || !onSingleTap) {
+        return;
       }
 
-      applyTapZoomAtPoint({
-        x: Number.isFinite(locationX) ? locationX : width / 2,
-        y: Number.isFinite(locationY) ? locationY : height / 2,
-        width,
-        height,
-        maxZoomScale,
-        scale,
-        translateX,
-        translateY,
-      });
+      clearWebSingleTapTimer();
+
+      if (!enableDoubleTapZoom) {
+        onSingleTap(resolvedX, resolvedY);
+        return;
+      }
+
+      webSingleTapTimerRef.current = setTimeout(() => {
+        onSingleTap(resolvedX, resolvedY);
+        webSingleTapTimerRef.current = null;
+      }, 250);
     },
     [
+      clearWebSingleTapTimer,
       enableDoubleTapZoom,
       height,
       maxZoomScale,
+      onSingleTap,
       pauseWebAutoplayWithoutPagingInteraction,
-      scheduleWebAutoplayResume,
       scale,
+      scheduleWebAutoplayResume,
       translateX,
       translateY,
       width,
@@ -405,6 +428,6 @@ export function useGestureViewerPaging({
     onMomentumScrollEnd,
     onScroll,
     onScrollBeginDrag,
-    onWebDoubleClick,
+    onWebClick,
   };
 }

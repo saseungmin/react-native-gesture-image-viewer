@@ -123,6 +123,6 @@ export function useGestureViewerPaging({
     onMomentumScrollEnd,
     onScroll,
     onScrollBeginDrag,
-    onWebDoubleClick: undefined,
+    onWebClick: undefined,
   };
 }

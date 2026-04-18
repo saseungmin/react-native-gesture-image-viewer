@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react';
 import type { ScrollViewProps } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 
@@ -18,6 +19,7 @@ export type UseGestureViewerPagingArgs = {
   itemSpacing: number;
   manager: GestureViewerManager | null;
   maxZoomScale: number;
+  onSingleTap?: (x: number, y: number) => void;
   scale: SharedValue<number>;
   scrollTo: (index: number, animated: boolean) => void;
   syncCurrentIndex: (nextIndex: number) => void;
@@ -27,9 +29,13 @@ export type UseGestureViewerPagingArgs = {
   width: number;
 };
 
+export type WebClickTarget = {
+  getBoundingClientRect: () => { left: number; top: number };
+};
+
 export type UseGestureViewerPagingResult = {
   onMomentumScrollEnd?: ScrollViewProps['onMomentumScrollEnd'];
   onScroll?: ScrollViewProps['onScroll'];
   onScrollBeginDrag?: ScrollViewProps['onScrollBeginDrag'];
-  onWebDoubleClick?: (event: any) => void;
+  onWebClick?: (event: MouseEvent<WebClickTarget>) => void;
 };

@@ -75,6 +75,13 @@ export type TriggerRect = {
   height: number;
 };
 
+export type GestureViewerSingleTapEvent<ItemT> = {
+  x: number;
+  y: number;
+  index: number;
+  item: ItemT;
+};
+
 export interface TriggerAnimationConfig extends WithTimingConfig {
   /**
    * Animation duration in milliseconds
@@ -122,8 +129,17 @@ export interface GestureViewerProps<ItemT, LC> {
    */
   renderItem: (item: ItemT, index: number) => React.ReactElement;
   /**
+   * A callback function that is called when a single tap is confirmed on the viewer content.
+   * @remarks
+   * - The callback runs only after the tap is resolved as a single tap, so it may be slightly delayed when double-tap zoom is enabled.
+   * - It is not called for swipe, pinch, dismiss, or double-tap zoom gestures.
+   * - Prefer this callback over overlaying a pressable in `renderContainer` for fullscreen tap handling.
+   */
+  onSingleTap?: (event: GestureViewerSingleTapEvent<ItemT>) => void;
+  /**
    * A callback function that is called to render the container.
    * @remarks Useful for composing additional UI (e.g., close button, toolbars) around the viewer.
+   * Prefer `onSingleTap` for fullscreen tap handling instead of overlaying a pressable over the viewer content.
    * The second argument provides control helpers such as `dismiss()` to close the viewer.
    *
    * @param children - The viewer content to be rendered inside your container.
@@ -425,11 +441,14 @@ export type GestureViewerState = {
   readonly totalCount: number;
 };
 
-export type GestureViewerEventType = 'zoomChange' | 'rotationChange';
+export type GestureViewerEventType = 'zoomChange' | 'rotationChange' | 'tap';
+
+export type SingleTapEventData = { kind: 'single'; x: number; y: number; index: number };
 
 export type GestureViewerEventData = {
   zoomChange: { scale: number; previousScale: number | null };
   rotationChange: { rotation: number; previousRotation: number | null };
+  tap: SingleTapEventData;
 };
 
 export type GestureViewerEventCallback<T extends GestureViewerEventType> = (

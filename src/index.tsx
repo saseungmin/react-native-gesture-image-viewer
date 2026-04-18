@@ -8,6 +8,7 @@ export type {
   GestureViewerEventType,
   GestureViewerProps,
   GestureViewerState,
+  GestureViewerSingleTapEvent,
 } from './types';
 export { useGestureViewerController } from './useGestureViewerController';
 export { useGestureViewerEvent } from './useGestureViewerEvent';

@@ -86,6 +86,10 @@ class GestureViewerManager {
     this.emitEvent('rotationChange', { rotation, previousRotation });
   };
 
+  emitTap = (data: GestureViewerEventData['tap']) => {
+    this.emitEvent('tap', data);
+  };
+
   getState(): GestureViewerState {
     return {
       currentIndex: this.currentIndex,

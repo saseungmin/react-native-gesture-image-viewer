@@ -34,6 +34,7 @@ export const useGestureViewer = <ItemT, LC>({
   data,
   initialIndex = 0,
   onDismiss,
+  onSingleTap,
   width: customWidth,
   dismiss,
   enableDoubleTapZoom = true,
@@ -68,6 +69,9 @@ export const useGestureViewer = <ItemT, LC>({
   const triggerRectRef = useRef<TriggerRect | null>(null);
   const pendingIndexRef = useRef(initialIndex);
   const onAnimationCompleteRef = useRef(triggerAnimation?.onAnimationComplete);
+  const onSingleTapRef = useRef(onSingleTap);
+  const dataRef = useRef(data);
+  const managerRef = useRef(manager);
 
   const isValidTriggerRect = useCallback((rect: TriggerRect | null): rect is TriggerRect => {
     return !!rect && rect.width > 0 && rect.height > 0;
@@ -176,23 +180,13 @@ export const useGestureViewer = <ItemT, LC>({
     [dataLength, manager, resetTransformState],
   );
 
-  const emitZoomChange = useCallback(
-    (currentScale: number, prevScale: number | null) => {
-      if (manager) {
-        manager.emitZoomChange(currentScale, prevScale);
-      }
-    },
-    [manager],
-  );
+  const emitZoomChange = useCallback((currentScale: number, prevScale: number | null) => {
+    managerRef.current?.emitZoomChange(currentScale, prevScale);
+  }, []);
 
-  const emitRotationChange = useCallback(
-    (currentRotation: number, prevRotation: number | null) => {
-      if (manager) {
-        manager.emitRotationChange(currentRotation, prevRotation);
-      }
-    },
-    [manager],
-  );
+  const emitRotationChange = useCallback((currentRotation: number, prevRotation: number | null) => {
+    managerRef.current?.emitRotationChange(currentRotation, prevRotation);
+  }, []);
 
   const onAnimationComplete = useCallback(() => {
     onAnimationCompleteRef.current?.();
@@ -316,6 +310,18 @@ export const useGestureViewer = <ItemT, LC>({
   useEffect(() => {
     onAnimationCompleteRef.current = triggerAnimation?.onAnimationComplete;
   }, [triggerAnimation?.onAnimationComplete]);
+
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+
+  useEffect(() => {
+    managerRef.current = manager;
+  }, [manager]);
+
+  useEffect(() => {
+    onSingleTapRef.current = onSingleTap;
+  }, [onSingleTap]);
 
   useEffect(() => {
     if (shouldStartTriggerAnimation && triggerRectRef.current) {
@@ -647,6 +653,40 @@ export const useGestureViewer = <ItemT, LC>({
     ],
   );
 
+  const emitSingleTap = useCallback((x: number, y: number) => {
+    const index = pendingIndexRef.current;
+    const currentData = dataRef.current;
+
+    if (index < 0 || index >= currentData.length) {
+      return;
+    }
+
+    managerRef.current?.emitTap({ kind: 'single', x, y, index });
+
+    const item = currentData[index];
+
+    if (item === undefined) {
+      return;
+    }
+
+    onSingleTapRef.current?.({ x, y, index, item });
+  }, []);
+
+  const singleTapGesture = useMemo(
+    () =>
+      Gesture.Tap()
+        .enabled(Platform.OS !== 'web')
+        .numberOfTaps(1)
+        .onEnd((event, success) => {
+          if (!success) {
+            return;
+          }
+
+          scheduleOnRN(emitSingleTap, event.x, event.y);
+        }),
+    [emitSingleTap],
+  );
+
   const doubleTapGesture = useMemo(
     () =>
       Gesture.Tap()
@@ -667,9 +707,14 @@ export const useGestureViewer = <ItemT, LC>({
     [enableDoubleTapZoom, height, maxZoomScale, scale, translateX, translateY, width],
   );
 
+  const tapGesture = useMemo(
+    () => Gesture.Exclusive(doubleTapGesture, singleTapGesture),
+    [doubleTapGesture, singleTapGesture],
+  );
+
   const zoomGesture = useMemo(
-    () => Gesture.Race(zoomPinchGesture, Gesture.Exclusive(zoomPanGesture, doubleTapGesture)),
-    [zoomPinchGesture, zoomPanGesture, doubleTapGesture],
+    () => Gesture.Race(zoomPinchGesture, Gesture.Exclusive(zoomPanGesture, tapGesture)),
+    [zoomPinchGesture, zoomPanGesture, tapGesture],
   );
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -702,30 +747,30 @@ export const useGestureViewer = <ItemT, LC>({
     return Gesture.Native().requireExternalGestureToFail(dismissGestureRef);
   }, []);
 
-  const { onMomentumScrollEnd, onScroll, onScrollBeginDrag, onWebDoubleClick } =
-    useGestureViewerPaging({
-      adjustedInitialIndex,
-      autoPlay,
-      autoPlayInterval,
-      currentIndex,
-      dataLength,
-      enableDoubleTapZoom,
-      enableHorizontalSwipe,
-      enableLoop,
-      height,
-      isRotated,
-      isZoomed,
-      itemSpacing,
-      manager,
-      maxZoomScale,
-      scale,
-      scrollTo,
-      syncCurrentIndex,
-      syncPendingIndex,
-      translateX,
-      translateY,
-      width,
-    });
+  const { onMomentumScrollEnd, onScroll, onScrollBeginDrag, onWebClick } = useGestureViewerPaging({
+    adjustedInitialIndex,
+    autoPlay,
+    autoPlayInterval,
+    currentIndex,
+    dataLength,
+    enableDoubleTapZoom,
+    enableHorizontalSwipe,
+    enableLoop,
+    height,
+    isRotated,
+    isZoomed,
+    itemSpacing,
+    manager,
+    maxZoomScale,
+    onSingleTap: emitSingleTap,
+    scale,
+    scrollTo,
+    syncCurrentIndex,
+    syncPendingIndex,
+    translateX,
+    translateY,
+    width,
+  });
 
   return {
     animatedStyle,
@@ -739,7 +784,7 @@ export const useGestureViewer = <ItemT, LC>({
     isZoomed,
     listRef,
     nativeScrollGesture,
-    onWebDoubleClick,
+    onWebClick,
     onMomentumScrollEnd,
     onScroll,
 

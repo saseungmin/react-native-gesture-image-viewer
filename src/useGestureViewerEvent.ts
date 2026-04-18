@@ -8,7 +8,7 @@ import type { GestureViewerEventCallback, GestureViewerEventType } from './types
  * Hook for subscribing to GestureViewer events on the default instance.
  *
  * This hook allows you to listen to specific events from the default GestureViewer instance
- * (with ID 'default'), such as zoom changes or rotation changes. Events are automatically
+ * (with ID 'default'), such as zoom changes, rotation changes, or confirmed tap events. Events are automatically
  * throttled to prevent excessive callback invocations during gestures.
  *
  * @param eventType - The type of event to listen for
@@ -24,6 +24,13 @@ import type { GestureViewerEventCallback, GestureViewerEventType } from './types
  * // Listen to rotation changes on the default instance (ID: 'default')
  * useGestureViewerEvent('rotationChange', (data) => {
  *   console.log(`Rotation changed from ${data.previousRotation}° to ${data.rotation}°`);
+ * });
+ *
+ * // Listen to confirmed single taps on the default instance (ID: 'default')
+ * useGestureViewerEvent('tap', (data) => {
+ *   if (data.kind === 'single') {
+ *     console.log(`Tapped item ${data.index} at (${data.x}, ${data.y})`);
+ *   }
  * });
  * ```
  */
@@ -52,6 +59,13 @@ export function useGestureViewerEvent<T extends GestureViewerEventType>(
  * // Listen to rotation changes on a modal viewer
  * useGestureViewerEvent('modal-viewer', 'rotationChange', (data) => {
  *   updateRotationIndicator(data.rotation);
+ * });
+ *
+ * // Listen to confirmed single taps on a specific instance
+ * useGestureViewerEvent('gallery', 'tap', (data) => {
+ *   if (data.kind === 'single') {
+ *     console.log(`Gallery tap on item ${data.index}`);
+ *   }
  * });
  * ```
  */

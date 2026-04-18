@@ -59,7 +59,7 @@ export function GestureViewer<ItemT, LC>({
     dismissGesture,
     zoomGesture,
     nativeScrollGesture,
-    onWebDoubleClick,
+    onWebClick,
     onMomentumScrollEnd,
     onScroll,
     onScrollBeginDrag,
@@ -191,7 +191,9 @@ export function GestureViewer<ItemT, LC>({
           <Animated.View style={[styles.background, backdropStyleProps, backdropStyle]} />
           <Animated.View
             style={[styles.content, animatedStyle]}
-            {...(Platform.OS === 'web' && { onClick: onWebDoubleClick })}
+            {...(Platform.OS === 'web' && {
+              onClick: onWebClick,
+            })}
             {...(Platform.OS === 'web' &&
               isFlashListLike(Component) && { dataSet: { 'flash-list-paging-enabled-fix': true } })}
           >
