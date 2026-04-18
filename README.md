@@ -37,7 +37,12 @@ Full documentation is available at: <https://react-native-gesture-image-viewer.p
 ### Examples & Demo
 
 - [📁 Example Project](/example/) - Real implementation code with various use cases
-- [🤖 Expo Go](https://snack.expo.dev/@harang/react-native-gesture-image-viewer-v2) - Try it instantly on Expo Snack
+- [🥠 Expo Go](https://snack.expo.dev/@harang/react-native-gesture-image-viewer-v2) - Try it instantly on Expo Snack
+
+### 🤖 AI
+
+- [llms.txt](https://react-native-gesture-image-viewer.pages.dev/llms.txt): A structured index file containing the titles, links, and brief descriptions of all documentation pages.
+- [llms-full.txt](https://react-native-gesture-image-viewer.pages.dev/llms-full.txt): A full-content file that concatenates the complete content of every documentation page into a single file.
 
 ### Basic Usage
 
