@@ -12,13 +12,28 @@ import {
 } from 'react-native-gesture-image-viewer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const images = [
-  'https://picsum.photos/400/200',
-  'https://picsum.photos/300/200',
-  'https://picsum.photos/200/200',
-  'https://picsum.photos/200/300',
-  'https://picsum.photos/200/400',
-];
+const photos = [
+  {
+    uri: 'https://picsum.photos/400/200',
+    note: 'Single tap anywhere to hide or show the viewer controls.',
+  },
+  {
+    uri: 'https://picsum.photos/300/200',
+    note: 'Pinch to zoom and swipe left or right to move between items.',
+  },
+  {
+    uri: 'https://picsum.photos/200/200',
+    note: 'Use the toolbar buttons for zoom, rotate, and reset actions.',
+  },
+  {
+    uri: 'https://picsum.photos/200/300',
+    note: 'Swipe down to dismiss the viewer at any time.',
+  },
+  {
+    uri: 'https://picsum.photos/200/400',
+    note: 'Loop mode lets you keep paging without stopping at the end.',
+  },
+] as const;
 
 function Example() {
   const [visible, setVisible] = useState(false);
@@ -47,6 +62,12 @@ function Example() {
     console.log(`Rotation changed from ${data.previousRotation}° to ${data.rotation}°`);
   });
 
+  useGestureViewerEvent('tap', (data) => {
+    if (data.kind === 'single') {
+      console.log(`Tapped item ${data.index} at (${data.x}, ${data.y})`);
+    }
+  });
+
   const renderImage = useCallback((imageUrl: string) => {
     return (
       <Image
@@ -65,9 +86,9 @@ function Example() {
           title={`Loop: ${enableLoop ? 'ON' : 'OFF'}`}
           onPress={() => setEnableLoop(!enableLoop)}
         />
-        <Text style={styles.text}>Click on thumbnail to open!</Text>
+        <Text style={styles.text}>Click on a thumbnail to open the viewer.</Text>
         <View style={styles.galleryContainer}>
-          {images.map((uri, index) => (
+          {photos.map(({ uri }, index) => (
             <GestureTrigger key={uri} index={index} onPress={() => modalOpen(index)}>
               <Pressable style={styles.thumb}>
                 <Image source={{ uri }} style={styles.thumbImage} contentFit="cover" />
@@ -84,13 +105,14 @@ function Example() {
       >
         <View style={{ flex: 1 }}>
           <GestureViewer
-            data={images}
+            data={photos.map(({ uri }) => uri)}
             initialIndex={selectedIndex}
             onDismiss={() => setVisible(false)}
             onDismissStart={() => setShowExternalUI(false)}
             enableLoop={enableLoop}
             ListComponent={FlashList}
             renderItem={renderImage}
+            onSingleTap={() => setShowExternalUI((prev) => !prev)}
             backdropStyle={{ backgroundColor: '#181818' }}
             renderContainer={(children, helpers) => (
               <View style={{ flex: 1 }}>
@@ -213,9 +235,10 @@ function Example() {
                     onPress={goToNext}
                   />
                 </View>
-                <Text
-                  style={{ textAlign: 'center', color: 'white' }}
-                >{`${currentIndex + 1} / ${totalCount}`}</Text>
+                <Text style={{ textAlign: 'center', color: 'white' }}>
+                  {`${currentIndex + 1} / ${totalCount}`}
+                </Text>
+                <Text style={styles.noteText}>{photos[currentIndex]?.note}</Text>
               </View>
             </>
           )}
@@ -258,6 +281,16 @@ const styles = StyleSheet.create({
     color: '#222',
     fontSize: 22,
     fontWeight: 'bold',
+  },
+  subtext: {
+    textAlign: 'center',
+    color: '#666',
+    maxWidth: 320,
+  },
+  noteText: {
+    textAlign: 'center',
+    color: 'white',
+    paddingHorizontal: 24,
   },
 });
 
