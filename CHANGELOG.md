@@ -1,5 +1,62 @@
 # react-native-gesture-image-viewer
 
+## 2.3.0
+
+### Minor Changes
+
+- [#158](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/158) [`7999145`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/79991459c353814bdeb9a7a06205f74b8faf35a1) Thanks [@saseungmin](https://github.com/saseungmin)! - feat: add cross-platform single tap support for `GestureViewer`
+
+  This release adds `onSingleTap` to `GestureViewer` so you can handle confirmed single taps without overlaying an extra pressable on top of the viewer.
+
+  ```tsx
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    onSingleTap={() => setShowControls((prev) => !prev)}
+  />
+  ```
+
+  It also adds a `tap` event to `useGestureViewerEvent`, currently emitting confirmed single taps with `{ kind: 'single', x, y, index }`.
+
+  ```tsx
+  useGestureViewerEvent("tap", (event) => {
+    if (event.kind === "single") {
+      console.log(`Tapped item ${event.index} at (${event.x}, ${event.y})`);
+    }
+  });
+  ```
+
+  This improves common viewer UI patterns such as toggling headers, toolbars, counters, or captions on tap while preserving swipe, pinch, dismiss, and double-tap zoom behavior.
+
+  Related discussion: https://github.com/saseungmin/react-native-gesture-image-viewer/discussions/157
+
+- [#161](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/161) [`5e8ad1f`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/5e8ad1f069e22fee60633a118171d45b9b78dcb0) Thanks [@saseungmin](https://github.com/saseungmin)! - feat: add configurable dismiss swipe directions
+
+  - `GestureViewer` now supports `dismiss.direction` with `down`, `up`, and `both`.
+  - The default remains `down` for backward compatibility, and backdrop fading now follows the configured dismiss direction.
+
+  Example:
+
+  ```tsx
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    dismiss={{
+      direction: "both",
+      threshold: 100,
+    }}
+  />
+  ```
+
+### Patch Changes
+
+- [#160](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/160) [`8f3ce64`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/8f3ce64761e66d753af8a2688bf6e021aa787675) Thanks [@saseungmin](https://github.com/saseungmin)! - docs: add AI documentation links to README
+
+  - [llms.txt](https://react-native-gesture-image-viewer.pages.dev/llms.txt)
+  - [llms-full.txt](https://react-native-gesture-image-viewer.pages.dev/llms-full.txt)
+
+- [`58341ea`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/58341ea2b3248a5c3dd5e8c94e19cfc884028d6a) Thanks [@saseungmin](https://github.com/saseungmin)! - fix: support bidirectional (up & down) swipe-to-dismiss
+
 ## 2.2.0
 
 ### Minor Changes
