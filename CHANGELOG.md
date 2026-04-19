@@ -43,7 +43,6 @@
     renderItem={renderImage}
     dismiss={{
       direction: "both",
-      threshold: 100,
     }}
   />
   ```
