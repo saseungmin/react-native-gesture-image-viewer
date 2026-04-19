@@ -55,7 +55,7 @@
   - [llms.txt](https://react-native-gesture-image-viewer.pages.dev/llms.txt)
   - [llms-full.txt](https://react-native-gesture-image-viewer.pages.dev/llms-full.txt)
 
-- [`58341ea`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/58341ea2b3248a5c3dd5e8c94e19cfc884028d6a) Thanks [@saseungmin](https://github.com/saseungmin)! - fix: support bidirectional (up & down) swipe-to-dismiss
+- [#156](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/156) [`63c258f`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/63c258f229808725c276807d404879437dcdd5a6) Thanks [@cljamal](https://github.com/cljamal)! - fix: support bidirectional (up & down) swipe-to-dismiss
 
 ## 2.2.0
 
