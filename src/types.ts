@@ -82,6 +82,8 @@ export type GestureViewerSingleTapEvent<ItemT> = {
   item: ItemT;
 };
 
+export type GestureViewerDismissDirection = 'down' | 'up' | 'both';
+
 export interface TriggerAnimationConfig extends WithTimingConfig {
   /**
    * Animation duration in milliseconds
@@ -199,8 +201,8 @@ export interface GestureViewerProps<ItemT, LC> {
    */
   autoPlayInterval?: number;
   /**
-   * Dismiss gesture options. Calls `onDismiss` function when swiping down.
-   * @remarks Useful for closing modals with downward swipe gestures.
+   * Dismiss gesture options.
+   * @remarks Useful for closing modals with configurable vertical swipe gestures.
    */
   dismiss?: {
     /**
@@ -208,6 +210,12 @@ export interface GestureViewerProps<ItemT, LC> {
      * @defaultValue true
      */
     enabled?: boolean;
+    /**
+     * Controls which vertical swipe direction can trigger `onDismiss`.
+     * @remarks Use `down` for backward-compatible behavior, `up` for upward-only dismiss, or `both` for either direction.
+     * @defaultValue 'down'
+     */
+    direction?: GestureViewerDismissDirection;
     /**
      * `threshold` controls when `onDismiss` is called by applying a threshold value during vertical gestures.
      * @defaultValue 80
@@ -219,7 +227,7 @@ export interface GestureViewerProps<ItemT, LC> {
      */
     resistance?: number;
     /**
-     * By default, the background `opacity` gradually decreases from 1 to 0 during downward swipe gestures.
+     * By default, the background `opacity` gradually decreases as you drag in the configured dismiss direction.
      * @remarks When `false`, this animation is disabled.
      * @defaultValue true
      */

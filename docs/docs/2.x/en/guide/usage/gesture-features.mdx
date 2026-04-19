@@ -12,6 +12,7 @@ function App() {
       renderItem={renderImage}
       dismiss={{
         enabled: true,
+        direction: 'down',
         threshold: 80,
         resistance: 2,
         fadeBackdrop: true,
@@ -29,14 +30,15 @@ function App() {
 
 ### `dismiss`
 
-Dismiss gesture options. Calls `onDismiss` function when swiping down. Useful for closing modals with downward swipe gestures.
+Dismiss gesture options. Controls which vertical swipe direction can trigger `onDismiss`, making it useful for modal-style close gestures with backward-compatible downward dismiss by default.
 
-| Property       | Description                                                                                             | Type      | Default |
-| :------------- | :------------------------------------------------------------------------------------------------------ | :-------- | :-----: |
-| `enabled`      | When `false`, dismiss gesture is disabled.                                                              | `boolean` | `true`  |
-| `threshold`    | `threshold` controls when `onDismiss` is called by applying a threshold value during vertical gestures. | `number`  |  `80`   |
-| `resistance`   | `resistance` controls the range of vertical movement by applying resistance during dismiss gestures.    | `number`  |   `2`   |
-| `fadeBackdrop` | By default, the background `opacity` gradually decreases from 1 to 0 during downward swipe gestures.    | `boolean` | `true`  |
+| Property       | Description                                                                                               | Type                 | Default |
+| :------------- | :-------------------------------------------------------------------------------------------------------- | :------------------- | :-----: |
+| `enabled`      | When `false`, dismiss gesture is disabled.                                                                | `boolean`            | `true`  |
+| `direction`    | Controls which vertical swipe direction can dismiss.                                                      | `down`, `up`, `both` | `down`  |
+| `threshold`    | `threshold` controls when `onDismiss` is called by applying a threshold value during vertical gestures.   | `number`             |  `80`   |
+| `resistance`   | `resistance` controls the range of vertical movement by applying resistance during dismiss gestures.      | `number`             |   `2`   |
+| `fadeBackdrop` | By default, the background `opacity` gradually decreases as you drag in the configured dismiss direction. | `boolean`            | `true`  |
 
 ### `enableHorizontalSwipe` (default: `true`)
 

@@ -112,6 +112,9 @@ function Example() {
             enableLoop={enableLoop}
             ListComponent={FlashList}
             renderItem={renderImage}
+            dismiss={{
+              direction: 'down',
+            }}
             onSingleTap={() => setShowExternalUI((prev) => !prev)}
             backdropStyle={{ backgroundColor: '#181818' }}
             renderContainer={(children, helpers) => (

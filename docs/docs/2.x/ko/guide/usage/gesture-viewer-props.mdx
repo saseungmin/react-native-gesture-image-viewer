@@ -140,187 +140,193 @@ function App() {
 ````tsx title="GestureViewerProps"
 export interface GestureViewerProps<ItemT, LC> {
   /**
-   * When you want to efficiently manage multiple `GestureViewer` instances, you can use the `id` prop to use multiple `GestureViewer` components.
-   * @remarks `GestureViewer` automatically removes instances from memory when components are unmounted, so no manual memory management is required.
+   * 여러 개의 `GestureViewer` 인스턴스를 효율적으로 관리하고 싶다면 `id` prop을 사용해 각각의 `GestureViewer`를 구분할 수 있습니다.
+   * @remarks `GestureViewer`는 컴포넌트가 언마운트되면 인스턴스를 메모리에서 자동으로 제거하므로 별도의 수동 메모리 관리가 필요하지 않습니다.
    * @defaultValue 'default'
    */
   id?: string;
   /**
-   * The data to display in the `GestureViewer`.
+   * `GestureViewer`에 표시할 데이터입니다.
    */
   data: ItemT[];
   /**
-   * The index of the item to display in the `GestureViewer` when the component is mounted.
+   * 컴포넌트가 마운트될 때 `GestureViewer`에 처음 표시할 아이템의 인덱스입니다.
    * @defaultValue 0
    */
   initialIndex?: number;
   /**
-   * A callback function that is called when the `GestureViewer` is dismissed.
+   * `GestureViewer`가 닫힐 때 호출되는 콜백 함수입니다.
    */
   onDismiss?: () => void;
   /**
-   * A callback function that is called when the dismiss interaction starts.
-   * @remarks Useful to hide external UI (e.g., headers, buttons) while the dismiss gesture/animation is in progress.
+   * dismiss 인터랙션이 시작될 때 호출되는 콜백 함수입니다.
+   * @remarks dismiss 제스처/애니메이션이 진행되는 동안 외부 UI(예: 헤더, 버튼)를 숨길 때 유용합니다.
    */
   onDismissStart?: () => void;
   /**
-   * A callback function that is called to render the item.
+   * 아이템을 렌더링할 때 호출되는 콜백 함수입니다.
    */
   renderItem: (item: ItemT, index: number) => React.ReactElement;
   /**
-   * A callback function that is called when a single tap is confirmed on the viewer content.
+   * 뷰어 콘텐츠에서 싱글 탭이 확정되었을 때 호출되는 콜백 함수입니다.
    * @remarks
-   * - The callback runs only after the tap is resolved as a single tap, so it may be slightly delayed when double-tap zoom is enabled.
-   * - It is not called for swipe, pinch, dismiss, or double-tap zoom gestures.
-   * - Prefer this callback over overlaying a pressable in `renderContainer` for fullscreen tap handling.
+   * - 이 콜백은 탭이 싱글 탭으로 확정된 뒤에만 실행되므로, 더블 탭 줌이 활성화되어 있으면 약간 지연될 수 있습니다.
+   * - 스와이프, 핀치, dismiss, 더블 탭 줌 제스처에서는 호출되지 않습니다.
+   * - 전체 화면 탭 처리가 필요하다면 `renderContainer`에서 pressable을 덮어씌우는 대신 이 콜백 사용을 권장합니다.
    */
   onSingleTap?: (event: GestureViewerSingleTapEvent<ItemT>) => void;
   /**
-   * A callback function that is called to render the container.
-   * @remarks Useful for composing additional UI (e.g., close button, toolbars) around the viewer.
-   * Prefer `onSingleTap` for fullscreen tap handling instead of overlaying a pressable over the viewer content.
-   * The second argument provides control helpers such as `dismiss()` to close the viewer.
+   * 컨테이너를 렌더링할 때 호출되는 콜백 함수입니다.
+   * @remarks 뷰어 주변에 추가 UI(예: 닫기 버튼, 툴바)를 구성할 때 유용합니다.
+   * 전체 화면 탭 처리는 뷰어 콘텐츠 위에 pressable을 덮어씌우기보다 `onSingleTap` 사용을 권장합니다.
+   * 두 번째 인자는 `dismiss()`처럼 뷰어를 닫을 수 있는 제어 헬퍼를 제공합니다.
    *
-   * @param children - The viewer content to be rendered inside your container.
-   * @param helpers - Control helpers for the viewer. Currently includes `dismiss()`.
-   * @returns A React element that wraps and renders the provided `children`.
+   * @param children - 컨테이너 내부에 렌더링할 뷰어 콘텐츠입니다.
+   * @param helpers - 뷰어 제어 헬퍼입니다. 현재는 `dismiss()`를 포함합니다.
+   * @returns 전달된 `children`을 감싸서 렌더링하는 React 엘리먼트입니다.
    */
   renderContainer?: (
     children: React.ReactElement,
     helpers: { dismiss: () => void },
   ) => React.ReactElement;
   /**
-   * Support for any list component like `ScrollView`, `FlatList`, `FlashList` through the `ListComponent` prop.
+   * `ListComponent` prop을 통해 `ScrollView`, `FlatList`, `FlashList` 같은 다양한 리스트 컴포넌트를 지원합니다.
    */
   ListComponent: LC;
   /**
-   * The width of the `GestureViewer`.
-   * @remarks If you don't set this prop, the width of the `GestureViewer` will be the same as the width of the screen.
-   * @defaultValue screen width
+   * `GestureViewer`의 너비입니다.
+   * @remarks 이 prop을 지정하지 않으면 `GestureViewer`의 너비는 화면 너비와 동일해집니다.
+   * @defaultValue 화면 너비
    */
   width?: number;
   /**
-   * The height of the `GestureViewer`.
-   * @remarks If you don't set this prop, the height of the `GestureViewer` will be the same as the height of the screen.
-   * @defaultValue screen height
+   * `GestureViewer`의 높이입니다.
+   * @remarks 이 prop을 지정하지 않으면 `GestureViewer`의 높이는 화면 높이와 동일해집니다.
+   * @defaultValue 화면 높이
    */
   height?: number;
   /**
-   * The props to pass to the list component.
-   * @remarks The `listProps` provides **type inference based on the selected list component**, ensuring accurate autocompletion and type safety in your IDE.
+   * 리스트 컴포넌트에 전달할 props입니다.
+   * @remarks `listProps`는 **선택한 리스트 컴포넌트를 기준으로 타입 추론**을 제공하므로 IDE에서 더 정확한 자동완성과 타입 안정성을 보장합니다.
    */
   listProps?: Partial<ConditionalListProps<ItemT, LC>>;
   /**
-   * The style of the backdrop.
+   * backdrop의 스타일입니다.
    */
   backdropStyle?: StyleProp<ViewStyle>;
   /**
-   * The style of the container.
+   * 컨테이너의 스타일입니다.
    */
   containerStyle?: StyleProp<ViewStyle>;
   /**
-   * Auto play mode.
+   * 자동 재생 모드입니다.
    * @remarks
-   * - When `true`, the viewer will automatically play the next item after the specified interval.
-   * - When `enableLoop` is enabled, the viewer will loop back to the first item after the last item.
-   * - When `enableLoop` is disabled, the viewer will stop at the last item.
-   * - When there is only one item, auto-play is disabled.
-   * - When zoom or rotate gestures are detected, the auto-play will be paused.
+   * - `true`이면 지정된 간격 후 다음 아이템이 자동으로 재생됩니다.
+   * - `enableLoop`가 활성화되어 있으면 마지막 아이템 다음에 첫 번째 아이템으로 돌아갑니다.
+   * - `enableLoop`가 비활성화되어 있으면 마지막 아이템에서 멈춥니다.
+   * - 아이템이 하나뿐이면 자동 재생은 비활성화됩니다.
+   * - 줌 또는 회전 제스처가 감지되면 자동 재생이 일시 정지됩니다.
    * @defaultValue false
    */
   autoPlay?: boolean;
   /**
-   * Auto play interval.
+   * 자동 재생 간격입니다.
    * @remarks
-   * - When `autoPlay` is enabled, the viewer advances to the next item after the specified interval (ms).
-   * - Must be a positive integer. Values below 250ms are clamped to 250ms at runtime.
+   * - `autoPlay`가 활성화되어 있으면 지정된 간격(ms)마다 다음 아이템으로 이동합니다.
+   * - 양의 정수여야 합니다. 250ms 미만 값은 런타임에서 250ms로 보정됩니다.
    * @defaultValue 3000
    */
   autoPlayInterval?: number;
   /**
-   * Dismiss gesture options. Calls `onDismiss` function when swiping down.
-   * @remarks Useful for closing modals with downward swipe gestures.
+   * dismiss 제스처 옵션입니다.
+   * @remarks 위/아래 방향을 선택할 수 있는 수직 스와이프 닫기 제스처에 유용합니다.
    */
   dismiss?: {
     /**
-     * When `false`, dismiss gesture is disabled.
+     * `false`이면 dismiss 제스처가 비활성화됩니다.
      * @defaultValue true
      */
     enabled?: boolean;
     /**
-     * `threshold` controls when `onDismiss` is called by applying a threshold value during vertical gestures.
+     * 어떤 수직 스와이프 방향에서 `onDismiss`를 호출할지 설정합니다.
+     * @remarks 기존 동작과 호환되는 `down`, 위로만 닫는 `up`, 양방향 모두 허용하는 `both`를 사용할 수 있습니다.
+     * @defaultValue 'down'
+     */
+    direction?: GestureViewerDismissDirection;
+    /**
+     * `threshold`는 수직 제스처 중 임계값을 적용해 `onDismiss`가 호출되는 시점을 제어합니다.
      * @defaultValue 80
      */
     threshold?: number;
     /**
-     * `resistance` controls the range of vertical movement by applying resistance during dismiss gestures.
+     * `resistance`는 dismiss 제스처 중 저항을 적용해 수직 이동 범위를 제어합니다.
      * @defaultValue 2
      */
     resistance?: number;
     /**
-     * By default, the background `opacity` gradually decreases from 1 to 0 during downward swipe gestures.
-     * @remarks When `false`, this animation is disabled.
+     * 기본적으로 설정된 dismiss 방향으로 드래그하는 동안 배경 `opacity`가 점진적으로 감소합니다.
+     * @remarks `false`이면 이 애니메이션이 비활성화됩니다.
      * @defaultValue true
      */
     fadeBackdrop?: boolean;
   };
   /**
-   * Controls left/right swipe gestures.
-   * @remarks When `false`, horizontal gestures are disabled.
+   * 좌우 스와이프 제스처를 제어합니다.
+   * @remarks `false`이면 가로 제스처가 비활성화됩니다.
    * @defaultValue true
    */
   enableHorizontalSwipe?: boolean;
   /**
-   * Only works when zoom is active, allows moving item position when zoomed.
-   * @remarks When `false`, gesture movement is disabled during zoom.
+   * 줌이 활성화된 경우에만 동작하며, 확대된 상태에서 아이템 위치를 이동할 수 있게 합니다.
+   * @remarks `false`이면 줌 중 제스처 이동이 비활성화됩니다.
    * @defaultValue true
    */
   enablePanWhenZoomed?: boolean;
   /**
-   * Controls two-finger pinch gestures.
-   * @remarks When `false`, two-finger zoom gestures are disabled.
+   * 두 손가락 핀치 제스처를 제어합니다.
+   * @remarks `false`이면 두 손가락 줌 제스처가 비활성화됩니다.
    * @defaultValue true
    */
   enablePinchZoom?: boolean;
   /**
-   * Controls double-tap zoom gestures.
-   * @remarks When `false`, double-tap zoom gestures are disabled.
+   * 더블 탭 줌 제스처를 제어합니다.
+   * @remarks `false`이면 더블 탭 줌 제스처가 비활성화됩니다.
    * @defaultValue true
    */
   enableDoubleTapZoom?: boolean;
   /**
-   * Enables infinite loop navigation.
+   * 무한 루프 탐색을 활성화합니다.
    * @defaultValue false
    */
   enableLoop?: boolean;
   /**
-   * Enables snap scrolling mode.
+   * 스냅 스크롤 모드를 활성화합니다.
    *
    * @remarks
-   * **`false` (default)**: Paging mode (`pagingEnabled: true`)
-   * - Scrolls by full screen size increments
+   * **`false` (기본값)**: 페이징 모드 (`pagingEnabled: true`)
+   * - 화면 전체 크기 단위로 스크롤됩니다.
    *
-   * **`true`**: Snap mode (`snapToInterval` auto-calculated)
-   * - `snapToInterval` is automatically calculated based on `width` and `itemSpacing` values
-   * - Use this option when you need item spacing
+   * **`true`**: 스냅 모드 (`snapToInterval` 자동 계산)
+   * - `snapToInterval`은 `width`와 `itemSpacing` 값을 기준으로 자동 계산됩니다.
+   * - 아이템 간격이 필요할 때 이 옵션을 사용하세요.
    * @defaultValue false
    *
    */
   enableSnapMode?: boolean;
   /**
-   * The spacing between items in pixels.
-   * @remarks Only applied when `enableSnapMode` is `true`.
+   * 아이템 사이 간격(픽셀)입니다.
+   * @remarks `enableSnapMode`가 `true`일 때만 적용됩니다.
    * @defaultValue 0
    */
   itemSpacing?: number;
   /**
-   * The maximum zoom scale.
+   * 최대 줌 배율입니다.
    * @defaultValue 2
    */
   maxZoomScale?: number;
   /**
-   * Trigger-based animation settings
-   * @remarks You can customize animation duration, easing, and system reduce-motion behavior.
+   * 트리거 기반 애니메이션 설정입니다.
+   * @remarks 애니메이션 지속 시간, easing, 시스템 reduce-motion 동작을 커스터마이즈할 수 있습니다.
    *
    * @example
    * ```tsx
@@ -330,7 +336,7 @@ export interface GestureViewerProps<ItemT, LC> {
    *     easing: Easing.out(Easing.cubic),
    *     reduceMotion: 'system',
    *     onAnimationComplete: () => {
-   *       console.log('Animation complete');
+   *       console.log('애니메이션 완료');
    *     },
    *   }}
    * />

@@ -17,6 +17,7 @@ import { registry } from './GestureViewerRegistry';
 import type { GestureViewerProps, TriggerRect } from './types';
 import { useGestureViewerPaging } from './useGestureViewerPaging';
 import { createBoundsConstraint, createScrollAction } from './utils';
+import { getDismissDistance, shouldDismissByDirection } from './utils/dismiss';
 import { applyTapZoomAtPoint } from './utils/tapZoom';
 
 type UseGestureViewerProps<ItemT, LC> = Omit<
@@ -108,12 +109,19 @@ export const useGestureViewer = <ItemT, LC>({
 
   const dismissOptions = useMemo(
     () => ({
+      direction: dismiss?.direction ?? 'down',
       enabled: dismiss?.enabled ?? true,
       fadeBackdrop: dismiss?.fadeBackdrop ?? true,
       resistance: dismiss?.resistance ?? 2,
       threshold: dismiss?.threshold ?? 80,
     }),
-    [dismiss?.enabled, dismiss?.threshold, dismiss?.resistance, dismiss?.fadeBackdrop],
+    [
+      dismiss?.direction,
+      dismiss?.enabled,
+      dismiss?.threshold,
+      dismiss?.resistance,
+      dismiss?.fadeBackdrop,
+    ],
   );
 
   const adjustedInitialIndex = useMemo(() => {
@@ -481,7 +489,14 @@ export const useGestureViewer = <ItemT, LC>({
         translateY.value = event.translationY / dismissOptions.resistance;
       })
       .onEnd((event) => {
-        if (canDismiss && Math.abs(event.translationY) > dismissOptions.threshold) {
+        if (
+          canDismiss &&
+          shouldDismissByDirection(
+            event.translationY,
+            dismissOptions.threshold,
+            dismissOptions.direction,
+          )
+        ) {
           scheduleOnRN(handleDismiss);
           return;
         }
@@ -738,10 +753,11 @@ export const useGestureViewer = <ItemT, LC>({
       return { opacity: baseOpacity };
     }
 
-    const dismissOpacity = interpolate(Math.abs(translateY.value), [0, 200], [1, 0], 'clamp');
+    const dismissDistance = getDismissDistance(translateY.value, dismissOptions.direction);
+    const dismissOpacity = interpolate(dismissDistance, [0, 200], [1, 0], 'clamp');
 
     return { opacity: baseOpacity * dismissOpacity };
-  }, [dismissOptions.fadeBackdrop]);
+  }, [dismissOptions.direction, dismissOptions.fadeBackdrop]);
 
   const nativeScrollGesture = useMemo(() => {
     return Gesture.Native().requireExternalGestureToFail(dismissGestureRef);
