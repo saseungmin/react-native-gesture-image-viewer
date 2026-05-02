@@ -1,5 +1,15 @@
 # react-native-gesture-image-viewer
 
+## 2.3.1
+
+### Patch Changes
+
+- [#162](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/162) [`b6ed63a`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/b6ed63a201bc6a4a7c57673b7f6451a7004a68f2) Thanks [@saseungmin](https://github.com/saseungmin)! - chore: support React Compiler-safe shared value access
+
+  Align internal Reanimated shared value access with React Compiler guidance by using `get()` and `set()` instead of direct `.value` reads and writes. Public APIs are unchanged.
+
+  - <https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue/#react-compiler-support>
+
 ## 2.3.0
 
 ### Minor Changes
