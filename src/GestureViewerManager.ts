@@ -158,32 +158,34 @@ class GestureViewerManager {
   rotate = (angle: 0 | 90 | 180 | 270 | 360 = 90, clockwise = true) => {
     const MAX_ANGLE = 360;
 
+    const currentRotation = this.rotation?.get();
+
     if (
-      !this.rotation ||
+      currentRotation === undefined ||
       angle < 0 ||
       angle > MAX_ANGLE ||
-      (angle !== 0 && this.rotation.value % angle !== 0 && angle !== 360)
+      (angle !== 0 && currentRotation % angle !== 0 && angle !== 360)
     ) {
       return;
     }
 
     if (angle === 0) {
-      const nextAngle = Math.floor(this.rotation.value / MAX_ANGLE) * MAX_ANGLE;
+      const nextAngle = Math.floor(currentRotation / MAX_ANGLE) * MAX_ANGLE;
 
-      this.rotation.value = withTiming(clockwise ? nextAngle : nextAngle - MAX_ANGLE);
+      this.rotation?.set(withTiming(clockwise ? nextAngle : nextAngle - MAX_ANGLE));
       return;
     }
 
     if (angle === 360) {
-      this.rotation.value = withTiming(
-        clockwise ? this.rotation.value + MAX_ANGLE : this.rotation.value - MAX_ANGLE,
+      this.rotation?.set(
+        withTiming(clockwise ? currentRotation + MAX_ANGLE : currentRotation - MAX_ANGLE),
       );
       return;
     }
 
-    const nextAngle = clockwise ? this.rotation.value + angle : this.rotation.value - angle;
+    const nextAngle = clockwise ? currentRotation + angle : currentRotation - angle;
 
-    this.rotation.value = withTiming(nextAngle);
+    this.rotation?.set(withTiming(nextAngle));
   };
 
   zoomIn = (multiplier = 0.25) => {
@@ -197,21 +199,21 @@ class GestureViewerManager {
       return;
     }
 
-    const nextScale = Math.min(this.scale.value * (1 + multiplier), this.maxZoomScale);
+    const nextScale = Math.min(this.scale.get() * (1 + multiplier), this.maxZoomScale);
 
-    this.scale.value = withTiming(nextScale);
+    this.scale.set(withTiming(nextScale));
 
     const { translateX, translateY } = createBoundsConstraint({
       width: this.width,
       height: this.height,
     })({
-      translateX: this.translateX.value,
-      translateY: this.translateY.value,
+      translateX: this.translateX.get(),
+      translateY: this.translateY.get(),
       scale: nextScale,
     });
 
-    this.translateX.value = withTiming(translateX);
-    this.translateY.value = withTiming(translateY);
+    this.translateX.set(withTiming(translateX));
+    this.translateY.set(withTiming(translateY));
   };
 
   zoomOut = (multiplier = 0.25) => {
@@ -225,13 +227,13 @@ class GestureViewerManager {
       return;
     }
 
-    const nextScale = Math.max(this.scale.value / (1 + multiplier), 1);
+    const nextScale = Math.max(this.scale.get() / (1 + multiplier), 1);
 
-    this.scale.value = withTiming(nextScale);
+    this.scale.set(withTiming(nextScale));
 
     if (nextScale === 1) {
-      this.translateX.value = withTiming(0);
-      this.translateY.value = withTiming(0);
+      this.translateX.set(withTiming(0));
+      this.translateY.set(withTiming(0));
       return;
     }
 
@@ -239,13 +241,13 @@ class GestureViewerManager {
       width: this.width,
       height: this.height,
     })({
-      translateX: this.translateX.value,
-      translateY: this.translateY.value,
+      translateX: this.translateX.get(),
+      translateY: this.translateY.get(),
       scale: nextScale,
     });
 
-    this.translateX.value = withTiming(translateX);
-    this.translateY.value = withTiming(translateY);
+    this.translateX.set(withTiming(translateX));
+    this.translateY.set(withTiming(translateY));
   };
 
   resetZoom = (scale = 1) => {
@@ -259,9 +261,9 @@ class GestureViewerManager {
       return;
     }
 
-    this.scale.value = withTiming(scale);
-    this.translateX.value = withTiming(0);
-    this.translateY.value = withTiming(0);
+    this.scale.set(withTiming(scale));
+    this.translateX.set(withTiming(0));
+    this.translateY.set(withTiming(0));
   };
 
   goToIndex = (index: number) => {

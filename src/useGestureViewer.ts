@@ -147,13 +147,13 @@ export const useGestureViewer = <ItemT, LC>({
   );
 
   const resetTransformState = useCallback(() => {
-    translateX.value = withTiming(0);
-    translateY.value = withTiming(0);
-    initialTranslateX.value = withTiming(0);
-    initialTranslateY.value = withTiming(0);
-    startScale.value = withTiming(1);
-    scale.value = withTiming(1);
-    rotation.value = 0;
+    translateX.set(withTiming(0));
+    translateY.set(withTiming(0));
+    initialTranslateX.set(withTiming(0));
+    initialTranslateY.set(withTiming(0));
+    startScale.set(withTiming(1));
+    scale.set(withTiming(1));
+    rotation.set(0);
   }, [initialTranslateX, initialTranslateY, rotation, scale, startScale, translateX, translateY]);
 
   const syncPendingIndex = useCallback(
@@ -201,7 +201,7 @@ export const useGestureViewer = <ItemT, LC>({
   }, []);
 
   useAnimatedReaction(
-    () => scale.value,
+    () => scale.get(),
     (currentScale, previousScale) => {
       if (currentScale !== previousScale) {
         scheduleOnRN(emitZoomChange, currentScale, previousScale);
@@ -212,7 +212,7 @@ export const useGestureViewer = <ItemT, LC>({
   );
 
   useAnimatedReaction(
-    () => rotation.value,
+    () => rotation.get(),
     (currentRotation, previousRotation) => {
       if (currentRotation !== previousRotation) {
         scheduleOnRN(emitRotationChange, currentRotation, previousRotation);
@@ -286,12 +286,12 @@ export const useGestureViewer = <ItemT, LC>({
   }, [manager]);
 
   useEffect(() => {
-    translateY.value = 0;
-    translateX.value = 0;
-    scale.value = 1;
-    backdropOpacity.value = 1;
-    startScale.value = 1;
-    rotation.value = 0;
+    translateY.set(0);
+    translateX.set(0);
+    scale.set(1);
+    backdropOpacity.set(1);
+    startScale.set(1);
+    rotation.set(0);
 
     if (adjustedInitialIndex <= 0 || !listRef.current) {
       return;
@@ -340,23 +340,27 @@ export const useGestureViewer = <ItemT, LC>({
         triggerRectRef.current.height / height,
       );
 
-      triggerScale.value = initialScaleFromTrigger;
-      triggerTranslateX.value = startX;
-      triggerTranslateY.value = startY;
-      triggerOpacity.value = 0;
+      triggerScale.set(initialScaleFromTrigger);
+      triggerTranslateX.set(startX);
+      triggerTranslateY.set(startY);
+      triggerOpacity.set(0);
 
-      triggerScale.value = withTiming(1, animationConfig, (finished) => {
-        if (finished) {
-          scheduleOnRN(onAnimationComplete);
-        }
-      });
-      triggerTranslateX.value = withTiming(0, animationConfig);
-      triggerTranslateY.value = withTiming(0, animationConfig);
-      triggerOpacity.value = withTiming(1, {
-        duration: animationConfig.duration / 2,
-        easing: animationConfig.easing,
-        reduceMotion: animationConfig.reduceMotion,
-      });
+      triggerScale.set(
+        withTiming(1, animationConfig, (finished) => {
+          if (finished) {
+            scheduleOnRN(onAnimationComplete);
+          }
+        }),
+      );
+      triggerTranslateX.set(withTiming(0, animationConfig));
+      triggerTranslateY.set(withTiming(0, animationConfig));
+      triggerOpacity.set(
+        withTiming(1, {
+          duration: animationConfig.duration / 2,
+          easing: animationConfig.easing,
+          reduceMotion: animationConfig.reduceMotion,
+        }),
+      );
 
       setShouldStartTriggerAnimation(false);
     }
@@ -391,7 +395,7 @@ export const useGestureViewer = <ItemT, LC>({
       }
 
       triggerRectRef.current = nextTriggerRect;
-      triggerOpacity.value = 0;
+      triggerOpacity.set(0);
       setShouldStartTriggerAnimation(true);
       registry.clearActiveTriggerNode(id);
     });
@@ -409,14 +413,16 @@ export const useGestureViewer = <ItemT, LC>({
       const endY = rect.y + rect.height / 2 - height / 2;
       const endScale = Math.min(rect.width / width, rect.height / height);
 
-      triggerScale.value = withTiming(endScale, animationConfig);
-      triggerTranslateX.value = withTiming(endX, animationConfig);
-      triggerTranslateY.value = withTiming(endY, animationConfig);
-      triggerOpacity.value = withTiming(0, animationConfig, (finished) => {
-        if (finished && onDismiss) {
-          scheduleOnRN(onDismiss);
-        }
-      });
+      triggerScale.set(withTiming(endScale, animationConfig));
+      triggerTranslateX.set(withTiming(endX, animationConfig));
+      triggerTranslateY.set(withTiming(endY, animationConfig));
+      triggerOpacity.set(
+        withTiming(0, animationConfig, (finished) => {
+          if (finished && onDismiss) {
+            scheduleOnRN(onDismiss);
+          }
+        }),
+      );
     },
     [
       animationConfig,
@@ -486,7 +492,7 @@ export const useGestureViewer = <ItemT, LC>({
       .withRef(dismissGestureRef)
       .enabled(canDismiss)
       .onUpdate((event) => {
-        translateY.value = event.translationY / dismissOptions.resistance;
+        translateY.set(event.translationY / dismissOptions.resistance);
       })
       .onEnd((event) => {
         if (
@@ -501,13 +507,15 @@ export const useGestureViewer = <ItemT, LC>({
           return;
         }
 
-        translateY.value = withSpring(0, {
-          damping: 50,
-          energyThreshold: 6e-9,
-          mass: 4,
-          overshootClamping: false,
-          stiffness: 600,
-        });
+        translateY.set(
+          withSpring(0, {
+            damping: 50,
+            energyThreshold: 6e-9,
+            mass: 4,
+            overshootClamping: false,
+            stiffness: 600,
+          }),
+        );
       });
   }, [translateY, dismissOptions, handleDismiss, isZoomed]);
 
@@ -521,39 +529,44 @@ export const useGestureViewer = <ItemT, LC>({
           }
         })
         .onBegin((event) => {
-          startScale.value = scale.value;
-          initialTranslateX.value = translateX.value;
-          initialTranslateY.value = translateY.value;
-          lastFocalX.value = event.focalX;
-          lastFocalY.value = event.focalY;
+          startScale.set(scale.get());
+          initialTranslateX.set(translateX.get());
+          initialTranslateY.set(translateY.get());
+          lastFocalX.set(event.focalX);
+          lastFocalY.set(event.focalY);
         })
         .onUpdate((event) => {
-          const newScale = startScale.value * event.scale;
+          const initialScale = startScale.get();
+          const newScale = initialScale * event.scale;
 
-          scale.value = newScale;
+          scale.set(newScale);
 
           if (newScale <= 1) {
-            translateX.value = withTiming(0);
-            translateY.value = withTiming(0);
+            translateX.set(withTiming(0));
+            translateY.set(withTiming(0));
             return;
           }
 
-          const focalDeltaX = Math.abs(event.focalX - lastFocalX.value);
-          const focalDeltaY = Math.abs(event.focalY - lastFocalY.value);
+          const currentLastFocalX = lastFocalX.get();
+          const currentLastFocalY = lastFocalY.get();
+          const focalDeltaX = Math.abs(event.focalX - currentLastFocalX);
+          const focalDeltaY = Math.abs(event.focalY - currentLastFocalY);
           const threshold = 50;
 
           if (focalDeltaX < threshold && focalDeltaY < threshold) {
-            lastFocalX.value = event.focalX;
-            lastFocalY.value = event.focalY;
+            lastFocalX.set(event.focalX);
+            lastFocalY.set(event.focalY);
           }
 
-          const deltaScale = newScale - startScale.value;
-          const centerX = lastFocalX.value - width / 2;
-          const centerY = lastFocalY.value - height / 2;
+          const nextLastFocalX = lastFocalX.get();
+          const nextLastFocalY = lastFocalY.get();
+          const deltaScale = newScale - initialScale;
+          const centerX = nextLastFocalX - width / 2;
+          const centerY = nextLastFocalY - height / 2;
 
           // NOTE 새로운 이동값 = 기존 이동값 - (중심점 거리 × 스케일 변화량) / 원래 스케일 (중심점이 화면 중심에서 멀수록, 확대 배율이 클수록 더 많이 이동)
-          const newTranslateX = initialTranslateX.value - (centerX * deltaScale) / startScale.value;
-          const newTranslateY = initialTranslateY.value - (centerY * deltaScale) / startScale.value;
+          const newTranslateX = initialTranslateX.get() - (centerX * deltaScale) / initialScale;
+          const newTranslateY = initialTranslateY.get() - (centerY * deltaScale) / initialScale;
 
           const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } =
             constrainTranslation({
@@ -562,50 +575,56 @@ export const useGestureViewer = <ItemT, LC>({
               translateY: newTranslateY,
             });
 
-          translateX.value = constrainedTranslateX;
-          translateY.value = constrainedTranslateY;
+          translateX.set(constrainedTranslateX);
+          translateY.set(constrainedTranslateY);
         })
         .onEnd(() => {
-          if (scale.value > maxZoomScale) {
-            scale.value = withTiming(maxZoomScale, {
-              duration: 300,
-              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-            });
+          const currentScale = scale.get();
+
+          if (currentScale > maxZoomScale) {
+            scale.set(
+              withTiming(maxZoomScale, {
+                duration: 300,
+                easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+              }),
+            );
 
             const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } =
               constrainTranslation({
                 scale: maxZoomScale,
-                translateX: translateX.value,
-                translateY: translateY.value,
+                translateX: translateX.get(),
+                translateY: translateY.get(),
               });
 
-            translateX.value = withTiming(constrainedTranslateX);
-            translateY.value = withTiming(constrainedTranslateY);
+            translateX.set(withTiming(constrainedTranslateX));
+            translateY.set(withTiming(constrainedTranslateY));
 
             return;
           }
 
-          if (scale.value < 1) {
-            scale.value = withTiming(1, {
-              duration: 300,
-              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-            });
-            translateX.value = withTiming(0);
-            translateY.value = withTiming(0);
-            initialTranslateX.value = withTiming(0);
-            initialTranslateY.value = withTiming(0);
+          if (currentScale < 1) {
+            scale.set(
+              withTiming(1, {
+                duration: 300,
+                easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+              }),
+            );
+            translateX.set(withTiming(0));
+            translateY.set(withTiming(0));
+            initialTranslateX.set(withTiming(0));
+            initialTranslateY.set(withTiming(0));
             return;
           }
 
           const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } =
             constrainTranslation({
-              scale: scale.value,
-              translateX: translateX.value,
-              translateY: translateY.value,
+              scale: currentScale,
+              translateX: translateX.get(),
+              translateY: translateY.get(),
             });
 
-          translateX.value = withTiming(constrainedTranslateX);
-          translateY.value = withTiming(constrainedTranslateY);
+          translateX.set(withTiming(constrainedTranslateX));
+          translateY.set(withTiming(constrainedTranslateY));
         })
         .onTouchesUp(() => {
           scheduleOnRN(setIsPinching, false);
@@ -637,23 +656,25 @@ export const useGestureViewer = <ItemT, LC>({
         .activeCursor('grabbing')
         .averageTouches(true)
         .onBegin(() => {
-          initialTranslateX.value = translateX.value;
-          initialTranslateY.value = translateY.value;
+          initialTranslateX.set(translateX.get());
+          initialTranslateY.set(translateY.get());
         })
         .onUpdate((event) => {
-          if (scale.value > 1) {
-            const newTranslateX = initialTranslateX.value + event.translationX;
-            const newTranslateY = initialTranslateY.value + event.translationY;
+          const currentScale = scale.get();
+
+          if (currentScale > 1) {
+            const newTranslateX = initialTranslateX.get() + event.translationX;
+            const newTranslateY = initialTranslateY.get() + event.translationY;
 
             const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } =
               constrainTranslation({
-                scale: scale.value,
+                scale: currentScale,
                 translateX: newTranslateX,
                 translateY: newTranslateY,
               });
 
-            translateX.value = constrainedTranslateX;
-            translateY.value = constrainedTranslateY;
+            translateX.set(constrainedTranslateX);
+            translateY.set(constrainedTranslateY);
           }
         }),
     [
@@ -733,27 +754,27 @@ export const useGestureViewer = <ItemT, LC>({
   );
 
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: triggerOpacity.value,
+    opacity: triggerOpacity.get(),
     transform: [
-      { translateX: triggerTranslateX.value },
-      { translateY: triggerTranslateY.value },
-      { scale: triggerScale.value },
+      { translateX: triggerTranslateX.get() },
+      { translateY: triggerTranslateY.get() },
+      { scale: triggerScale.get() },
 
-      { translateY: translateY.value },
-      { translateX: translateX.value },
-      { scale: scale.value },
-      { rotate: `${rotation.value}deg` },
+      { translateY: translateY.get() },
+      { translateX: translateX.get() },
+      { scale: scale.get() },
+      { rotate: `${rotation.get()}deg` },
     ],
   }));
 
   const backdropStyle = useAnimatedStyle(() => {
-    const baseOpacity = triggerOpacity.value;
+    const baseOpacity = triggerOpacity.get();
 
-    if (!dismissOptions.fadeBackdrop || scale.value !== 1) {
+    if (!dismissOptions.fadeBackdrop || scale.get() !== 1) {
       return { opacity: baseOpacity };
     }
 
-    const dismissDistance = getDismissDistance(translateY.value, dismissOptions.direction);
+    const dismissDistance = getDismissDistance(translateY.get(), dismissOptions.direction);
     const dismissOpacity = interpolate(dismissDistance, [0, 200], [1, 0], 'clamp');
 
     return { opacity: baseOpacity * dismissOpacity };
