@@ -540,7 +540,7 @@ export const useGestureViewer = <ItemT, LC>({
           startFocalY.set(event.focalY);
           lastFocalX.set(event.focalX);
           lastFocalY.set(event.focalY);
-          hasActiveFocal.set(true);
+          hasActiveFocal.set(false);
         })
         .onUpdate((event) => {
           const initialScale = startScale.get();
