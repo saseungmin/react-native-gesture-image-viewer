@@ -1,5 +1,5 @@
 ---
-"react-native-gesture-image-viewer": patch
+'react-native-gesture-image-viewer': patch
 ---
 
 Fix pinch zoom drift near image edges for fullscreen contained images.
