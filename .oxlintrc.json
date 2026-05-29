@@ -14,14 +14,13 @@
   },
   "settings": {
     "jsx-a11y": {
-      "polymorphicPropName": null,
       "components": {},
       "attributes": {}
     },
     "react": {
       "formComponents": [],
       "linkComponents": [],
-      "version": null,
+      "version": "19.2.0",
       "componentWrapperFunctions": []
     },
     "jsdoc": {
