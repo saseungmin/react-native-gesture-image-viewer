@@ -1,5 +1,16 @@
 # react-native-gesture-image-viewer
 
+## 2.3.2
+
+### Patch Changes
+
+- [#165](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/165) [`ac41589`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/ac41589a9eab59bea836147ff2d4d3d88b33927d) Thanks [@saseungmin](https://github.com/saseungmin)! - Fix pinch zoom drift near image edges for fullscreen contained images.
+
+  Pinch zoom now tracks the two-finger midpoint during scaling instead of feeling anchored to one finger or biased toward
+  the viewer center.
+
+  Fixes https://github.com/saseungmin/react-native-gesture-image-viewer/issues/164
+
 ## 2.3.1
 
 ### Patch Changes
