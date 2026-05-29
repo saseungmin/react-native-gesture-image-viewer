@@ -266,7 +266,6 @@ const styles = StyleSheet.create({
     gap: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    maxWidth: 360,
   },
   thumb: {
     width: 110,

@@ -19,6 +19,7 @@ import { useGestureViewerPaging } from './useGestureViewerPaging';
 import { createBoundsConstraint, createScrollAction } from './utils';
 import { getDismissDistance, shouldDismissByDirection } from './utils/dismiss';
 import { applyTapZoomAtPoint } from './utils/tapZoom';
+import { calculateFocalPointTranslation, shouldAcceptFocalPoint } from './utils/zoom';
 
 type UseGestureViewerProps<ItemT, LC> = Omit<
   GestureViewerProps<ItemT, LC>,
@@ -95,6 +96,9 @@ export const useGestureViewer = <ItemT, LC>({
 
   const lastFocalX = useSharedValue(0);
   const lastFocalY = useSharedValue(0);
+  const startFocalX = useSharedValue(0);
+  const startFocalY = useSharedValue(0);
+  const hasActiveFocal = useSharedValue(false);
 
   const dataLength = data?.length || 0;
 
@@ -528,12 +532,15 @@ export const useGestureViewer = <ItemT, LC>({
             scheduleOnRN(setIsPinching, true);
           }
         })
-        .onBegin((event) => {
+        .onStart((event) => {
           startScale.set(scale.get());
           initialTranslateX.set(translateX.get());
           initialTranslateY.set(translateY.get());
+          startFocalX.set(event.focalX);
+          startFocalY.set(event.focalY);
           lastFocalX.set(event.focalX);
           lastFocalY.set(event.focalY);
+          hasActiveFocal.set(true);
         })
         .onUpdate((event) => {
           const initialScale = startScale.get();
@@ -547,26 +554,44 @@ export const useGestureViewer = <ItemT, LC>({
             return;
           }
 
-          const currentLastFocalX = lastFocalX.get();
-          const currentLastFocalY = lastFocalY.get();
-          const focalDeltaX = Math.abs(event.focalX - currentLastFocalX);
-          const focalDeltaY = Math.abs(event.focalY - currentLastFocalY);
           const threshold = 50;
 
-          if (focalDeltaX < threshold && focalDeltaY < threshold) {
+          if (
+            shouldAcceptFocalPoint({
+              focalX: event.focalX,
+              focalY: event.focalY,
+              hasActiveFocal: hasActiveFocal.get(),
+              lastFocalX: lastFocalX.get(),
+              lastFocalY: lastFocalY.get(),
+              threshold,
+            })
+          ) {
+            if (!hasActiveFocal.get()) {
+              startFocalX.set(event.focalX);
+              startFocalY.set(event.focalY);
+            }
+
             lastFocalX.set(event.focalX);
             lastFocalY.set(event.focalY);
+            hasActiveFocal.set(true);
           }
 
           const nextLastFocalX = lastFocalX.get();
           const nextLastFocalY = lastFocalY.get();
-          const deltaScale = newScale - initialScale;
-          const centerX = nextLastFocalX - width / 2;
-          const centerY = nextLastFocalY - height / 2;
 
-          // NOTE 새로운 이동값 = 기존 이동값 - (중심점 거리 × 스케일 변화량) / 원래 스케일 (중심점이 화면 중심에서 멀수록, 확대 배율이 클수록 더 많이 이동)
-          const newTranslateX = initialTranslateX.get() - (centerX * deltaScale) / initialScale;
-          const newTranslateY = initialTranslateY.get() - (centerY * deltaScale) / initialScale;
+          const { translateX: newTranslateX, translateY: newTranslateY } =
+            calculateFocalPointTranslation({
+              currentFocalX: nextLastFocalX,
+              currentFocalY: nextLastFocalY,
+              height,
+              initialScale,
+              initialTranslateX: initialTranslateX.get(),
+              initialTranslateY: initialTranslateY.get(),
+              nextScale: newScale,
+              startFocalX: startFocalX.get(),
+              startFocalY: startFocalY.get(),
+              width,
+            });
 
           const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } =
             constrainTranslation({
@@ -613,6 +638,7 @@ export const useGestureViewer = <ItemT, LC>({
             translateY.set(withTiming(0));
             initialTranslateX.set(withTiming(0));
             initialTranslateY.set(withTiming(0));
+            hasActiveFocal.set(false);
             return;
           }
 
@@ -630,6 +656,7 @@ export const useGestureViewer = <ItemT, LC>({
           scheduleOnRN(setIsPinching, false);
         })
         .onFinalize(() => {
+          hasActiveFocal.set(false);
           scheduleOnRN(setIsPinching, false);
         }),
     [
@@ -646,6 +673,9 @@ export const useGestureViewer = <ItemT, LC>({
       constrainTranslation,
       lastFocalX,
       lastFocalY,
+      startFocalX,
+      startFocalY,
+      hasActiveFocal,
     ],
   );
 
