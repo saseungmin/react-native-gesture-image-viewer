@@ -10,6 +10,7 @@
   "rules": {
     "react/react-in-jsx-scope": "off",
     "react/style-prop-object": "off",
+    "react/react-compiler": "off",
     "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }]
   },
   "settings": {
