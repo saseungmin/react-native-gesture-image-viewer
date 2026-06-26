@@ -140,7 +140,7 @@
     ],
     "preset": "@react-native/jest-preset"
   },
-  "packageManager": "yarn@4.15.0",
+  "packageManager": "yarn@4.17.0",
   "create-react-native-library": {
     "languages": "js",
     "type": "library",
