@@ -3,8 +3,12 @@ import { afterEach, describe, expect, it, jest } from '@jest/globals';
 import { INITIAL_SCROLL_IDLE_TIMEOUT_MS, scheduleInitialScroll } from '../scheduleInitialScroll';
 
 type IdleTestGlobal = typeof globalThis & {
-  requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number;
-  cancelIdleCallback?: (handle: number) => void;
+  requestIdleCallback?: (
+    this: IdleTestGlobal,
+    callback: () => void,
+    options?: { timeout?: number },
+  ) => number;
+  cancelIdleCallback?: (this: IdleTestGlobal, handle: number) => void;
 };
 
 const idleGlobal = globalThis as IdleTestGlobal;
@@ -53,6 +57,30 @@ describe('scheduleInitialScroll', () => {
     cleanup();
 
     expect(cancelIdleCallback).toHaveBeenCalledWith(7);
+  });
+
+  it('binds idle callbacks to the scheduler global', () => {
+    const callback = jest.fn();
+    const requestIdleCallback = jest.fn(function (
+      this: IdleTestGlobal,
+      scheduledCallback: () => void,
+    ) {
+      expect(this).toBe(idleGlobal);
+      scheduledCallback();
+      return 7;
+    });
+    const cancelIdleCallback = jest.fn(function (this: IdleTestGlobal) {
+      expect(this).toBe(idleGlobal);
+    });
+
+    idleGlobal.requestIdleCallback = requestIdleCallback;
+    idleGlobal.cancelIdleCallback = cancelIdleCallback;
+
+    const cleanup = scheduleInitialScroll(callback);
+    cleanup();
+
+    expect(requestIdleCallback.mock.contexts[0]).toBe(idleGlobal);
+    expect(cancelIdleCallback.mock.contexts[0]).toBe(idleGlobal);
   });
 
   it('falls back to timeout scheduling when idle cancellation is unavailable', () => {

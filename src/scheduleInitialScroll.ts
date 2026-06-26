@@ -4,17 +4,19 @@ type IdleCallbackOptions = {
   timeout?: number;
 };
 
-type RequestIdleCallback = (callback: () => void, options?: IdleCallbackOptions) => number;
-type CancelIdleCallback = (handle: number) => void;
-
 type IdleSchedulerGlobal = typeof globalThis & {
-  requestIdleCallback?: RequestIdleCallback;
-  cancelIdleCallback?: CancelIdleCallback;
+  requestIdleCallback?: (
+    this: IdleSchedulerGlobal,
+    callback: () => void,
+    options?: IdleCallbackOptions,
+  ) => number;
+  cancelIdleCallback?: (this: IdleSchedulerGlobal, handle: number) => void;
 };
 
 export const scheduleInitialScroll = (callback: () => void): (() => void) => {
   const idleGlobal = globalThis as IdleSchedulerGlobal;
-  const { cancelIdleCallback, requestIdleCallback } = idleGlobal;
+  const requestIdleCallback = idleGlobal.requestIdleCallback?.bind(idleGlobal);
+  const cancelIdleCallback = idleGlobal.cancelIdleCallback?.bind(idleGlobal);
 
   if (requestIdleCallback && cancelIdleCallback) {
     const idleCallbackId = requestIdleCallback(callback, {
