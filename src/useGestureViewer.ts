@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { InteractionManager, Platform, type View, useWindowDimensions } from 'react-native';
+import { Platform, type View, useWindowDimensions } from 'react-native';
 import { Gesture, type GestureType } from 'react-native-gesture-handler';
 import {
   Easing,
@@ -14,6 +14,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import type GestureViewerManager from './GestureViewerManager';
 import { registry } from './GestureViewerRegistry';
+import { scheduleInitialScroll } from './scheduleInitialScroll';
 import type { GestureViewerProps, TriggerRect } from './types';
 import { useGestureViewerPaging } from './useGestureViewerPaging';
 import { createBoundsConstraint, createScrollAction } from './utils';
@@ -301,13 +302,9 @@ export const useGestureViewer = <ItemT, LC>({
       return;
     }
 
-    const runAfterInteractions = InteractionManager.runAfterInteractions(() => {
+    return scheduleInitialScroll(() => {
       scrollTo(adjustedInitialIndex, false);
     });
-
-    return () => {
-      runAfterInteractions?.cancel();
-    };
   }, [
     adjustedInitialIndex,
     translateY,

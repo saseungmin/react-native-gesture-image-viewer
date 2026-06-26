@@ -105,6 +105,7 @@
     "@react-native/babel-preset": "0.85.3",
     "@react-native/jest-preset": "0.85.3",
     "@react-native/metro-config": "0.85.3",
+    "@testing-library/react-native": "^14.0.1",
     "@types/babel__core": "^7.20.5",
     "@types/jest": "^29.5.14",
     "@types/react": "^19.2.15",
@@ -119,6 +120,7 @@
     "react-native-gesture-handler": "^2.31.2",
     "react-native-reanimated": "4.3.1",
     "react-native-worklets": "0.8.3",
+    "test-renderer": "^1.2.0",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
@@ -138,7 +140,17 @@
       "<rootDir>/example/node_modules",
       "<rootDir>/lib/"
     ],
-    "preset": "@react-native/jest-preset"
+    "preset": "@react-native/jest-preset",
+    "resolver": "react-native-worklets/jest/resolver",
+    "setupFiles": [
+      "react-native-gesture-handler/jestSetup.js"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest-setup.js"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?|react-native-reanimated|react-native-worklets|react-native-gesture-handler|@testing-library/react-native|test-renderer)/)"
+    ]
   },
   "packageManager": "yarn@4.17.0",
   "create-react-native-library": {
