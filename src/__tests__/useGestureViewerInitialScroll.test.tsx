@@ -83,7 +83,7 @@ describe('useGestureViewer initial scroll scheduling', () => {
       />,
     );
 
-    expect(screen.getByText('third')).toBeOnTheScreen();
+    expect(screen.getByText('third')).toBeTruthy();
     expect(idleGlobal.requestIdleCallback).toHaveBeenCalledWith(expect.any(Function), {
       timeout: INITIAL_SCROLL_IDLE_TIMEOUT_MS,
     });

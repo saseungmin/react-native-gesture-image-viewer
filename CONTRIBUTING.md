@@ -4,43 +4,41 @@ Contributions are always welcome, no matter how large or small!
 
 We want this community to be friendly and respectful to each other. Please follow it in all your interactions with the project. Before contributing, please read the [code of conduct](./CODE_OF_CONDUCT.md).
 
-## Development workflow
+## Development Workflow
 
-This project is a monorepo managed using [Yarn workspaces](https://yarnpkg.com/features/workspaces). It contains the following packages:
+This project uses pnpm workspaces for the example app and documentation site, while the npm package itself remains at the repository root. It contains:
 
-- The library package in the root directory.
-- An example app in the `example/` directory.
+- The library package at the repository root.
+- An example app in `example/`.
+- The Rspress documentation site in `docs/`.
 
-To get started with the project, run `yarn` in the root directory to install the required dependencies for each package:
+To get started, make sure you have the correct version of [Node.js](https://nodejs.org/) installed. See [`.nvmrc`](./.nvmrc) for the version used in this project.
+
+Enable Corepack and install dependencies from the root directory:
 
 ```sh
-yarn
+corepack enable
+pnpm install
 ```
 
-> Since the project relies on Yarn workspaces, you cannot use [`npm`](https://github.com/npm/cli) for development.
-
-The [example app](/example/) demonstrates usage of the library. You need to run it to test any changes you make.
-
-It is configured to use the local version of the library, so any changes you make to the library's source code will be reflected in the example app. Changes to the library's JavaScript code will be reflected in the example app without a rebuild, but native code changes will require a rebuild of the example app.
-
-You can use various commands from the root directory to work with the project.
+The [example app](/example/) demonstrates usage of the library. It depends on the local root package through `workspace:*`, so changes under `src` are reflected in the example app. Native changes require rebuilding the example app.
 
 To start the packager:
 
 ```sh
-yarn example start
+pnpm example start
 ```
 
 To run the example app on Android:
 
 ```sh
-yarn example android
+pnpm example android
 ```
 
 To run the example app on iOS:
 
 ```sh
-yarn example ios
+pnpm example ios
 ```
 
 To confirm that the app is running with the new architecture, you can check the Metro logs for a message like this:
@@ -54,63 +52,51 @@ Note the `"fabric":true` and `"concurrentRoot":true` properties.
 To run the example app on Web:
 
 ```sh
-yarn example web
+pnpm example web
 ```
 
-Make sure your code passes TypeScript and ESLint. Run the following to verify:
+Make sure your code passes TypeScript, linting, formatting, and tests:
 
 ```sh
-yarn typecheck
-yarn lint
+pnpm typecheck
+pnpm lint
+pnpm format:check
+pnpm test
 ```
 
-To fix formatting errors, run the following:
+## Commit Message Convention
 
-```sh
-yarn lint --fix
-```
-
-Remember to add tests for your change if possible. Run the unit tests by:
-
-```sh
-yarn test
-```
-
-### Commit message convention
-
-We follow the [conventional commits specification](https://www.conventionalcommits.org/en) for our commit messages:
+We follow the [conventional commits specification](https://www.conventionalcommits.org/en) for commit messages:
 
 - `fix`: bug fixes, e.g. fix crash due to deprecated method.
 - `feat`: new features, e.g. add new method to the module.
 - `refactor`: code refactor, e.g. migrate from class components to hooks.
-- `docs`: changes into documentation, e.g. add usage example for the module..
-- `test`: adding or updating tests, e.g. add integration tests using detox.
+- `docs`: changes into documentation, e.g. add usage example for the module.
+- `test`: adding or updating tests, e.g. add integration tests.
 - `chore`: tooling changes, e.g. change CI config.
 
 Our pre-commit hooks verify that your commit message matches this format when committing.
 
-### Linting and tests
+## Scripts
 
-[oxlint](https://oxc.rs/docs/guide/usage/linter.html), [oxfmt](https://oxc.rs/docs/guide/usage/formatter.html), [TypeScript](https://www.typescriptlang.org/)
+The root `package.json` contains scripts for common tasks:
 
-We use [TypeScript](https://www.typescriptlang.org/) for type checking, [oxlint](https://oxc.rs/docs/guide/usage/linter.html) for linting, [oxfmt](https://oxc.rs/docs/guide/usage/formatter.html) for formatting the code, and [Jest](https://jestjs.io/) for testing.
+- `pnpm install`: install workspace dependencies.
+- `pnpm format`: format supported files with Oxfmt.
+- `pnpm format:check`: check formatting without writing files.
+- `pnpm lint`: lint source files with Oxlint.
+- `pnpm lint:fix`: apply safe Oxlint fixes.
+- `pnpm typecheck`: type-check the library package.
+- `pnpm test`: run library unit tests with [Jest](https://jestjs.io/).
+- `pnpm build`: build the root library package with Bob.
+- `pnpm example start`: start the Metro server for the example app.
+- `pnpm example android`: run the example app on Android.
+- `pnpm example ios`: run the example app on iOS.
+- `pnpm example:build`: export the example app for web.
+- `pnpm docs:typecheck`: type-check the Rspress docs package.
+- `pnpm docs:build`: build the Rspress docs package.
 
-Our pre-commit hooks verify that the linter and tests pass when committing.
-
-### Scripts
-
-The `package.json` file contains various scripts for common tasks:
-
-- `yarn`: setup project by installing dependencies.
-- `yarn typecheck`: type-check files with TypeScript.
-- `yarn lint`: lint files with ESLint.
-- `yarn fmt`: format files with oxfmt.
-- `yarn test`: run unit tests with Jest.
-- `yarn example start`: start the Metro server for the example app.
-- `yarn example android`: run the example app on Android.
-- `yarn example ios`: run the example app on iOS.
-
-### Sending a pull request
+## Sending A Pull Request
 
 > **Working on your first pull request?** You can learn how from this _free_ series: [How to Contribute to an Open Source Project on GitHub](https://app.egghead.io/playlists/how-to-contribute-to-an-open-source-project-on-github).
 

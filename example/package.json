@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "android": "expo run:android",
+    "build": "expo export --platform web",
     "ios": "expo run:ios",
     "start": "expo start --clear",
     "web": "expo start --web"

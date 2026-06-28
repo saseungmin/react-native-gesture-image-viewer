@@ -30,15 +30,15 @@ jobs:
         run: npm install -g npm@latest
 
       - name: Build
-        run: yarn build
+        run: pnpm build
 
-      - name: Create Release Pull Request or Publish to yarn
+      - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@3841a0683d3cfa6dae0f9bb335290003010fe3f0 # 1.9.0
         with:
           commit: 'chore(release): version packages'
           title: 'chore(release): version packages'
-          version: 'yarn changeset version'
-          publish: 'yarn changeset publish'
+          version: 'pnpm changeset version'
+          publish: 'pnpm changeset publish'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

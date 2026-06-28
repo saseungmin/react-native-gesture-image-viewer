@@ -2,10 +2,10 @@
 
 ## Setup
 
-Install the dependencies:
+Install workspace dependencies from the repository root:
 
 ```bash
-yarn install
+pnpm install
 ```
 
 ## Get started
@@ -13,17 +13,17 @@ yarn install
 Start the dev server:
 
 ```bash
-yarn run dev
+pnpm -C docs dev
 ```
 
 Build the website for production:
 
 ```bash
-yarn run build
+pnpm docs:build
 ```
 
 Preview the production build locally:
 
 ```bash
-yarn run preview
+pnpm -C docs preview
 ```

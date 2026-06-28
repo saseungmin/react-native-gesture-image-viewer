@@ -46,11 +46,6 @@
     "type": "git",
     "url": "git+https://github.com/saseungmin/react-native-gesture-image-viewer.git"
   },
-  "workspaces": [
-    ".",
-    "example",
-    "docs"
-  ],
   "files": [
     "lib",
     "src",
@@ -87,7 +82,10 @@
     "build": "bob build",
     "changeset": "changeset",
     "clean": "del-cli lib",
-    "example": "yarn workspace react-native-gesture-image-viewer-example run",
+    "docs:build": "pnpm -C docs build",
+    "docs:typecheck": "pnpm -C docs typecheck",
+    "example": "pnpm -C example run",
+    "example:build": "pnpm -C example build",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
@@ -135,24 +133,7 @@
       "@commitlint/config-conventional"
     ]
   },
-  "jest": {
-    "modulePathIgnorePatterns": [
-      "<rootDir>/example/node_modules",
-      "<rootDir>/lib/"
-    ],
-    "preset": "@react-native/jest-preset",
-    "resolver": "react-native-worklets/jest/resolver",
-    "setupFiles": [
-      "react-native-gesture-handler/jestSetup.js"
-    ],
-    "setupFilesAfterEnv": [
-      "<rootDir>/jest-setup.js"
-    ],
-    "transformIgnorePatterns": [
-      "node_modules/(?!((jest-)?react-native|@react-native(-community)?|react-native-reanimated|react-native-worklets|react-native-gesture-handler|@testing-library/react-native|test-renderer)/)"
-    ]
-  },
-  "packageManager": "yarn@4.17.0",
+  "packageManager": "pnpm@11.7.0",
   "create-react-native-library": {
     "languages": "js",
     "type": "library",

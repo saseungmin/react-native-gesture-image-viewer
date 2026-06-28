@@ -1,0 +1,8 @@
+packages:
+  - .
+  - example
+  - docs
+allowBuilds:
+  '@evilmartians/lefthook': true
+  msgpackr-extract: true
+autoInstallPeers: true

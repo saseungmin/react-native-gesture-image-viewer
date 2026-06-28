@@ -1,18 +1,22 @@
 pre-commit:
-  parallel: true
+  parallel: false
   commands:
-    lint:
-      glob: '*.{js,ts,jsx,tsx}'
-      run: yarn oxlint {staged_files}
     fmt:
-      glob: '*.{js,ts,jsx,tsx}'
-      run: yarn oxfmt {staged_files}
+      glob: '**/*.{js,jsx,ts,tsx,json,yml,yaml,md}'
+      run: pnpm format {staged_files}
+      stage_fixed: true
+    fmt-config:
+      glob: '.ox*.json'
+      run: pnpm format {staged_files}
+      stage_fixed: true
+    lint:
+      glob: '**/*.{js,ts,jsx,tsx}'
+      run: pnpm lint {staged_files}
     types:
-      glob: '*.{js,ts,jsx,tsx}'
-      exclude: 'docs/'
-      run: yarn tsc
+      glob: '**/*.{js,jsx,ts,tsx}'
+      run: pnpm typecheck
 commit-msg:
   parallel: true
   commands:
     commitlint:
-      run: yarn commitlint --edit
+      run: pnpm exec commitlint --edit {1}

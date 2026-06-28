@@ -13,6 +13,7 @@ const root = path.resolve(__dirname, '..');
 const config = withMetroConfig(getDefaultConfig(__dirname), {
   root,
   dirname: __dirname,
+  workspaces: ['.', 'example', 'docs'],
 });
 
 config.resolver.unstable_enablePackageExports = true;
