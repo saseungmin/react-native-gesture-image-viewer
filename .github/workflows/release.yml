@@ -21,7 +21,7 @@ jobs:
     environment: npm
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # 7.0.0
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -34,7 +34,7 @@ jobs:
 
       - name: Create Release Pull Request or Publish to yarn
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@3841a0683d3cfa6dae0f9bb335290003010fe3f0 # 1.9.0
         with:
           commit: 'chore(release): version packages'
           title: 'chore(release): version packages'
