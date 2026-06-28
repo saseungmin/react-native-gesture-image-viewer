@@ -1,18 +1,3 @@
-import { describe, expect, it, jest } from '@jest/globals';
-
-jest.mock('react-native-reanimated', () => ({
-  withTiming: (value: number) => value,
-}));
-
-jest.mock('react-native-gesture-handler', () => ({
-  FlatList: function GestureFlatList() {
-    return null;
-  },
-  ScrollView: function GestureScrollView() {
-    return null;
-  },
-}));
-
 import GestureViewerManager from '../GestureViewerManager';
 
 describe('GestureViewerManager tap events', () => {

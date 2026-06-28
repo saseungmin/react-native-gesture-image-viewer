@@ -1,5 +1,3 @@
-import { describe, expect, it } from '@jest/globals';
-
 import { getDismissDistance, shouldDismissByDirection } from '../utils/dismiss';
 
 describe('dismiss direction helpers', () => {

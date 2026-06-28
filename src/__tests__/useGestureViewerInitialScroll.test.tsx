@@ -1,4 +1,3 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { render, screen } from '@testing-library/react-native';
 import React, { forwardRef, useImperativeHandle } from 'react';
 import { Text, View } from 'react-native';
@@ -23,7 +22,10 @@ type TestListProps = {
 const idleGlobal = globalThis as IdleTestGlobal;
 const originalRequestIdleCallback = idleGlobal.requestIdleCallback;
 const originalCancelIdleCallback = idleGlobal.cancelIdleCallback;
-const scrollToIndex = jest.fn<TestListHandle['scrollToIndex']>();
+const scrollToIndex = jest.fn<
+  ReturnType<TestListHandle['scrollToIndex']>,
+  Parameters<TestListHandle['scrollToIndex']>
+>();
 
 const TestFlashList = forwardRef<TestListHandle, TestListProps>(function TestFlashList(
   { data, renderItem },

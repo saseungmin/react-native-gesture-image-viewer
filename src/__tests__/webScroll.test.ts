@@ -1,5 +1,3 @@
-import { describe, expect, it } from '@jest/globals';
-
 import { getWebAutoPlayTargetPhysicalIndex, resolveWebScrollFinalState } from '../utils/webScroll';
 
 describe('web scroll settling', () => {

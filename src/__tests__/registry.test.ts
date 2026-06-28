@@ -1,5 +1,3 @@
-import { describe, expect, it, jest } from '@jest/globals';
-
 jest.mock('../GestureViewerManager', () => {
   return jest.fn().mockImplementation(() => ({
     cleanUp: jest.fn(),

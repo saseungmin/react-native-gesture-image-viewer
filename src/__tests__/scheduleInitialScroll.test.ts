@@ -1,5 +1,3 @@
-import { afterEach, describe, expect, it, jest } from '@jest/globals';
-
 import { INITIAL_SCROLL_IDLE_TIMEOUT_MS, scheduleInitialScroll } from '../scheduleInitialScroll';
 
 type IdleTestGlobal = typeof globalThis & {
