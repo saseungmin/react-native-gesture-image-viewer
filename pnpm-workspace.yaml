@@ -3,6 +3,6 @@ packages:
   - example
   - docs
 allowBuilds:
-  '@evilmartians/lefthook': true
-  msgpackr-extract: true
+  '@evilmartians/lefthook@2.1.9': true
+  'msgpackr-extract@3.0.4': true
 autoInstallPeers: true
