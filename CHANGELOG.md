@@ -1,5 +1,25 @@
 # react-native-gesture-image-viewer
 
+## 2.3.3
+
+### Patch Changes
+
+- [#172](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/172) [`021e902`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/021e9025d21fb275c47addca0f7d96cca363bb1b) Thanks [@saseungmin](https://github.com/saseungmin)! - Refresh the demo media used in the README and getting started docs.
+
+  The documentation now points to the release-hosted demo video and includes an updated animated WebP preview asset for a clearer gesture demo.
+
+- [#171](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/171) [`0b0ac10`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/0b0ac100da13ff3a3455b36dd60f3d4d9297dece) Thanks [@saseungmin](https://github.com/saseungmin)! - Migrate the repository release and documentation workflow from Yarn to pnpm.
+
+  This keeps the published library API unchanged for app users, while contributors and release automation now install, build, test, and publish from the pnpm lockfile and workspace setup.
+
+- [#169](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/169) [`4fd230e`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/4fd230ed830f483f05c5698306400006558acd08) Thanks [@saseungmin](https://github.com/saseungmin)! - Replace deprecated InteractionManager initial scroll scheduling with a cancellable idle scheduler.
+
+  The viewer now uses React Native's [requestIdleCallback](https://reactnative.dev/docs/global-requestIdleCallback) when available and falls back to a cancellable timer so initialIndex still works on hosts without idle callback support.
+
+- [#167](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/167) [`450ce3b`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/450ce3b08c22078b883180c582b1fc2309d0b307) Thanks [@saseungmin](https://github.com/saseungmin)! - Update the dependency baseline for Expo SDK 56 and React Native 0.85.
+
+  The example app now uses the Expo 56 compatible React Native/Reanimated/Worklets stack, while development and example dependencies stay on the latest Gesture Handler 2.x patch line.
+
 ## 2.3.2
 
 ### Patch Changes
