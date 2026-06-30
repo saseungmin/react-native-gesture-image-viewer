@@ -13,7 +13,14 @@ React Native에서 이미지 갤러리나 콘텐츠 뷰어를 구현할 때, 복
 기존 라이브러리들은 커스터마이징이 어렵거나 성능 문제가 있었습니다. `react-native-gesture-image-viewer`는 React Native Reanimated와 Gesture Handler를 기반으로 한 고성능 **범용 제스처 뷰어** 라이브러리로, 이미지뿐만 아니라 비디오, 커스텀 컴포넌트 등 모든 콘텐츠에 완전한 커스터마이징과 직관적인 제스처 지원을 제공합니다.
 
 <p align="center">
-  <img src="./assets/example.gif" width="600" alt="Gesture and zoom demo" />
+  <video
+    src="https://github.com/saseungmin/react-native-gesture-image-viewer/releases/download/demo-video/demo-video.mov"
+    controls
+    autoPlay
+    loop
+    muted
+    style={{ maxHeight: 480, justifySelf: 'center' }}
+  />
 </p>
 
 ### 주요 특징
