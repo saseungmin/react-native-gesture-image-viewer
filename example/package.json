@@ -13,7 +13,6 @@
   "dependencies": {
     "@expo/metro-runtime": "~56.0.13",
     "@expo/vector-icons": "^15.1.1",
-    "@shopify/flash-list": "2.0.2",
     "expo": "^56.0.7",
     "expo-font": "~56.0.5",
     "expo-image": "~56.0.9",
