@@ -1,0 +1,39 @@
+# Overview
+
+<div style={{ width: '100%', alignItems: 'center', display: 'flex', justifyContent: 'center' }}>
+  <video
+    src="https://github.com/saseungmin/react-native-gesture-image-viewer/releases/download/demo-video/demo-video.mov"
+    controls
+    autoPlay
+    loop
+    muted
+    style={{ maxHeight: 480, justifySelf: 'center' }}
+  />
+</div>
+
+Have you ever struggled with implementing complex gesture handling and animations when building image galleries or content viewers in React Native?
+
+Existing libraries often have limited customization options or performance issues. `react-native-gesture-image-viewer` is a high-performance **universal gesture viewer** library built on [**React Native Reanimated**](https://docs.swmansion.com/react-native-reanimated/) and [**Gesture Handler**](https://docs.swmansion.com/react-native-gesture-handler/docs/), providing complete customization and intuitive gesture support for not only images but also videos, custom components, and any other content.
+
+## How v3 Paging Works
+
+Version 3 no longer depends on a consumer-provided `ScrollView`, `FlatList`, or `FlashList` for paging. `GestureViewer` owns horizontal paging internally with a gesture-driven render window.
+
+By default, the viewer mounts only three pages: previous, current, and next. When the user swipes or when you call `goToIndex`, `goToNext`, or `goToPrevious`, Reanimated moves the visual page position first. After the transition settles, the viewer updates the center virtual index and recalculates the small set of mounted slots around the new current item.
+
+In non-loop mode, edge slots outside the data range are omitted. In loop mode, virtual indexes are mapped back to logical data indexes, so moving past the last item can show the first item without handing paging behavior to a list implementation.
+
+Use `windowSize` only when you need more adjacent content mounted, and use `pageSpacing` when you need visible space between pages.
+
+## Key Features
+
+- 🤌 **Complete Gesture Support** - Pinch zoom, double-tap zoom, swipe navigation, pan when zoomed-in, and vertical drag to dismiss
+- 🏎️ **High-Performance Animations** - Smooth and responsive animations at 60fps and beyond, powered by React Native Reanimated
+- 🪟 **List-Free Render Window** - Internal gesture-owned paging without requiring `ScrollView`, `FlatList`, or `FlashList`
+- 🎨 **Full Customization** - Total control over components, styles, and gesture behavior
+- 🎛️ **External Control API** - Trigger actions programmatically from buttons or other UI components
+- 🧩 **Multi-Instance Management** - Manage multiple viewers independently using unique IDs
+- 🧬 **Flexible Integration** - Use with Modal, [React Native Modal](https://www.npmjs.com/package/react-native-modal), [Expo Image](https://www.npmjs.com/package/expo-image), [FastImage](https://github.com/DylanVann/react-native-fast-image), and custom content
+- 🧠 **Full TypeScript Support** - Great developer experience with type inference and safety
+- 🌐 **Cross-Platform Support** - Runs on iOS, Android, and Web with Expo Go and New Architecture compatibility
+- 🪄 **Easy-to-Use API** - Simple and intuitive API that requires minimal setup

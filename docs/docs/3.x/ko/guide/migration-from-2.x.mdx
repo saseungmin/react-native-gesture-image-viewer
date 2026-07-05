@@ -1,0 +1,88 @@
+import { Steps } from '@rspress/core/theme';
+
+# 2.x에서 3.x로 마이그레이션
+
+3.x에서는 사용자가 넘기던 리스트 기반 페이징 레이어를 제거했습니다. 이제 `GestureViewer`가 내부 제스처 기반 render window로 페이징을 직접 처리하므로, 뷰어에 `ScrollView`, `FlatList`, `FlashList`를 넘길 필요가 없습니다.
+
+## 마이그레이션 단계
+
+<Steps>
+
+### 리스트 컴포넌트 props 제거
+
+`GestureViewer`에서 `ListComponent`와 `listProps`를 제거하세요.
+
+```diff
+<GestureViewer
+  data={images}
+  renderItem={renderImage}
+- ListComponent={FlatList}
+- listProps={{
+-   keyExtractor: (item) => item.id,
+- }}
+/>
+```
+
+### snap 간격을 pageSpacing으로 교체
+
+`enableSnapMode`와 `itemSpacing`은 제거되었습니다. 페이지 사이에 보이는 간격이 필요하다면 `pageSpacing`을 사용하세요.
+
+```diff
+<GestureViewer
+  data={images}
+  renderItem={renderImage}
+- enableSnapMode
+- itemSpacing={16}
++ pageSpacing={16}
+/>
+```
+
+### 필요한 경우에만 render window 조정
+
+3.x의 기본값은 이전, 현재, 다음 총 세 페이지를 마운트합니다. 인접한 콘텐츠를 더 많이 마운트해야 할 때만 `windowSize`를 늘리세요.
+
+```tsx
+<GestureViewer data={images} renderItem={renderImage} windowSize={5} />
+```
+
+### 프로그래밍 방식 이동 유지
+
+`goToIndex`, `goToPrevious`, `goToNext`는 계속 동작합니다. `enableHorizontalSwipe={false}`는 사용자의 가로 스와이프 제스처만 비활성화하며, controller 이동은 계속 사용할 수 있습니다.
+
+```tsx
+const { goToIndex } = useGestureViewerController();
+
+goToIndex(2);
+goToIndex(2, { animated: false });
+```
+
+</Steps>
+
+## 제거된 Props
+
+| 2.x prop         | 3.x 대체 방식                                            |
+| ---------------- | -------------------------------------------------------- |
+| `ListComponent`  | 제거됨. 페이징은 내부에서 처리됩니다.                    |
+| `listProps`      | 제거됨. 콘텐츠 커스터마이징은 `renderItem`을 사용하세요. |
+| `enableSnapMode` | 제거됨. 내부 페이징은 항상 제스처 기반입니다.            |
+| `itemSpacing`    | `pageSpacing`                                            |
+
+## 자주 쓰던 `listProps` 마이그레이션
+
+3.x는 더 이상 `ScrollView`, `FlatList`, `FlashList`로 props를 전달하지 않습니다. 자주 쓰던 `listProps` 설정은 아래 v3 API로 옮기세요.
+
+| 2.x `listProps` 사용                                                                 | 3.x 방향                                                                                                                                       |
+| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `keyExtractor`                                                                       | 제거됨. render window가 slot key를 직접 관리합니다. 아이템 식별성은 `data`에서 안정적으로 유지하고, 콘텐츠는 `renderItem`에서 렌더링하세요.    |
+| `initialScrollIndex`                                                                 | `initialIndex`를 사용하세요.                                                                                                                   |
+| `scrollEnabled`, `pagingEnabled`, `horizontal`, `snapToInterval`, `decelerationRate` | 제거됨. 페이징은 내부 제스처가 소유합니다. 사용자 스와이프를 잠글 때는 `enableHorizontalSwipe`, 페이지 사이 간격은 `pageSpacing`을 사용하세요. |
+| `onScroll`, `onMomentumScrollEnd`, `onViewableItemsChanged`                          | 제거됨. `currentIndex`/`totalCount`는 `useGestureViewerState`를 사용하고, 지원되는 뷰어 인터랙션은 viewer event를 사용하세요.                  |
+| `ref.current.scrollToIndex(...)`                                                     | `useGestureViewerController().goToIndex(...)`, `goToNext()`, `goToPrevious()`를 사용하세요.                                                    |
+| `windowSize`, `maxToRenderPerBatch`, `removeClippedSubviews`, `estimatedItemSize`    | 리스트 virtualization 튜닝 대신 `windowSize`를 사용하세요. 기본값은 이전/현재/다음만 마운트합니다.                                             |
+| `showsHorizontalScrollIndicator`, `contentContainerStyle`, list separators           | 제거됨. 시각적 구성은 `renderItem` 내부에서 조합하거나, 페이지 사이 간격은 `pageSpacing`을 사용하세요.                                         |
+
+## 참고
+
+- `renderItem`은 이미지, 비디오, 커스텀 콘텐츠를 렌더링하는 커스터마이징 지점으로 유지됩니다.
+- `useGestureViewerState`는 계속 `currentIndex`와 `totalCount`를 제공합니다.
+- `useGestureViewerController`는 계속 프로그래밍 방식 제어 surface로 사용합니다.

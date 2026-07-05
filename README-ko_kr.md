@@ -23,7 +23,7 @@ React Native에서 이미지 갤러리나 콘텐츠 뷰어를 구현할 때, 복
 - 🎨 **완전한 커스터마이징** - 컴포넌트, 스타일, 제스처 동작까지 완벽하게 제어 가능
 - 🎛️ **외부 제어 API** - 버튼 등 다른 UI 컴포넌트에서 프로그래밍 방식으로 제어 가능
 - 🧩 **다중 인스턴스 관리** - 고유 ID 기반으로 여러 뷰어를 독립적으로 관리
-- 🧬 **유연한 통합** - Modal, [React Native Modal](https://www.npmjs.com/package/react-native-modal), ScrollView, FlatList, [FlashList](https://www.npmjs.com/package/@shopify/flash-list), [Expo Image](https://www.npmjs.com/package/expo-image), [FastImage](https://github.com/DylanVann/react-native-fast-image) 등 원하는 컴포넌트 사용
+- 🧬 **유연한 통합** - Modal, [React Native Modal](https://www.npmjs.com/package/react-native-modal), [Expo Image](https://www.npmjs.com/package/expo-image), [FastImage](https://github.com/DylanVann/react-native-fast-image), 비디오, 커스텀 콘텐츠 사용
 - 🧠 **완벽한 TypeScript 지원** - 타입 추론과 안정성을 갖춘 뛰어난 개발 경험 제공
 - 🌐 **크로스 플랫폼 지원** - iOS, Android, Web에서 동작하며 Expo Go 및 New Architecture 지원
 - 🪄 **간편한 API** - 복잡한 설정 없이도 직관적이고 쉽게 구현 가능
@@ -50,7 +50,7 @@ React Native에서 이미지 갤러리나 콘텐츠 뷰어를 구현할 때, 복
 
 ```tsx
 import { useCallback, useState } from 'react';
-import { ScrollView, Image, Modal, View, Text, Button, Pressable } from 'react-native';
+import { Image, Modal, View, Text, Button, Pressable } from 'react-native';
 import {
   GestureViewer,
   GestureTrigger,
@@ -95,7 +95,7 @@ function App() {
           data={images}
           initialIndex={selectedIndex}
           renderItem={renderImage}
-          ListComponent={ScrollView}
+          pageSpacing={16}
           onDismiss={() => setVisible(false)}
         />
         <View>

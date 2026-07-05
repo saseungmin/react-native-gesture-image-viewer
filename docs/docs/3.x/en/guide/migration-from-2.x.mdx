@@ -1,0 +1,88 @@
+import { Steps } from '@rspress/core/theme';
+
+# Migrating from 2.x to 3.x
+
+Version 3 removes the consumer-supplied list paging layer. `GestureViewer` now owns its paging with an internal gesture-driven render window, so apps no longer need to pass `ScrollView`, `FlatList`, or `FlashList` into the viewer.
+
+## Migration Steps
+
+<Steps>
+
+### Remove list component props
+
+Delete `ListComponent` and `listProps` from `GestureViewer`.
+
+```diff
+<GestureViewer
+  data={images}
+  renderItem={renderImage}
+- ListComponent={FlatList}
+- listProps={{
+-   keyExtractor: (item) => item.id,
+- }}
+/>
+```
+
+### Replace snap spacing with page spacing
+
+`enableSnapMode` and `itemSpacing` have been removed. Use `pageSpacing` when you need visible space between pages.
+
+```diff
+<GestureViewer
+  data={images}
+  renderItem={renderImage}
+- enableSnapMode
+- itemSpacing={16}
++ pageSpacing={16}
+/>
+```
+
+### Tune the render window only when needed
+
+By default, v3 mounts three pages: previous, current, and next. Increase `windowSize` only when you need more adjacent content mounted.
+
+```tsx
+<GestureViewer data={images} renderItem={renderImage} windowSize={5} />
+```
+
+### Keep programmatic navigation
+
+`goToIndex`, `goToPrevious`, and `goToNext` still work. `enableHorizontalSwipe={false}` disables only user horizontal swipe gestures; controller navigation remains available.
+
+```tsx
+const { goToIndex } = useGestureViewerController();
+
+goToIndex(2);
+goToIndex(2, { animated: false });
+```
+
+</Steps>
+
+## Removed Props
+
+| 2.x prop         | 3.x replacement                                      |
+| ---------------- | ---------------------------------------------------- |
+| `ListComponent`  | Removed. Paging is internal.                         |
+| `listProps`      | Removed. Use `renderItem` for content customization. |
+| `enableSnapMode` | Removed. Internal paging is always gesture-driven.   |
+| `itemSpacing`    | `pageSpacing`                                        |
+
+## Common `listProps` Migrations
+
+v3 no longer forwards props to `ScrollView`, `FlatList`, or `FlashList`. Move common `listProps` usage to the v3 viewer APIs instead:
+
+| 2.x `listProps` usage                                                                | v3 direction                                                                                                               |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `keyExtractor`                                                                       | Removed. The render window owns slot keys; keep stable item identity in `data` and render content through `renderItem`.    |
+| `initialScrollIndex`                                                                 | Use `initialIndex`.                                                                                                        |
+| `scrollEnabled`, `pagingEnabled`, `horizontal`, `snapToInterval`, `decelerationRate` | Removed. Paging is gesture-owned. Use `enableHorizontalSwipe` to lock user swipes and `pageSpacing` for visible page gaps. |
+| `onScroll`, `onMomentumScrollEnd`, `onViewableItemsChanged`                          | Removed. Use `useGestureViewerState` for `currentIndex`/`totalCount`; use viewer events for supported viewer interactions. |
+| `ref.current.scrollToIndex(...)`                                                     | Use `useGestureViewerController().goToIndex(...)`, `goToNext()`, or `goToPrevious()`.                                      |
+| `windowSize`, `maxToRenderPerBatch`, `removeClippedSubviews`, `estimatedItemSize`    | Replace list virtualization tuning with `windowSize`. The default mounts previous/current/next only.                       |
+| `showsHorizontalScrollIndicator`, `contentContainerStyle`, list separators           | Removed. Compose visual content inside `renderItem` or use `pageSpacing` for inter-page gaps.                              |
+
+## Notes
+
+- `renderItem` remains the customization point for images, videos, and custom content.
+- `useGestureViewerState` continues to expose `currentIndex` and `totalCount`.
+- `useGestureViewerController` remains the programmatic control surface.

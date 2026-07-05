@@ -1,0 +1,100 @@
+import { Tab, Tabs } from '@rspress/core/theme';
+
+# 커스텀 컴포넌트
+
+`react-native-gesture-image-viewer`는 강력한 기능으로 완벽한 컴포넌트 커스터마이징이 가능합니다. 이미지뿐만 아니라 원하는 컴포넌트로 제스처를 지원하는 아이템을 만들 수 있습니다.
+
+## 모달 컴포넌트
+
+다음과 같이 원하는 `Modal`을 사용하여 뷰어를 만들 수 있습니다.
+
+<Tabs>
+  <Tab label="Use Modal">
+    ```tsx
+    import { Image, Modal } from 'react-native';
+    import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+    function App() {
+      const images = [...];
+      const [visible, setVisible] = useState(false);
+
+      return (
+        <Modal visible={visible} onRequestClose={() => setVisible(false)}>
+          <GestureViewer
+            data={images}
+            renderItem={renderImage}
+            onDismiss={() => setVisible(false)}
+          />
+        </Modal>
+      );
+    }
+    ```
+
+  </Tab>
+  <Tab label="Use react-nativee-modal">
+    ```tsx
+    import { Image } from 'react-native';
+    import Modal from 'react-native-modal';
+    import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+    function App() {
+      const images = [...];
+      const [visible, setVisible] = useState(false);
+
+      return (
+        <Modal
+          isVisible={visible}
+          onBackButtonPress={() => setVisible(false)}
+          onBackdropPress={() => setVisible(false)}
+          hasBackdrop={false}
+          style={styles.modal}
+          useNativeDriver={true}
+          hideModalContentWhileAnimating={true}
+          animationInTiming={300}
+          animationOutTiming={300}
+        >
+          <GestureViewer
+            data={images}
+            renderItem={renderImage}
+            onDismiss={() => setVisible(false)}
+          />
+        </Modal>
+      );
+    }
+    ```
+
+  </Tab>
+</Tabs>
+
+## Render Window
+
+3.x는 사용자가 넘기는 리스트 컴포넌트 대신 내부 render window를 사용합니다. 콘텐츠 커스터마이징은 `renderItem`을 사용하고, 기본 window가 부족할 때만 `windowSize`나 `pageSpacing`을 조정하세요.
+
+```tsx
+function App() {
+  return <GestureViewer data={images} renderItem={renderImage} windowSize={5} pageSpacing={16} />;
+}
+```
+
+## 콘텐츠 컴포넌트
+
+`renderItem` props를 통해 [`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/), [`FastImage`](https://github.com/DylanVann/react-native-fast-image) 등 다양한 종류의 콘텐츠 컴포넌트를 주입하여 제스처를 사용할 수 있습니다.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+import { Image } from 'expo-image';
+
+function App() {
+  const renderImage = useCallback((imageUrl: string) => {
+    return (
+      <Image
+        source={{ uri: imageUrl }}
+        style={{ width: '100%', height: '100%' }}
+        contentFit="contain"
+      />
+    );
+  }, []);
+
+  return <GestureViewer data={images} renderItem={renderImage} />;
+}
+```

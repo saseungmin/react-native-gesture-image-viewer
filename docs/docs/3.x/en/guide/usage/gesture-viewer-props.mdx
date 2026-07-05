@@ -1,0 +1,327 @@
+# GestureViewer Props
+
+### `enableLoop` (default: `false`)
+
+Enables loop mode. When `true`, navigating next from the last item goes to the first item, and navigating previous from the first item goes to the last item.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  return (
+    <GestureViewer
+      data={data}
+      renderItem={renderItem}
+      enableLoop={true} // [!code highlight]
+    />
+  );
+}
+```
+
+### `windowSize` (default: `3`)
+
+Controls how many internal render-window slots are mounted, including the current item. Values are normalized to an odd number of at least `3`; for example, `4` becomes `5`.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  return (
+    <GestureViewer
+      data={data}
+      renderItem={renderItem}
+      windowSize={5} // [!code highlight]
+    />
+  );
+}
+```
+
+### `pageSpacing` (default: `0`)
+
+Sets horizontal visual space between pages. The page stride is `width + pageSpacing`, while zoom bounds still use `width` and `height`.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  return (
+    <GestureViewer
+      data={data}
+      renderItem={renderItem}
+      pageSpacing={16} // [!code highlight]
+    />
+  );
+}
+```
+
+### `autoPlay` (default: `false`)
+
+Enables auto play mode. When `true`, the viewer will automatically play the next item after the specified interval.
+
+- When `enableLoop` is enabled, the viewer will loop back to the first item after the last item.
+- When `enableLoop` is disabled, the viewer will stop at the last item.
+- When there is only one item, auto-play is disabled.
+- When zoom or rotate gestures are detected, the auto-play will be paused.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  return (
+    <GestureViewer
+      data={data}
+      renderItem={renderItem}
+      // [!code highlight]
+      autoPlay={true}
+    />
+  );
+}
+```
+
+### `autoPlayInterval` (default: `3000`)
+
+Sets the interval between auto play in milliseconds.  
+Must be a positive integer. Values below 250ms are clamped to 250ms at runtime.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  return (
+    <GestureViewer
+      data={data}
+      renderItem={renderItem}
+      // [!code highlight:2]
+      autoPlay={true}
+      autoPlayInterval={3000}
+    />
+  );
+}
+```
+
+### `onSingleTap`
+
+Runs when the viewer confirms a single tap. This is useful for toggling viewer chrome such as headers, footers, captions, and action buttons without overlaying another pressable on top of the viewer.
+
+- May resolve slightly later when double-tap zoom is enabled because the viewer waits to confirm it is not a double tap
+- Does not fire for swipe, pinch, dismiss, or double-tap zoom gestures
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const [showControls, setShowControls] = useState(true);
+
+  return (
+    <GestureViewer
+      data={images}
+      renderItem={renderImage}
+      onSingleTap={() => setShowControls((prev) => !prev)} // [!code highlight]
+    />
+  );
+}
+```
+
+### `initialIndex` (default: `0`)
+
+Sets the initial index value.
+
+### `maxZoomScale` (default: `2`)
+
+Controls the maximum zoom scale multiplier.
+
+## `GestureViewerProps` interface
+
+[Go to source](https://github.com/saseungmin/react-native-gesture-image-viewer/blob/next/src/types.ts)
+
+````tsx title="GestureViewerProps"
+export interface GestureViewerProps<ItemT> {
+  /**
+   * When you want to efficiently manage multiple `GestureViewer` instances, you can use the `id` prop to use multiple `GestureViewer` components.
+   * @remarks `GestureViewer` automatically removes instances from memory when components are unmounted, so no manual memory management is required.
+   * @defaultValue 'default'
+   */
+  id?: string;
+  /**
+   * The data to display in the `GestureViewer`.
+   */
+  data: ItemT[];
+  /**
+   * The index of the item to display in the `GestureViewer` when the component is mounted.
+   * @defaultValue 0
+   */
+  initialIndex?: number;
+  /**
+   * A callback function that is called when the `GestureViewer` is dismissed.
+   */
+  onDismiss?: () => void;
+  /**
+   * A callback function that is called when the dismiss interaction starts.
+   * @remarks Useful to hide external UI (e.g., headers, buttons) while the dismiss gesture/animation is in progress.
+   */
+  onDismissStart?: () => void;
+  /**
+   * A callback function that is called to render the item.
+   */
+  renderItem: (item: ItemT, index: number) => React.ReactElement;
+  /**
+   * A callback function that is called when a single tap is confirmed on the viewer content.
+   * @remarks
+   * - The callback runs only after the tap is resolved as a single tap, so it may be slightly delayed when double-tap zoom is enabled.
+   * - It is not called for swipe, pinch, dismiss, or double-tap zoom gestures.
+   * - Prefer this callback over overlaying a pressable in `renderContainer` for fullscreen tap handling.
+   */
+  onSingleTap?: (event: GestureViewerSingleTapEvent<ItemT>) => void;
+  /**
+   * A callback function that is called to render the container.
+   * @remarks Useful for composing additional UI (e.g., close button, toolbars) around the viewer.
+   * Prefer `onSingleTap` for fullscreen tap handling instead of overlaying a pressable over the viewer content.
+   * The second argument provides control helpers such as `dismiss()` to close the viewer.
+   *
+   * @param children - The viewer content to be rendered inside your container.
+   * @param helpers - Control helpers for the viewer. Currently includes `dismiss()`.
+   * @returns A React element that wraps and renders the provided `children`.
+   */
+  renderContainer?: (
+    children: React.ReactElement,
+    helpers: { dismiss: () => void },
+  ) => React.ReactElement;
+  /**
+   * The width of the `GestureViewer`.
+   * @remarks If you don't set this prop, the width of the `GestureViewer` will be the same as the width of the screen.
+   * @defaultValue screen width
+   */
+  width?: number;
+  /**
+   * The height of the `GestureViewer`.
+   * @remarks If you don't set this prop, the height of the `GestureViewer` will be the same as the height of the screen.
+   * @defaultValue screen height
+   */
+  height?: number;
+  /**
+   * The style of the backdrop.
+   */
+  backdropStyle?: StyleProp<ViewStyle>;
+  /**
+   * The style of the container.
+   */
+  containerStyle?: StyleProp<ViewStyle>;
+  /**
+   * Auto play mode.
+   * @remarks
+   * - When `true`, the viewer will automatically play the next item after the specified interval.
+   * - When `enableLoop` is enabled, the viewer will loop back to the first item after the last item.
+   * - When `enableLoop` is disabled, the viewer will stop at the last item.
+   * - When there is only one item, auto-play is disabled.
+   * - When zoom or rotate gestures are detected, the auto-play will be paused.
+   * @defaultValue false
+   */
+  autoPlay?: boolean;
+  /**
+   * Auto play interval.
+   * @remarks
+   * - When `autoPlay` is enabled, the viewer advances to the next item after the specified interval (ms).
+   * - Must be a positive integer. Values below 250ms are clamped to 250ms at runtime.
+   * @defaultValue 3000
+   */
+  autoPlayInterval?: number;
+  /**
+   * Dismiss gesture options.
+   * @remarks Useful for closing modals with configurable vertical swipe gestures.
+   */
+  dismiss?: {
+    /**
+     * When `false`, dismiss gesture is disabled.
+     * @defaultValue true
+     */
+    enabled?: boolean;
+    /**
+     * Controls which vertical swipe direction can trigger `onDismiss`.
+     * @remarks Use `down` for backward-compatible behavior, `up` for upward-only dismiss, or `both` for either direction.
+     * @defaultValue 'down'
+     */
+    direction?: GestureViewerDismissDirection;
+    /**
+     * `threshold` controls when `onDismiss` is called by applying a threshold value during vertical gestures.
+     * @defaultValue 80
+     */
+    threshold?: number;
+    /**
+     * `resistance` controls the range of vertical movement by applying resistance during dismiss gestures.
+     * @defaultValue 2
+     */
+    resistance?: number;
+    /**
+     * By default, the background `opacity` gradually decreases as you drag in the configured dismiss direction.
+     * @remarks When `false`, this animation is disabled.
+     * @defaultValue true
+     */
+    fadeBackdrop?: boolean;
+  };
+  /**
+   * Controls left/right swipe gestures.
+   * @remarks When `false`, horizontal gestures are disabled.
+   * @defaultValue true
+   */
+  enableHorizontalSwipe?: boolean;
+  /**
+   * Only works when zoom is active, allows moving item position when zoomed.
+   * @remarks When `false`, gesture movement is disabled during zoom.
+   * @defaultValue true
+   */
+  enablePanWhenZoomed?: boolean;
+  /**
+   * Controls two-finger pinch gestures.
+   * @remarks When `false`, two-finger zoom gestures are disabled.
+   * @defaultValue true
+   */
+  enablePinchZoom?: boolean;
+  /**
+   * Controls double-tap zoom gestures.
+   * @remarks When `false`, double-tap zoom gestures are disabled.
+   * @defaultValue true
+   */
+  enableDoubleTapZoom?: boolean;
+  /**
+   * Enables infinite loop navigation.
+   * @defaultValue false
+   */
+  enableLoop?: boolean;
+  /**
+   * Number of mounted render-window slots including the current item.
+   * @remarks Values are normalized to an odd number of at least 3. For example, `4` becomes `5`.
+   * @defaultValue 3
+   */
+  windowSize?: number;
+  /**
+   * Horizontal visual space between pages.
+   * @remarks Page stride is `width + pageSpacing`; zoom bounds still use `width` and `height`.
+   * @defaultValue 0
+   */
+  pageSpacing?: number;
+  /**
+   * The maximum zoom scale.
+   * @defaultValue 2
+   */
+  maxZoomScale?: number;
+  /**
+   * Trigger-based animation settings
+   * @remarks You can customize animation duration, easing, and system reduce-motion behavior.
+   *
+   * @example
+   * ```tsx
+   * <GestureViewer
+   *   triggerAnimation={{
+   *     duration: 250,
+   *     easing: Easing.out(Easing.cubic),
+   *     reduceMotion: 'system',
+   *     onAnimationComplete: () => {
+   *       console.log('Animation complete');
+   *     },
+   *   }}
+   * />
+   * ```
+   */
+  triggerAnimation?: TriggerAnimationConfig;
+}
+````

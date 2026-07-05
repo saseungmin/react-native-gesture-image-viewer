@@ -1,0 +1,76 @@
+# 프로그래밍 방식 제어
+
+`useGestureViewerController` 훅을 사용하여 `GestureViewer`를 프로그래밍 방식으로 제어할 수 있습니다.
+
+## useGestureViewerController
+
+```tsx
+import { GestureViewer, useGestureViewerController } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const { goToIndex, goToPrevious, goToNext, zoomIn, zoomOut, resetZoom, rotate } =
+    useGestureViewerController();
+
+  return (
+    <View>
+      <GestureViewer data={images} renderItem={renderImage} />
+      {/* Zoom Controls & Rotation Controls */}
+      <View>
+        <Button title="Zoom In" onPress={() => zoomIn(0.25)} />
+        <Button title="Zoom Out" onPress={() => zoomOut(0.25)} />
+        <Button
+          title="Reset"
+          onPress={() => {
+            rotate(0);
+            resetZoom();
+          }}
+        />
+        <Button title="Rotate Clockwise" onPress={() => rotate(90)} />
+        <Button title="Rotate Counter Clockwise" onPress={() => rotate(90, false)} />
+      </View>
+      {/* Navigation Controls */}
+      <View>
+        <Button title="Prev" onPress={goToPrevious} />
+        <Button title="Jump to index 2" onPress={() => goToIndex(2)} />
+        <Button title="Next" onPress={goToNext} />
+      </View>
+    </View>
+  );
+}
+```
+
+### 매개변수
+
+- `id?: string`
+  - `GestureViewer` 인스턴스의 ID입니다.
+  - 기본값: `"default"`
+
+## API Reference
+
+| 속성           | 설명                               | 타입                                                        | 파라미터 기본값 |
+| :------------- | :--------------------------------- | :---------------------------------------------------------- | :-------------: |
+| `goToIndex`    | 특정 인덱스로 이동합니다.          | `(index: number, options?: { animated?: boolean }) => void` |        -        |
+| `goToPrevious` | 이전 아이템으로 이동합니다.        | `() => void`                                                |        -        |
+| `goToNext`     | 다음 아이템으로 이동합니다.        | `() => void`                                                |        -        |
+| `zoomIn`       | 지정된 배수만큼 확대합니다.        | `(multiplier?: number) => void`                             |     `0.25`      |
+| `zoomOut`      | 지정된 배수만큼 축소합니다.        | `(multiplier?: number) => void`                             |     `0.25`      |
+| `resetZoom`    | 지정된 스케일로 줌을 초기화합니다. | `(scale?: number) => void`                                  |       `1`       |
+| `rotate`       | 지정된 각도만큼 회전합니다.        | `(angle?: RotationAngle, clockwise?: boolean) => void`      |   `90, true`    |
+
+페이지 전환 애니메이션 없이 현재 아이템을 즉시 바꿔야 한다면 `goToIndex(index, { animated: false })`를 사용하세요.
+
+- `zoomIn(multiplier?)`
+  - **multiplier**: 확대할 배수 (범위: `0.01 ~ 1`)
+  - 예: `zoomIn(0.5)` → 현재 스케일의 50% 만큼 추가 확대
+- `zoomOut(multiplier?)`
+  - **multiplier**: 축소할 배수 (범위: `0.01 ~ 1`)
+  - 예: `zoomOut(0.3)` → 현재 스케일을 1.3으로 나누어 축소
+- `resetZoom(scale?)`
+  - **scale**: 초기화할 스케일 값
+  - 예: `resetZoom(1.5)` → 1.5배 스케일로 초기화
+- `rotate(angle?, clockwise?)`
+  - **angle**: 회전할 각도 (0, 90, 180, 270, 360)
+  - **clockwise**: 회전 방향 (true: 시계방향, false: 반시계방향)
+  - 예: `rotate(90)` → 90도 시계방향 회전
+  - 예: `rotate(90, false)` → 90도 반시계방향 회전
+  - 예: `rotate(0)` → 회전 초기화

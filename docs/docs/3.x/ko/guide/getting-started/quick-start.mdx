@@ -1,0 +1,96 @@
+import { PackageManagerTabs } from '@rspress/core/theme';
+import { ExpoSnackEmbed } from '../../../../../components/ExpoSnackEmbed';
+
+# 빠른 시작
+
+<div style={{ width: '100%', alignItems: 'center', display: 'flex', justifyContent: 'center' }}>
+  <video
+    src="https://github.com/saseungmin/react-native-gesture-image-viewer/releases/download/demo-video/demo-video.mov"
+    controls
+    autoPlay
+    loop
+    muted
+    style={{ maxHeight: 480, justifySelf: 'center' }}
+  />
+</div>
+
+## 예제 및 데모
+
+- [📁 예제 프로젝트](https://github.com/saseungmin/react-native-gesture-image-viewer/tree/main/example) - 실제 구현 코드와 다양한 사용 사례
+- [🤖 Expo Snack](https://snack.expo.dev/@harang/react-native-gesture-image-viewer-v3) - Expo Snack에서 바로 체험
+
+<ExpoSnackEmbed snackId="@harang/react-native-gesture-image-viewer-v3" height="635px" />
+
+## 설치
+
+:::warning 중요
+`react-native-gesture-image-viewer`는 [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated)와 [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler)를 기반으로 한 높은 성능의 뷰어 라이브러리입니다.  
+따라서 이 라이브러리를 사용하기 전에 React Native Reanimated와 Gesture Handler를 설치해야 합니다. **아직 설정을 하지 않았다면 [설치 가이드](/guide/getting-started/installation.html)를 참고해주세요.**
+:::
+
+<PackageManagerTabs command="install react-native-gesture-image-viewer" />
+
+## 기본 사용법
+
+`react-native-gesture-image-viewer`는 완전한 커스터마이징을 위해 제스처 동작에만 집중한 라이브러리입니다.
+
+```tsx
+import { useCallback, useState } from 'react';
+import { Image, Modal, View, Text, Button, Pressable } from 'react-native';
+import {
+  GestureViewer,
+  GestureTrigger,
+  useGestureViewerController,
+  useGestureViewerEvent,
+  useGestureViewerState,
+} from 'react-native-gesture-image-viewer';
+
+function App() {
+  const images = [...];
+  const [visible, setVisible] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const { goToIndex, goToPrevious, goToNext } = useGestureViewerController();
+
+  const { currentIndex, totalCount } = useGestureViewerState();
+
+  const openModal = (index: number) => {
+    setSelectedIndex(index);
+    setVisible(true);
+  };
+
+  const renderImage = useCallback((imageUrl: string) => {
+    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
+  }, []);
+
+  useGestureViewerEvent('zoomChange', (data) => {
+    console.log(`Zoom changed from ${data.previousScale} to ${data.scale}`);
+  });
+
+  return (
+    <View>
+      {images.map((uri, index) => (
+        <GestureTrigger key={uri} onPress={() => openModal(index)}>
+          <Pressable>
+            <Image source={{ uri }} />
+          </Pressable>
+        </GestureTrigger>
+      ))}
+      <Modal transparent visible={visible}>
+        <GestureViewer
+          data={images}
+          initialIndex={selectedIndex}
+          renderItem={renderImage}
+          onDismiss={() => setVisible(false)}
+        />
+        <View>
+          <Button title="Prev" onPress={goToPrevious} />
+          <Button title="Jump to index 2" onPress={() => goToIndex(2)} />
+          <Button title="Next" onPress={goToNext} />
+          <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+```
