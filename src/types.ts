@@ -1,72 +1,6 @@
 import type React from 'react';
-import type {
-  FlatListProps,
-  ListRenderItem,
-  FlatList as RNFlatList,
-  ScrollView as RNScrollView,
-  StyleProp,
-  ViewabilityConfig,
-  ViewStyle,
-  ViewToken,
-} from 'react-native';
-import type {
-  FlatList as GHFlatList,
-  ScrollView as GHScrollView,
-} from 'react-native-gesture-handler';
+import type { StyleProp, ViewStyle } from 'react-native';
 import type { WithTimingConfig } from 'react-native-reanimated';
-
-export type FlatListComponent<ItemT> = typeof RNFlatList<ItemT> | typeof GHFlatList<ItemT>;
-export type ScrollViewComponent = typeof RNScrollView | typeof GHScrollView;
-
-interface ViewabilityConfigCallbackPair<TItem> {
-  viewabilityConfig: ViewabilityConfig;
-  onViewableItemsChanged:
-    | ((info: { viewableItems: ViewToken<TItem>[]; changed: ViewToken<TItem>[] }) => void)
-    | null;
-}
-
-// Helper type to instantiate generic components with specific type parameter
-export type InstantiateGeneric<ItemT, LC> =
-  LC extends React.ComponentType<infer P>
-    ? P extends Record<string, any>
-      ? {
-          [K in keyof P]: K extends 'data'
-            ? ArrayLike<ItemT> | null | undefined
-            : K extends 'renderItem'
-              ? ListRenderItem<ItemT>
-              : K extends 'keyExtractor'
-                ? (item: ItemT, index: number) => string
-                : K extends 'getItemType'
-                  ? (item: ItemT, index: number, extraData?: any) => string | number | undefined
-                  : K extends 'overrideItemLayout'
-                    ? (
-                        layout: { span?: number; size?: number },
-                        item: ItemT,
-                        index: number,
-                        maxColumns?: number,
-                        extraData?: any,
-                      ) => void
-                    : K extends 'onViewableItemsChanged'
-                      ? FlatListProps<ItemT>['onViewableItemsChanged']
-                      : K extends 'viewabilityConfigCallbackPairs'
-                        ? ViewabilityConfigCallbackPair<ItemT>[]
-                        : P[K];
-        }
-      : P
-    : never;
-
-export type GetComponentProps<ItemT, LC> =
-  LC extends React.ComponentType<any> ? InstantiateGeneric<ItemT, LC> : never;
-
-type ConditionalListProps<ItemT, LC> = LC extends typeof RNFlatList<ItemT>
-  ? React.ComponentProps<typeof RNFlatList<ItemT>>
-  : LC extends typeof GHFlatList<ItemT>
-    ? React.ComponentProps<typeof GHFlatList<ItemT>>
-    : LC extends typeof RNScrollView
-      ? React.ComponentProps<typeof RNScrollView>
-      : LC extends typeof GHScrollView
-        ? React.ComponentProps<typeof GHScrollView>
-        : GetComponentProps<ItemT, LC>;
 
 export type TriggerRect = {
   x: number;
@@ -101,7 +35,7 @@ export interface TriggerAnimationConfig extends WithTimingConfig {
   onAnimationComplete?: () => void;
 }
 
-export interface GestureViewerProps<ItemT, LC> {
+export interface GestureViewerProps<ItemT> {
   /**
    * When you want to efficiently manage multiple `GestureViewer` instances, you can use the `id` prop to use multiple `GestureViewer` components.
    * @remarks `GestureViewer` automatically removes instances from memory when components are unmounted, so no manual memory management is required.
@@ -153,10 +87,6 @@ export interface GestureViewerProps<ItemT, LC> {
     helpers: { dismiss: () => void },
   ) => React.ReactElement;
   /**
-   * Support for any list component like `ScrollView`, `FlatList`, `FlashList` through the `ListComponent` prop.
-   */
-  ListComponent: LC;
-  /**
    * The width of the `GestureViewer`.
    * @remarks If you don't set this prop, the width of the `GestureViewer` will be the same as the width of the screen.
    * @defaultValue screen width
@@ -168,11 +98,6 @@ export interface GestureViewerProps<ItemT, LC> {
    * @defaultValue screen height
    */
   height?: number;
-  /**
-   * The props to pass to the list component.
-   * @remarks The `listProps` provides **type inference based on the selected list component**, ensuring accurate autocompletion and type safety in your IDE.
-   */
-  listProps?: Partial<ConditionalListProps<ItemT, LC>>;
   /**
    * The style of the backdrop.
    */
@@ -263,25 +188,17 @@ export interface GestureViewerProps<ItemT, LC> {
    */
   enableLoop?: boolean;
   /**
-   * Enables snap scrolling mode.
-   *
-   * @remarks
-   * **`false` (default)**: Paging mode (`pagingEnabled: true`)
-   * - Scrolls by full screen size increments
-   *
-   * **`true`**: Snap mode (`snapToInterval` auto-calculated)
-   * - `snapToInterval` is automatically calculated based on `width` and `itemSpacing` values
-   * - Use this option when you need item spacing
-   * @defaultValue false
-   *
+   * Number of mounted render-window slots including the current item.
+   * @remarks Values are normalized to an odd number of at least 3. For example, `4` becomes `5`.
+   * @defaultValue 3
    */
-  enableSnapMode?: boolean;
+  windowSize?: number;
   /**
-   * The spacing between items in pixels.
-   * @remarks Only applied when `enableSnapMode` is `true`.
+   * Horizontal visual space between pages.
+   * @remarks Page stride is `width + pageSpacing`; zoom bounds still use `width` and `height`.
    * @defaultValue 0
    */
-  itemSpacing?: number;
+  pageSpacing?: number;
   /**
    * The maximum zoom scale.
    * @defaultValue 2
@@ -323,7 +240,7 @@ export type GestureViewerController = {
    * Updates the currentIndex in the controller state.
    *
    * @param index - The target index (must be between 0 and totalCount - 1)
-   * @throws Will throw an error if index is out of bounds
+   * Out-of-range indexes are ignored.
    *
    * @example
    * ```typescript
@@ -333,7 +250,7 @@ export type GestureViewerController = {
    * controller.goToIndex(totalCount - 1); // Go to last item
    * ```
    */
-  goToIndex: (index: number) => void;
+  goToIndex: (index: number, options?: { animated?: boolean }) => void;
 
   /**
    * Navigates to the previous item in the sequence.

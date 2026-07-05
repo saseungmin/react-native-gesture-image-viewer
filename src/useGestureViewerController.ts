@@ -11,7 +11,7 @@ import type { GestureViewerController } from './types';
  * @returns Methods for controlling the viewer
  *
  * **Available methods:**
- * - `goToIndex(index: number)` - Navigate to specific index (0 to totalCount-1)
+ * - `goToIndex(index: number, options?: { animated?: boolean })` - Navigate to specific index (0 to totalCount-1)
  * - `goToPrevious()` - Navigate to previous item
  * - `goToNext()` - Navigate to next item
  * - `zoomIn(multiplier?: number)` - Zoom in (default: 0.25)
@@ -58,8 +58,8 @@ export const useGestureViewerController = (id = 'default'): GestureViewerControl
 
   return useMemo<GestureViewerController>(
     () => ({
-      goToIndex: (index) => {
-        managerRef.current?.goToIndex(index);
+      goToIndex: (index, options) => {
+        managerRef.current?.goToIndex(index, options);
       },
       goToPrevious: () => {
         managerRef.current?.goToPrevious();
