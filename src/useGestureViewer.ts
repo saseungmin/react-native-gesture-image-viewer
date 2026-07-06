@@ -114,6 +114,7 @@ export const useGestureViewer = <ItemT>({
   const currentIndexRef = useRef(initialCurrentIndex);
   const centerVirtualIndexRef = useRef(initialCurrentIndex);
   const previousInitialIndexRef = useRef(initialIndex);
+  const hasResolvedInitialIndexRef = useRef(dataLength > 0);
   const onAnimationCompleteRef = useRef(triggerAnimation?.onAnimationComplete);
   const onSingleTapRef = useRef(onSingleTap);
   const dataRef = useRef(data);
@@ -216,6 +217,13 @@ export const useGestureViewer = <ItemT>({
     [clearPendingWebSingleTap, pageTransitionLocked],
   );
 
+  const cancelPagingInteraction = useCallback(() => {
+    clearPendingWebSingleTap();
+    pagingAnimationActive.set(false);
+    pagingGestureActive.set(false);
+    setTransitioning(false);
+  }, [clearPendingWebSingleTap, pagingAnimationActive, pagingGestureActive, setTransitioning]);
+
   const resetTransformState = useCallback(() => {
     translateX.set(withTiming(0));
     translateY.set(withTiming(0));
@@ -287,15 +295,16 @@ export const useGestureViewer = <ItemT>({
       }
 
       resetTransformState();
-      pagingAnimationActive.set(false);
       cancelAnimation(visualPage);
 
       if (resolution.kind !== 'step' || options?.animated === false) {
+        cancelPagingInteraction();
         visualPage.set(targetVirtualIndex);
         commitVirtualIndex(targetVirtualIndex);
         return;
       }
 
+      pagingAnimationActive.set(false);
       setTransitioning(true);
       visualPage.set(
         withTiming(targetVirtualIndex, PAGE_TRANSITION_CONFIG, (finished) => {
@@ -308,7 +317,14 @@ export const useGestureViewer = <ItemT>({
         }),
       );
     },
-    [commitVirtualIndex, pagingAnimationActive, resetTransformState, setTransitioning, visualPage],
+    [
+      cancelPagingInteraction,
+      commitVirtualIndex,
+      pagingAnimationActive,
+      resetTransformState,
+      setTransitioning,
+      visualPage,
+    ],
   );
 
   const navigateByDirection = useCallback(
@@ -487,11 +503,20 @@ export const useGestureViewer = <ItemT>({
 
   useLayoutEffect(() => {
     const initialIndexChanged = previousInitialIndexRef.current !== initialIndex;
+    const shouldResolveInitialIndex =
+      initialIndexChanged || (!hasResolvedInitialIndexRef.current && dataLength > 0);
+
     previousInitialIndexRef.current = initialIndex;
     dataLengthRef.current = dataLength;
     enableLoopRef.current = enableLoop;
 
-    const nextIndex = initialIndexChanged
+    if (dataLength > 0) {
+      hasResolvedInitialIndexRef.current = true;
+    } else if (initialIndexChanged) {
+      hasResolvedInitialIndexRef.current = false;
+    }
+
+    const nextIndex = shouldResolveInitialIndex
       ? clampIndex(initialIndex, dataLength)
       : clampIndex(currentIndexRef.current, dataLength);
 
@@ -512,7 +537,7 @@ export const useGestureViewer = <ItemT>({
 
     if (shouldSyncVirtualPage) {
       cancelAnimation(visualPage);
-      setTransitioning(false);
+      cancelPagingInteraction();
       visualPage.set(nextVirtualIndex);
       centerVirtualIndexRef.current = nextVirtualIndex;
       setCenterVirtualIndex(nextVirtualIndex);
@@ -528,12 +553,12 @@ export const useGestureViewer = <ItemT>({
       resetTransformState();
     }
   }, [
+    cancelPagingInteraction,
     commitCurrentIndex,
     dataLength,
     enableLoop,
     initialIndex,
     resetTransformState,
-    setTransitioning,
     visualPage,
   ]);
 

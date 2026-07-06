@@ -7,6 +7,16 @@ import type { GestureViewerController } from '../types';
 import { useGestureViewerController } from '../useGestureViewerController';
 import { useGestureViewerState } from '../useGestureViewerState';
 
+const mockClearPendingWebSingleTap = jest.fn();
+const mockScheduleWebSingleTap = jest.fn();
+
+jest.mock('../useWebSingleTapTimer', () => ({
+  useWebSingleTapTimer: () => ({
+    clearPendingWebSingleTap: mockClearPendingWebSingleTap,
+    scheduleWebSingleTap: mockScheduleWebSingleTap,
+  }),
+}));
+
 const data = ['first', 'second', 'third', 'fourth'];
 
 let controller: GestureViewerController | null = null;
@@ -79,6 +89,8 @@ describe('GestureViewer render-window integration', () => {
   afterEach(() => {
     cleanup();
     controller = null;
+    mockClearPendingWebSingleTap.mockClear();
+    mockScheduleWebSingleTap.mockClear();
     jest.useRealTimers();
     jest.restoreAllMocks();
   });
@@ -109,6 +121,21 @@ describe('GestureViewer render-window integration', () => {
     expect(rendered.getByText('fourth')).toBeTruthy();
     expect(rendered.queryByText('first')).toBeNull();
     expect(rendered.queryByText('second')).toBeNull();
+  });
+
+  it('clears pending web single taps before immediate controller navigation', async () => {
+    const rendered = await render(<Harness viewerId="controller-jump-clear-tap" />);
+
+    await expectState(rendered, 'controller-jump-clear-tap', '0/4');
+
+    mockClearPendingWebSingleTap.mockClear();
+
+    await act(async () => {
+      getController().goToIndex(3, { animated: false });
+    });
+
+    expect(mockClearPendingWebSingleTap).toHaveBeenCalledTimes(1);
+    await expectState(rendered, 'controller-jump-clear-tap', '3/4');
   });
 
   it('keeps controller navigation available when horizontal swipe is disabled', async () => {
@@ -189,5 +216,50 @@ describe('GestureViewer render-window integration', () => {
     expect(rendered.queryByText('second')).toBeNull();
     expect(rendered.queryByText('third')).toBeNull();
     expect(rendered.queryByText('fourth')).toBeNull();
+  });
+
+  it('applies initialIndex when data arrives after an empty mount', async () => {
+    const rendered = await render(
+      <Harness data={[]} initialIndex={2} viewerId="delayed-initial-index" />,
+    );
+
+    await expectState(rendered, 'delayed-initial-index', '0/0');
+
+    await act(async () => {
+      await rendered.rerender(
+        <Harness data={data} initialIndex={2} viewerId="delayed-initial-index" />,
+      );
+    });
+
+    await expectState(rendered, 'delayed-initial-index', '2/4');
+    expect(rendered.getByText('second')).toBeTruthy();
+    expect(rendered.getByText('third')).toBeTruthy();
+    expect(rendered.getByText('fourth')).toBeTruthy();
+    expect(rendered.queryByText('first')).toBeNull();
+  });
+
+  it('keeps initialIndex pending when it changes before data arrives', async () => {
+    const rendered = await render(
+      <Harness data={[]} initialIndex={0} viewerId="pending-initial-index" />,
+    );
+
+    await expectState(rendered, 'pending-initial-index', '0/0');
+
+    await act(async () => {
+      await rendered.rerender(
+        <Harness data={[]} initialIndex={2} viewerId="pending-initial-index" />,
+      );
+    });
+
+    await expectState(rendered, 'pending-initial-index', '0/0');
+
+    await act(async () => {
+      await rendered.rerender(
+        <Harness data={data} initialIndex={2} viewerId="pending-initial-index" />,
+      );
+    });
+
+    await expectState(rendered, 'pending-initial-index', '2/4');
+    expect(rendered.getByText('third')).toBeTruthy();
   });
 });
