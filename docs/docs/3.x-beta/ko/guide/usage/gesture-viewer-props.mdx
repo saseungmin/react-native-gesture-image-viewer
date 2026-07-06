@@ -22,6 +22,8 @@ function App() {
 
 현재 아이템을 포함해 내부 render-window slot을 몇 개 마운트할지 제어합니다. 값은 최소 `3` 이상의 홀수로 정규화됩니다. 예를 들어 `4`는 `5`가 됩니다.
 
+하드 최대값은 없습니다. 큰 값은 더 많은 `renderItem` 콘텐츠를 의도적으로 마운트하므로, 메모리, 렌더링, 이미지 디코딩 비용을 감수하는 명시적인 선택으로 다루세요.
+
 ```tsx
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 

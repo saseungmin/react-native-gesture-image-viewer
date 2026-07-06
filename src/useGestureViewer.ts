@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { type View, useWindowDimensions } from 'react-native';
 import { Gesture, type GestureType } from 'react-native-gesture-handler';
 import {
@@ -179,14 +179,23 @@ export const useGestureViewer = <ItemT>({
     ],
   );
 
+  const renderCurrentIndex = clampIndex(currentIndex, dataLength);
+  const renderCenterVirtualIndex =
+    getVirtualIndexForLogicalIndex(
+      renderCurrentIndex,
+      centerVirtualIndex,
+      dataLength,
+      enableLoop,
+    ) ?? renderCurrentIndex;
+
   const fullRenderWindowSlots = createRenderWindow({
-    centerVirtualIndex,
+    centerVirtualIndex: renderCenterVirtualIndex,
     data,
     enableLoop,
     windowSize: normalizedWindowSize,
   });
   const renderWindowSlots = isTriggerOpening
-    ? fullRenderWindowSlots.filter((slot) => slot.virtualIndex === centerVirtualIndex)
+    ? fullRenderWindowSlots.filter((slot) => slot.virtualIndex === renderCenterVirtualIndex)
     : fullRenderWindowSlots;
 
   const constrainTranslation = useMemo(
@@ -393,34 +402,6 @@ export const useGestureViewer = <ItemT>({
   }, [data]);
 
   useEffect(() => {
-    dataLengthRef.current = dataLength;
-    enableLoopRef.current = enableLoop;
-    managerRef.current?.notifyStateChange();
-  }, [dataLength, enableLoop]);
-
-  useEffect(() => {
-    if (!isTransitioningRef.current) {
-      return;
-    }
-
-    const nextIndex = clampIndex(currentIndexRef.current, dataLength);
-    const nextVirtualIndex =
-      getVirtualIndexForLogicalIndex(
-        nextIndex,
-        centerVirtualIndexRef.current,
-        dataLength,
-        enableLoop,
-      ) ?? nextIndex;
-
-    cancelAnimation(visualPage);
-    setTransitioning(false);
-    visualPage.set(nextVirtualIndex);
-    centerVirtualIndexRef.current = nextVirtualIndex;
-    setCenterVirtualIndex(nextVirtualIndex);
-    commitCurrentIndex(nextIndex);
-  }, [commitCurrentIndex, dataLength, enableLoop, setTransitioning, visualPage]);
-
-  useEffect(() => {
     isZoomedRef.current = isZoomed;
   }, [isZoomed]);
 
@@ -502,9 +483,11 @@ export const useGestureViewer = <ItemT>({
     };
   }, [manager, navigateToIndex, navigateToNext, navigateToPrevious]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const initialIndexChanged = previousInitialIndexRef.current !== initialIndex;
     previousInitialIndexRef.current = initialIndex;
+    dataLengthRef.current = dataLength;
+    enableLoopRef.current = enableLoop;
 
     const nextIndex = initialIndexChanged
       ? clampIndex(initialIndex, dataLength)
@@ -518,13 +501,30 @@ export const useGestureViewer = <ItemT>({
         enableLoop,
       ) ?? nextIndex;
 
-    cancelAnimation(visualPage);
-    setTransitioning(false);
-    visualPage.set(nextVirtualIndex);
-    centerVirtualIndexRef.current = nextVirtualIndex;
-    setCenterVirtualIndex(nextVirtualIndex);
-    commitCurrentIndex(nextIndex);
-    resetTransformState();
+    const previousIndex = currentIndexRef.current;
+    const previousVirtualIndex = centerVirtualIndexRef.current;
+    const shouldSyncVirtualPage =
+      isTransitioningRef.current || previousVirtualIndex !== nextVirtualIndex;
+    const shouldResetTransform =
+      initialIndexChanged || previousIndex !== nextIndex || shouldSyncVirtualPage;
+
+    if (shouldSyncVirtualPage) {
+      cancelAnimation(visualPage);
+      setTransitioning(false);
+      visualPage.set(nextVirtualIndex);
+      centerVirtualIndexRef.current = nextVirtualIndex;
+      setCenterVirtualIndex(nextVirtualIndex);
+    }
+
+    if (previousIndex !== nextIndex) {
+      commitCurrentIndex(nextIndex);
+    } else {
+      managerRef.current?.notifyStateChange();
+    }
+
+    if (shouldResetTransform) {
+      resetTransformState();
+    }
   }, [
     commitCurrentIndex,
     dataLength,
@@ -1174,6 +1174,11 @@ export const useGestureViewer = <ItemT>({
     return { index, item };
   }, []);
 
+  const isWebInteractionLocked = useCallback(
+    () => isTransitioningRef.current || pageTransitionLocked.get(),
+    [pageTransitionLocked],
+  );
+
   const emitSingleTap = useCallback(
     (x: number, y: number, index?: number, item?: ItemT) => {
       if (isTransitioningRef.current) {
@@ -1266,6 +1271,7 @@ export const useGestureViewer = <ItemT>({
     maxZoomScale,
     scale,
     scheduleWebSingleTap,
+    isInteractionLocked: isWebInteractionLocked,
     translateX,
     translateY,
     width,
@@ -1301,8 +1307,8 @@ export const useGestureViewer = <ItemT>({
   return {
     animatedStyle,
     backdropStyle,
-    centerVirtualIndex,
-    currentIndex,
+    centerVirtualIndex: renderCenterVirtualIndex,
+    currentIndex: renderCurrentIndex,
     dataLength,
     dismissGesture,
     handleDismiss,

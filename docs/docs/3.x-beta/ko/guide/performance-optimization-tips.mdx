@@ -57,7 +57,7 @@ function App() {
 
 #### 인접 페이지를 더 많이 마운트해야 하는 경우가 아니라면 render window를 작게 유지하세요.
 
-기본 `windowSize`는 `3`이며 이전, 현재, 다음 아이템을 마운트합니다. 더 큰 window는 인접 페이지를 더 빨리 보여줄 수 있지만 렌더링과 이미지 디코딩 작업도 늘어납니다.
+기본 `windowSize`는 `3`이며 이전, 현재, 다음 아이템을 마운트합니다. 더 큰 window는 인접 페이지를 더 빨리 보여줄 수 있지만 렌더링, 메모리, 이미지 디코딩 작업도 늘어납니다. 라이브러리는 `windowSize`에 하드 최대값을 두지 않으므로, 큰 값을 선택하는 것은 명시적인 성능 tradeoff입니다.
 
 ```tsx
 import { useCallback, useState } from 'react';

@@ -22,6 +22,8 @@ function App() {
 
 Controls how many internal render-window slots are mounted, including the current item. Values are normalized to an odd number of at least `3`; for example, `4` becomes `5`.
 
+There is no hard maximum. Large values intentionally mount more `renderItem` content, so treat them as an explicit memory, render, and image decode cost.
+
 ```tsx
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 

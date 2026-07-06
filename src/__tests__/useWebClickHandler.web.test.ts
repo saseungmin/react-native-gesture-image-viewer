@@ -43,6 +43,7 @@ describe('useWebClickHandler', () => {
       enableDoubleTapZoom: true,
       getCurrentTapTarget: () => ({ index: 1, item: 'image-2' }),
       height: 200,
+      isInteractionLocked: () => false,
       maxZoomScale: 3,
       scale: sharedValue,
       scheduleWebSingleTap,
@@ -74,6 +75,7 @@ describe('useWebClickHandler', () => {
       enableDoubleTapZoom: true,
       getCurrentTapTarget: () => ({ index: 1, item: 'image-2' }),
       height: 200,
+      isInteractionLocked: () => false,
       maxZoomScale: 3,
       scale: sharedValue,
       scheduleWebSingleTap: jest.fn((callback: () => void) => {
@@ -108,6 +110,7 @@ describe('useWebClickHandler', () => {
       enableDoubleTapZoom: false,
       getCurrentTapTarget: () => ({ index: 1, item: 'image-2' }),
       height: 200,
+      isInteractionLocked: () => false,
       maxZoomScale: 3,
       scale: sharedValue,
       scheduleWebSingleTap,
@@ -120,6 +123,35 @@ describe('useWebClickHandler', () => {
 
     expect(emitSingleTap).toHaveBeenCalledWith(20, 20, 1, 'image-2');
     expect(scheduleWebSingleTap).not.toHaveBeenCalled();
+    expect(applyTapZoomAtPoint).not.toHaveBeenCalled();
+  });
+
+  it('ignores web clicks while page transition is locked', () => {
+    const clearPendingWebSingleTap = jest.fn();
+    const emitSingleTap = jest.fn();
+    const scheduleWebSingleTap = jest.fn();
+
+    const handleClick = createWebClickHandler({
+      clearPendingWebSingleTap,
+      emitSingleTap,
+      enableDoubleTapZoom: true,
+      getCurrentTapTarget: () => ({ index: 1, item: 'image-2' }),
+      height: 200,
+      isInteractionLocked: () => true,
+      maxZoomScale: 3,
+      scale: sharedValue,
+      scheduleWebSingleTap,
+      translateX: sharedValue,
+      translateY: sharedValue,
+      width: 100,
+    });
+
+    handleClick(createClickEvent(1));
+    handleClick(createClickEvent(2));
+
+    expect(clearPendingWebSingleTap).toHaveBeenCalledTimes(2);
+    expect(scheduleWebSingleTap).not.toHaveBeenCalled();
+    expect(emitSingleTap).not.toHaveBeenCalled();
     expect(applyTapZoomAtPoint).not.toHaveBeenCalled();
   });
 });

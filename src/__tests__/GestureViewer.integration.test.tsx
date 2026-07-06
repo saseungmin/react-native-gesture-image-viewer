@@ -11,6 +11,7 @@ const data = ['first', 'second', 'third', 'fourth'];
 let controller: GestureViewerController | null = null;
 
 type HarnessProps = {
+  data?: string[];
   enableHorizontalSwipe?: boolean;
   enableLoop?: boolean;
   initialIndex?: number;
@@ -18,6 +19,7 @@ type HarnessProps = {
 };
 
 function Harness({
+  data: viewerData = data,
   enableHorizontalSwipe = true,
   enableLoop = false,
   initialIndex = 0,
@@ -32,7 +34,7 @@ function Harness({
         {state.currentIndex}/{state.totalCount}
       </Text>
       <GestureViewer
-        data={data}
+        data={viewerData}
         enableHorizontalSwipe={enableHorizontalSwipe}
         enableLoop={enableLoop}
         height={240}
@@ -133,5 +135,22 @@ describe('GestureViewer render-window integration', () => {
     expect(rendered.getByText('first')).toBeTruthy();
     expect(rendered.getByText('second')).toBeTruthy();
     expect(rendered.queryByText('third')).toBeNull();
+  });
+
+  it('clamps and keeps content mounted when data shrinks below the current index', async () => {
+    const rendered = await render(<Harness initialIndex={3} viewerId="data-shrink" />);
+
+    await expectState(rendered, 'data-shrink', '3/4');
+    expect(rendered.getByText('fourth')).toBeTruthy();
+
+    await act(async () => {
+      await rendered.rerender(<Harness data={['first']} initialIndex={3} viewerId="data-shrink" />);
+    });
+
+    await expectState(rendered, 'data-shrink', '0/1');
+    expect(rendered.getByText('first')).toBeTruthy();
+    expect(rendered.queryByText('second')).toBeNull();
+    expect(rendered.queryByText('third')).toBeNull();
+    expect(rendered.queryByText('fourth')).toBeNull();
   });
 });

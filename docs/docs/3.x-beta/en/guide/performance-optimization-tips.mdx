@@ -57,7 +57,7 @@ function App() {
 
 #### Keep the render window small unless you need more adjacent pages mounted.
 
-The default `windowSize` is `3`, which mounts the previous, current, and next items. Larger windows can make adjacent pages feel more ready, but they also increase render and image decode work.
+The default `windowSize` is `3`, which mounts the previous, current, and next items. Larger windows can make adjacent pages feel more ready, but they also increase render, memory, and image decode work. The library does not cap `windowSize`; choosing a large value is an explicit performance tradeoff.
 
 ```tsx
 import { useCallback, useState } from 'react';

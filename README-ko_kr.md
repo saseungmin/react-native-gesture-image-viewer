@@ -34,6 +34,8 @@ React Native에서 이미지 갤러리나 콘텐츠 뷰어를 구현할 때, 복
 
 전체 문서는 <https://react-native-gesture-image-viewer.pages.dev>에서 확인할 수 있습니다.
 
+> v3는 현재 beta입니다. `react-native-gesture-image-viewer@beta`로 설치하고 [v3 beta 문서](https://react-native-gesture-image-viewer.pages.dev/3.x-beta/ko/)를 사용하세요. 문서 루트는 여전히 stable v2 문서를 가리킵니다.
+
 ### 예제 및 데모
 
 - [📁 예제 프로젝트](/example/) - 실제 구현 코드와 다양한 사용 사례

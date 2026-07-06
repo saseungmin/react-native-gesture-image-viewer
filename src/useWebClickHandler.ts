@@ -28,6 +28,7 @@ export type WebClickHandlerConfig<ItemT> = {
   enableDoubleTapZoom: boolean;
   getCurrentTapTarget: () => WebTapTarget<ItemT> | null;
   height: number;
+  isInteractionLocked: () => boolean;
   maxZoomScale: number;
   scale: SharedValue<number>;
   scheduleWebSingleTap: ScheduleWebSingleTap;

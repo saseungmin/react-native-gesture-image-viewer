@@ -29,6 +29,7 @@ export type WebClickHandlerConfig<ItemT> = {
   enableDoubleTapZoom: boolean;
   getCurrentTapTarget: () => WebTapTarget<ItemT> | null;
   height: number;
+  isInteractionLocked: () => boolean;
   maxZoomScale: number;
   scale: SharedValue<number>;
   scheduleWebSingleTap: ScheduleWebSingleTap;
@@ -43,6 +44,7 @@ export function createWebClickHandler<ItemT>({
   enableDoubleTapZoom,
   getCurrentTapTarget,
   height,
+  isInteractionLocked,
   maxZoomScale,
   scale,
   scheduleWebSingleTap,
@@ -54,6 +56,12 @@ export function createWebClickHandler<ItemT>({
     const rect = event.currentTarget.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
+
+    if (isInteractionLocked()) {
+      clearPendingWebSingleTap();
+      return;
+    }
+
     const tapTarget = getCurrentTapTarget();
 
     if (!tapTarget) {
@@ -94,6 +102,7 @@ export function useWebClickHandler<ItemT>({
   enableDoubleTapZoom,
   getCurrentTapTarget,
   height,
+  isInteractionLocked,
   maxZoomScale,
   scale,
   scheduleWebSingleTap,
@@ -109,6 +118,7 @@ export function useWebClickHandler<ItemT>({
         enableDoubleTapZoom,
         getCurrentTapTarget,
         height,
+        isInteractionLocked,
         maxZoomScale,
         scale,
         scheduleWebSingleTap,
@@ -122,6 +132,7 @@ export function useWebClickHandler<ItemT>({
       enableDoubleTapZoom,
       getCurrentTapTarget,
       height,
+      isInteractionLocked,
       maxZoomScale,
       scale,
       scheduleWebSingleTap,

@@ -34,6 +34,8 @@ Existing libraries often have limited customization options or performance issue
 
 Full documentation is available at: <https://react-native-gesture-image-viewer.pages.dev>
 
+> v3 is currently in beta. Install it with `react-native-gesture-image-viewer@beta` and use the [v3 beta docs](https://react-native-gesture-image-viewer.pages.dev/3.x-beta/). The docs root still points to the stable v2 documentation.
+
 ### Examples & Demo
 
 - [📁 Example Project](/example/) - Real implementation code with various use cases
