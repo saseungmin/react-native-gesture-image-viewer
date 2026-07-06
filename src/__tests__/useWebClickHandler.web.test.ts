@@ -65,7 +65,7 @@ describe('useWebClickHandler', () => {
     expect(emitSingleTap).not.toHaveBeenCalled();
   });
 
-  it('emits a scheduled single tap with the current tap target', () => {
+  it('resolves scheduled single taps when the timer fires', () => {
     const pendingSingleTapCallbacks: Array<() => void> = [];
     const emitSingleTap = jest.fn();
 
@@ -96,7 +96,7 @@ describe('useWebClickHandler', () => {
 
     pendingSingleTap?.();
 
-    expect(emitSingleTap).toHaveBeenCalledWith(20, 20, 1, 'image-2');
+    expect(emitSingleTap).toHaveBeenCalledWith(20, 20);
     expect(applyTapZoomAtPoint).not.toHaveBeenCalled();
   });
 

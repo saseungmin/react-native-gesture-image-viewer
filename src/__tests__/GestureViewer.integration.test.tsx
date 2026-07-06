@@ -7,14 +7,33 @@ import type { GestureViewerController } from '../types';
 import { useGestureViewerController } from '../useGestureViewerController';
 import { useGestureViewerState } from '../useGestureViewerState';
 
+type MockWebTapTarget = {
+  index: number;
+  item: unknown;
+};
+
+type MockWebClickHandlerConfig = {
+  emitSingleTap: (x: number, y: number, index?: number, item?: unknown) => void;
+  getCurrentTapTarget: () => MockWebTapTarget | null;
+};
+
 const mockClearPendingWebSingleTap = jest.fn();
 const mockScheduleWebSingleTap = jest.fn();
+const mockWebClickHandler = jest.fn();
+let mockWebClickHandlerConfig: MockWebClickHandlerConfig | null = null;
 
 jest.mock('../useWebSingleTapTimer', () => ({
   useWebSingleTapTimer: () => ({
     clearPendingWebSingleTap: mockClearPendingWebSingleTap,
     scheduleWebSingleTap: mockScheduleWebSingleTap,
   }),
+}));
+
+jest.mock('../useWebClickHandler', () => ({
+  useWebClickHandler: (config: MockWebClickHandlerConfig) => {
+    mockWebClickHandlerConfig = config;
+    return mockWebClickHandler;
+  },
 }));
 
 const data = ['first', 'second', 'third', 'fourth'];
@@ -24,10 +43,11 @@ let controller: GestureViewerController | null = null;
 type HarnessProps = {
   autoPlay?: boolean;
   autoPlayInterval?: number;
-  data?: string[];
+  data?: Array<string | undefined>;
   enableHorizontalSwipe?: boolean;
   enableLoop?: boolean;
   initialIndex?: number;
+  onSingleTap?: (event: { x: number; y: number; index: number; item: string | undefined }) => void;
   viewerId: string;
 };
 
@@ -38,6 +58,7 @@ function Harness({
   enableHorizontalSwipe = true,
   enableLoop = false,
   initialIndex = 0,
+  onSingleTap,
   viewerId,
 }: HarnessProps) {
   controller = useGestureViewerController(viewerId);
@@ -57,6 +78,7 @@ function Harness({
         height={240}
         id={viewerId}
         initialIndex={initialIndex}
+        onSingleTap={onSingleTap}
         renderItem={(item, index) => <Text testID={`${viewerId}-item-${index}`}>{item}</Text>}
         width={320}
       />
@@ -91,6 +113,8 @@ describe('GestureViewer render-window integration', () => {
     controller = null;
     mockClearPendingWebSingleTap.mockClear();
     mockScheduleWebSingleTap.mockClear();
+    mockWebClickHandler.mockClear();
+    mockWebClickHandlerConfig = null;
     jest.useRealTimers();
     jest.restoreAllMocks();
   });
@@ -154,6 +178,32 @@ describe('GestureViewer render-window integration', () => {
     expect(rendered.getByText('second')).toBeTruthy();
     expect(rendered.getByText('third')).toBeTruthy();
     expect(rendered.getByText('fourth')).toBeTruthy();
+  });
+
+  it('preserves tap events for explicit undefined items', async () => {
+    const onSingleTap = jest.fn();
+
+    const rendered = await render(
+      <Harness data={[undefined]} onSingleTap={onSingleTap} viewerId="undefined-tap-target" />,
+    );
+
+    await expectState(rendered, 'undefined-tap-target', '0/1');
+
+    expect(mockWebClickHandlerConfig?.getCurrentTapTarget()).toEqual({
+      index: 0,
+      item: undefined,
+    });
+
+    await act(async () => {
+      mockWebClickHandlerConfig?.emitSingleTap(20, 30);
+    });
+
+    expect(onSingleTap).toHaveBeenCalledWith({
+      x: 20,
+      y: 30,
+      index: 0,
+      item: undefined,
+    });
   });
 
   it('does not autoplay while trigger opening is still measuring', async () => {

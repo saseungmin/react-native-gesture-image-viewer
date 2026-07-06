@@ -90,6 +90,24 @@ describe('render window slot mapping', () => {
     ).toEqual([0, 1, 0, 1, 0]);
   });
 
+  it('renders only the center slot for a single looped item', () => {
+    const slots = createRenderWindow({
+      centerVirtualIndex: 4,
+      data: ['a'],
+      enableLoop: true,
+      windowSize: 5,
+    });
+
+    expect(slots).toEqual([
+      {
+        item: 'a',
+        logicalIndex: 0,
+        slotKey: 'slot-4',
+        virtualIndex: 4,
+      },
+    ]);
+  });
+
   it('keeps explicit undefined items in dense data arrays', () => {
     const slots = createRenderWindow<string | undefined>({
       centerVirtualIndex: 0,

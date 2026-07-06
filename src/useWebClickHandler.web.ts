@@ -90,7 +90,7 @@ export function createWebClickHandler<ItemT>({
 
     if (event.detail === 1) {
       scheduleWebSingleTap(() => {
-        emitSingleTap(x, y, tapTarget.index, tapTarget.item);
+        emitSingleTap(x, y);
       });
     }
   };

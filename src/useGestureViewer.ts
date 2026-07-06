@@ -1194,13 +1194,12 @@ export const useGestureViewer = <ItemT>({
 
   const getCurrentTapTarget = useCallback((): { index: number; item: ItemT } | null => {
     const index = pendingIndexRef.current;
-    const item = dataRef.current[index];
 
-    if (index < 0 || index >= dataRef.current.length || item === undefined) {
+    if (index < 0 || index >= dataRef.current.length || !(index in dataRef.current)) {
       return null;
     }
 
-    return { index, item };
+    return { index, item: dataRef.current[index] as ItemT };
   }, []);
 
   const isWebInteractionLocked = useCallback(

@@ -163,6 +163,21 @@ export function createRenderWindow<ItemT>({
     return [];
   }
 
+  if (enableLoop && dataLength === 1) {
+    if (!(0 in data)) {
+      return [];
+    }
+
+    return [
+      {
+        item: data[0] as ItemT,
+        logicalIndex: 0,
+        slotKey: `slot-${centerVirtualIndex}`,
+        virtualIndex: centerVirtualIndex,
+      },
+    ];
+  }
+
   const normalizedWindowSize = normalizeWindowSize(windowSize);
   const halfWindowSize = Math.floor(normalizedWindowSize / 2);
   const slots: RenderWindowSlot<ItemT>[] = [];
