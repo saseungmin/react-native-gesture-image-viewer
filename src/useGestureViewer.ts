@@ -29,7 +29,7 @@ import {
   shouldRunNavigationDuringTransition,
 } from './renderWindow';
 import type { GestureViewerProps, TriggerRect } from './types';
-import { useWebClickHandler } from './useWebClickHandler';
+import { type EmitSingleTap, useWebClickHandler } from './useWebClickHandler';
 import { useWebSingleTapTimer } from './useWebSingleTapTimer';
 import { createBoundsConstraint } from './utils';
 import { getDismissDistance, shouldDismissByDirection } from './utils/dismiss';
@@ -1232,14 +1232,15 @@ export const useGestureViewer = <ItemT>({
     [pageTransitionLocked],
   );
 
-  const emitSingleTap = useCallback(
-    (x: number, y: number, index?: number, item?: ItemT) => {
+  const emitSingleTap = useCallback<EmitSingleTap<ItemT>>(
+    (...args) => {
+      const [x, y] = args;
+
       if (isTransitioningRef.current) {
         return;
       }
 
-      const target =
-        item === undefined || index === undefined ? getCurrentTapTarget() : { index, item };
+      const target = args.length === 2 ? getCurrentTapTarget() : { index: args[2], item: args[3] };
 
       if (!target) {
         return;

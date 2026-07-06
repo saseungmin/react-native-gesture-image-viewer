@@ -23,9 +23,13 @@ export type WebClickEvent = {
 
 export type WebClickHandler = (event: WebClickEvent) => void;
 
+export type EmitSingleTap<ItemT> = (
+  ...args: [x: number, y: number] | [x: number, y: number, index: number, item: ItemT]
+) => void;
+
 export type WebClickHandlerConfig<ItemT> = {
   clearPendingWebSingleTap: () => void;
-  emitSingleTap: (x: number, y: number, index?: number, item?: ItemT) => void;
+  emitSingleTap: EmitSingleTap<ItemT>;
   enableDoubleTapZoom: boolean;
   getCurrentTapTarget: () => WebTapTarget<ItemT> | null;
   height: number;
@@ -90,7 +94,7 @@ export function createWebClickHandler<ItemT>({
 
     if (event.detail === 1) {
       scheduleWebSingleTap(() => {
-        emitSingleTap(x, y);
+        emitSingleTap(x, y, tapTarget.index, tapTarget.item);
       });
     }
   };
