@@ -234,6 +234,39 @@ describe('GestureViewer render-window integration', () => {
     expect(triggerNode.measure).toHaveBeenCalledTimes(1);
   });
 
+  it('does not autoplay while a mounted viewer starts a trigger opening', async () => {
+    jest.useFakeTimers();
+
+    const viewerId = 'mounted-trigger-opening';
+    const triggerNode = { measure: jest.fn() } as unknown as View;
+
+    const rendered = await render(
+      <Harness
+        autoPlay
+        autoPlayInterval={250}
+        data={['first', 'second']}
+        enableLoop
+        viewerId={viewerId}
+      />,
+    );
+
+    await expectState(rendered, viewerId, '0/2');
+
+    await act(async () => {
+      registry.setActiveTriggerNode(viewerId, triggerNode);
+    });
+
+    await waitFor(() => {
+      expect(triggerNode.measure).toHaveBeenCalledTimes(1);
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    await expectState(rendered, viewerId, '0/2');
+  });
+
   it('rebases loop edge navigation onto the nearest virtual page', async () => {
     const rendered = await render(<Harness enableLoop initialIndex={3} viewerId="loop-edge" />);
 

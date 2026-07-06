@@ -234,6 +234,23 @@ export const useGestureViewer = <ItemT>({
     rotation.set(0);
   }, [initialTranslateX, initialTranslateY, rotation, scale, startScale, translateX, translateY]);
 
+  const resetTransformStateImmediately = useCallback(() => {
+    cancelAnimation(translateX);
+    cancelAnimation(translateY);
+    cancelAnimation(initialTranslateX);
+    cancelAnimation(initialTranslateY);
+    cancelAnimation(startScale);
+    cancelAnimation(scale);
+    cancelAnimation(rotation);
+    translateX.set(0);
+    translateY.set(0);
+    initialTranslateX.set(0);
+    initialTranslateY.set(0);
+    startScale.set(1);
+    scale.set(1);
+    rotation.set(0);
+  }, [initialTranslateX, initialTranslateY, rotation, scale, startScale, translateX, translateY]);
+
   const commitCurrentIndex = useCallback((nextIndex: number) => {
     pendingIndexRef.current = nextIndex;
     currentIndexRef.current = nextIndex;
@@ -294,16 +311,17 @@ export const useGestureViewer = <ItemT>({
         return;
       }
 
-      resetTransformState();
       cancelAnimation(visualPage);
 
       if (resolution.kind !== 'step' || options?.animated === false) {
+        resetTransformStateImmediately();
         cancelPagingInteraction();
         visualPage.set(targetVirtualIndex);
         commitVirtualIndex(targetVirtualIndex);
         return;
       }
 
+      resetTransformState();
       pagingAnimationActive.set(false);
       setTransitioning(true);
       visualPage.set(
@@ -321,6 +339,7 @@ export const useGestureViewer = <ItemT>({
       cancelPagingInteraction,
       commitVirtualIndex,
       pagingAnimationActive,
+      resetTransformStateImmediately,
       resetTransformState,
       setTransitioning,
       visualPage,
@@ -412,7 +431,13 @@ export const useGestureViewer = <ItemT>({
   }, [id]);
 
   useEffect(() => {
-    return registry.subscribeToActiveTrigger(id, setActiveTriggerNode);
+    return registry.subscribeToActiveTrigger(id, (node) => {
+      setActiveTriggerNode(node);
+
+      if (node) {
+        setIsTriggerOpening(true);
+      }
+    });
   }, [id]);
 
   useEffect(() => {
