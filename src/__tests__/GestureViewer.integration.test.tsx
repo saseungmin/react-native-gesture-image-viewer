@@ -13,7 +13,7 @@ type MockWebTapTarget = {
 };
 
 type MockWebClickHandlerConfig = {
-  emitSingleTap: (x: number, y: number, index?: number, item?: unknown) => void;
+  emitSingleTap: (x: number, y: number, tapTarget?: MockWebTapTarget) => void;
   getCurrentTapTarget: () => MockWebTapTarget | null;
 };
 

@@ -96,7 +96,7 @@ describe('useWebClickHandler', () => {
 
     pendingSingleTap?.();
 
-    expect(emitSingleTap).toHaveBeenCalledWith(20, 20, 1, 'image-2');
+    expect(emitSingleTap).toHaveBeenCalledWith(20, 20, { index: 1, item: 'image-2' });
     expect(applyTapZoomAtPoint).not.toHaveBeenCalled();
   });
 
@@ -129,7 +129,7 @@ describe('useWebClickHandler', () => {
 
     pendingSingleTap?.();
 
-    expect(emitSingleTap).toHaveBeenCalledWith(20, 20, 0, undefined);
+    expect(emitSingleTap).toHaveBeenCalledWith(20, 20, { index: 0, item: undefined });
     expect(applyTapZoomAtPoint).not.toHaveBeenCalled();
   });
 
@@ -154,7 +154,7 @@ describe('useWebClickHandler', () => {
 
     handleClick(createClickEvent(2));
 
-    expect(emitSingleTap).toHaveBeenCalledWith(20, 20, 1, 'image-2');
+    expect(emitSingleTap).toHaveBeenCalledWith(20, 20, { index: 1, item: 'image-2' });
     expect(scheduleWebSingleTap).not.toHaveBeenCalled();
     expect(applyTapZoomAtPoint).not.toHaveBeenCalled();
   });

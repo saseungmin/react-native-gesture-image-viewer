@@ -1233,14 +1233,12 @@ export const useGestureViewer = <ItemT>({
   );
 
   const emitSingleTap = useCallback<EmitSingleTap<ItemT>>(
-    (...args) => {
-      const [x, y] = args;
-
+    (x, y, tapTarget) => {
       if (isTransitioningRef.current) {
         return;
       }
 
-      const target = args.length === 2 ? getCurrentTapTarget() : { index: args[2], item: args[3] };
+      const target = tapTarget ?? getCurrentTapTarget();
 
       if (!target) {
         return;

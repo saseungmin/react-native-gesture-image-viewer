@@ -22,9 +22,7 @@ export type WebClickEvent = {
 
 export type WebClickHandler = (event: WebClickEvent) => void;
 
-export type EmitSingleTap<ItemT> = (
-  ...args: [x: number, y: number] | [x: number, y: number, index: number, item: ItemT]
-) => void;
+export type EmitSingleTap<ItemT> = (x: number, y: number, tapTarget?: WebTapTarget<ItemT>) => void;
 
 export type WebClickHandlerConfig<ItemT> = {
   clearPendingWebSingleTap: () => void;
