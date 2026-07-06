@@ -4,11 +4,11 @@ pageType: home
 hero:
   name: React Native Gesture Image Viewer
   text: 부드럽고 유연한 이미지 뷰어
-  tagline: Reanimated 기반의 이미지 제스처와 완전한 제어
+  tagline: 리스트 없는 제스처 페이징을 위한 v3 beta 문서
   actions:
     - theme: brand
       text: 빠른 시작
-      link: /ko/guide/getting-started/installation.html
+      link: /3.x-beta/ko/guide/getting-started/installation.html
     - theme: alt
       text: GitHub
       link: https://github.com/saseungmin/react-native-gesture-image-viewer

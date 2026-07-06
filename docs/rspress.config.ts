@@ -12,8 +12,8 @@ export default defineConfig({
   logoText: 'React Native Gesture Image Viewer',
   llms: true,
   multiVersion: {
-    default: '3.x',
-    versions: ['1.x', '2.x', '3.x'],
+    default: '2.x',
+    versions: ['1.x', '2.x', '3.x-beta'],
   },
   search: {
     versioned: true,

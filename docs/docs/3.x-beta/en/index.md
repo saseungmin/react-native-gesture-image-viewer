@@ -4,11 +4,11 @@ pageType: home
 hero:
   name: React Native Gesture Image Viewer
   text: Smooth and flexible viewer
-  tagline: Reanimated-powered image gestures with full control
+  tagline: v3 beta documentation for list-free gesture paging
   actions:
     - theme: brand
       text: Quick Start
-      link: /guide/getting-started/installation.html
+      link: /3.x-beta/guide/getting-started/installation.html
     - theme: alt
       text: GitHub
       link: https://github.com/saseungmin/react-native-gesture-image-viewer
