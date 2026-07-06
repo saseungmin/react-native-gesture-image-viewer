@@ -6,7 +6,7 @@ Prepare the v3 beta by replacing consumer-supplied list paging with an internal 
 
 `GestureViewer` no longer depends on a consumer-provided `ScrollView`, `FlatList`, or `FlashList` to move between items. Instead, v3 owns paging internally with Reanimated shared values and a small render window around the current item.
 
-By default, the viewer mounts three render-window slots: previous, current, and next. When the user swipes, or when app code calls `goToIndex`, `goToNext`, or `goToPrevious`, the viewer moves the visual page first, then rebases the internal center virtual index and recalculates the mounted slots.
+By default, the viewer mounts three render-window slots: previous, current, and next. When the user swipes, or when app code moves to an adjacent item with `goToIndex`, `goToNext`, or `goToPrevious`, the viewer moves the visual page first, then rebases the internal center virtual index and recalculates the mounted slots. Non-adjacent `goToIndex` calls rebase immediately because the target page is not guaranteed to be mounted inside the small render window.
 
 Breaking changes:
 

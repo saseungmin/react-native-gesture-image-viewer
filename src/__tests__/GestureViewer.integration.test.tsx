@@ -1,7 +1,8 @@
 import { act, cleanup, render, waitFor } from '@testing-library/react-native';
-import { Text } from 'react-native';
+import { Text, type View } from 'react-native';
 
 import { GestureViewer } from '../GestureViewer';
+import { registry } from '../GestureViewerRegistry';
 import type { GestureViewerController } from '../types';
 import { useGestureViewerController } from '../useGestureViewerController';
 import { useGestureViewerState } from '../useGestureViewerState';
@@ -11,6 +12,8 @@ const data = ['first', 'second', 'third', 'fourth'];
 let controller: GestureViewerController | null = null;
 
 type HarnessProps = {
+  autoPlay?: boolean;
+  autoPlayInterval?: number;
   data?: string[];
   enableHorizontalSwipe?: boolean;
   enableLoop?: boolean;
@@ -19,6 +22,8 @@ type HarnessProps = {
 };
 
 function Harness({
+  autoPlay = false,
+  autoPlayInterval,
   data: viewerData = data,
   enableHorizontalSwipe = true,
   enableLoop = false,
@@ -34,6 +39,8 @@ function Harness({
         {state.currentIndex}/{state.totalCount}
       </Text>
       <GestureViewer
+        autoPlay={autoPlay}
+        autoPlayInterval={autoPlayInterval}
         data={viewerData}
         enableHorizontalSwipe={enableHorizontalSwipe}
         enableLoop={enableLoop}
@@ -72,6 +79,8 @@ describe('GestureViewer render-window integration', () => {
   afterEach(() => {
     cleanup();
     controller = null;
+    jest.useRealTimers();
+    jest.restoreAllMocks();
   });
 
   it('mounts only the adjacent render-window slots around the current item', async () => {
@@ -118,6 +127,34 @@ describe('GestureViewer render-window integration', () => {
     expect(rendered.getByText('second')).toBeTruthy();
     expect(rendered.getByText('third')).toBeTruthy();
     expect(rendered.getByText('fourth')).toBeTruthy();
+  });
+
+  it('does not autoplay while trigger opening is still measuring', async () => {
+    jest.useFakeTimers();
+
+    const viewerId = 'autoplay-trigger-opening';
+    const triggerNode = { measure: jest.fn() } as unknown as View;
+
+    registry.setActiveTriggerNode(viewerId, triggerNode);
+
+    const rendered = await render(
+      <Harness
+        autoPlay
+        autoPlayInterval={250}
+        data={['first', 'second']}
+        enableLoop
+        viewerId={viewerId}
+      />,
+    );
+
+    await expectState(rendered, viewerId, '0/2');
+
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    await expectState(rendered, viewerId, '0/2');
+    expect(triggerNode.measure).toHaveBeenCalledTimes(1);
   });
 
   it('rebases loop edge navigation onto the nearest virtual page', async () => {

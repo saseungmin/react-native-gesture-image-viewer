@@ -1,6 +1,8 @@
 export const DEFAULT_WINDOW_SIZE = 3;
 export const MIN_WINDOW_SIZE = 3;
 
+type NavigationDirection = -1 | 1;
+
 export type RenderWindowSlot<ItemT> = {
   item: ItemT;
   logicalIndex: number;
@@ -13,7 +15,7 @@ export type NavigationResolution =
       kind: 'noop';
     }
   | {
-      direction: -1 | 1;
+      direction: NavigationDirection;
       kind: 'step';
       targetIndex: number;
     }
@@ -27,6 +29,33 @@ export type NavigationOptions = {
 };
 
 const positiveModulo = (value: number, divisor: number) => ((value % divisor) + divisor) % divisor;
+
+const getStepTargetIndex = (
+  currentIndex: number,
+  dataLength: number,
+  enableLoop: boolean,
+  direction: NavigationDirection,
+) => {
+  const adjacentIndex = currentIndex + direction;
+
+  if (adjacentIndex >= 0 && adjacentIndex < dataLength) {
+    return adjacentIndex;
+  }
+
+  if (!enableLoop || dataLength <= 1) {
+    return null;
+  }
+
+  if (direction === 1 && currentIndex === dataLength - 1) {
+    return 0;
+  }
+
+  if (direction === -1 && currentIndex === 0) {
+    return dataLength - 1;
+  }
+
+  return null;
+};
 
 export function normalizeWindowSize(windowSize?: number): number {
   const candidateWindowSize = windowSize ?? DEFAULT_WINDOW_SIZE;
@@ -161,11 +190,13 @@ export function resolveNavigation({
   currentIndex,
   dataLength,
   enableLoop,
+  preferredDirection,
   targetIndex,
 }: {
   currentIndex: number;
   dataLength: number;
   enableLoop: boolean;
+  preferredDirection?: NavigationDirection;
   targetIndex: number;
 }): NavigationResolution {
   if (
@@ -182,19 +213,28 @@ export function resolveNavigation({
     return { kind: 'noop' };
   }
 
-  if (targetIndex === currentIndex + 1) {
+  if (preferredDirection !== undefined) {
+    const preferredTargetIndex = getStepTargetIndex(
+      currentIndex,
+      dataLength,
+      enableLoop,
+      preferredDirection,
+    );
+
+    if (preferredTargetIndex === targetIndex) {
+      return { direction: preferredDirection, kind: 'step', targetIndex };
+    }
+  }
+
+  const forwardTargetIndex = getStepTargetIndex(currentIndex, dataLength, enableLoop, 1);
+
+  if (forwardTargetIndex === targetIndex) {
     return { direction: 1, kind: 'step', targetIndex };
   }
 
-  if (targetIndex === currentIndex - 1) {
-    return { direction: -1, kind: 'step', targetIndex };
-  }
+  const backwardTargetIndex = getStepTargetIndex(currentIndex, dataLength, enableLoop, -1);
 
-  if (enableLoop && dataLength > 1 && currentIndex === dataLength - 1 && targetIndex === 0) {
-    return { direction: 1, kind: 'step', targetIndex };
-  }
-
-  if (enableLoop && dataLength > 1 && currentIndex === 0 && targetIndex === dataLength - 1) {
+  if (backwardTargetIndex === targetIndex) {
     return { direction: -1, kind: 'step', targetIndex };
   }
 

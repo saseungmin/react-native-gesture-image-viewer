@@ -58,6 +58,7 @@ function App() {
 | `rotate`       | 지정된 각도만큼 회전합니다.        | `(angle?: RotationAngle, clockwise?: boolean) => void`      |   `90, true`    |
 
 페이지 전환 애니메이션 없이 현재 아이템을 즉시 바꿔야 한다면 `goToIndex(index, { animated: false })`를 사용하세요.
+v3에서는 인접한 이동(`goToPrevious`, `goToNext`, 또는 이전/다음 아이템으로 이동하는 `goToIndex`)에만 페이지 전환 애니메이션을 사용합니다. 인접하지 않은 `goToIndex` 호출은 작은 render window만 마운트하는 구조이므로 즉시 rebase됩니다.
 
 - `zoomIn(multiplier?)`
   - **multiplier**: 확대할 배수 (범위: `0.01 ~ 1`)

@@ -17,6 +17,7 @@ import type GestureViewerManager from './GestureViewerManager';
 import { registry } from './GestureViewerRegistry';
 import { enableNativeTapGestures } from './platformTapGestures';
 import {
+  type NavigationOptions,
   clampIndex,
   createRenderWindow,
   getLogicalIndex,
@@ -254,11 +255,12 @@ export const useGestureViewer = <ItemT>({
   );
 
   const navigateToIndex = useCallback(
-    (targetIndex: number, options?: { animated?: boolean }) => {
+    (targetIndex: number, options?: NavigationOptions, preferredDirection?: -1 | 1) => {
       const resolution = resolveNavigation({
         currentIndex: currentIndexRef.current,
         dataLength: dataLengthRef.current,
         enableLoop: enableLoopRef.current,
+        preferredDirection,
         targetIndex,
       });
 
@@ -320,7 +322,7 @@ export const useGestureViewer = <ItemT>({
       const nextIndex = currentIndexRef.current + direction;
 
       if (nextIndex >= 0 && nextIndex < currentDataLength) {
-        navigateToIndex(nextIndex);
+        navigateToIndex(nextIndex, undefined, direction);
         return;
       }
 
@@ -328,7 +330,7 @@ export const useGestureViewer = <ItemT>({
         return;
       }
 
-      navigateToIndex(direction === 1 ? 0 : currentDataLength - 1);
+      navigateToIndex(direction === 1 ? 0 : currentDataLength - 1, undefined, direction);
     },
     [navigateToIndex],
   );
@@ -546,6 +548,7 @@ export const useGestureViewer = <ItemT>({
     if (
       !autoPlay ||
       dataLength <= 1 ||
+      isTriggerOpening ||
       isZoomed ||
       isRotated ||
       isPinching ||
@@ -593,6 +596,7 @@ export const useGestureViewer = <ItemT>({
     enableLoop,
     isPinching,
     isRotated,
+    isTriggerOpening,
     isZoomed,
     navigateToIndex,
   ]);

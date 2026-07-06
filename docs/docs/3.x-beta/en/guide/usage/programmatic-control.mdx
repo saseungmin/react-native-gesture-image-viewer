@@ -58,6 +58,7 @@ function App() {
 | `rotate`       | Rotate by the specified angle.        | `(angle?: RotationAngle, clockwise?: boolean) => void`      |    `90, true`     |
 
 Use `goToIndex(index, { animated: false })` when you need to update the current item immediately without the page transition animation.
+In v3, page transition animation is used for adjacent navigation only (`goToPrevious`, `goToNext`, or `goToIndex` to the previous/next item). Non-adjacent `goToIndex` calls rebase immediately because the viewer keeps only the small render window mounted.
 
 - `zoomIn(multiplier?)`
   - **multiplier**: The multiplier for zooming in (range: `0.01 ~ 1`)

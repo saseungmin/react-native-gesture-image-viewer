@@ -158,6 +158,48 @@ describe('navigation resolution', () => {
     ).toEqual({ direction: -1, kind: 'step', targetIndex: 3 });
   });
 
+  it('uses forward direction as the default two-item loop tie-breaker', () => {
+    expect(
+      resolveNavigation({ currentIndex: 1, dataLength: 2, enableLoop: true, targetIndex: 0 }),
+    ).toEqual({ direction: 1, kind: 'step', targetIndex: 0 });
+
+    expect(
+      resolveNavigation({ currentIndex: 0, dataLength: 2, enableLoop: true, targetIndex: 1 }),
+    ).toEqual({ direction: 1, kind: 'step', targetIndex: 1 });
+  });
+
+  it('honors preferred directions for two-item loop controls', () => {
+    expect(
+      resolveNavigation({
+        currentIndex: 1,
+        dataLength: 2,
+        enableLoop: true,
+        preferredDirection: -1,
+        targetIndex: 0,
+      }),
+    ).toEqual({ direction: -1, kind: 'step', targetIndex: 0 });
+
+    expect(
+      resolveNavigation({
+        currentIndex: 0,
+        dataLength: 2,
+        enableLoop: true,
+        preferredDirection: -1,
+        targetIndex: 1,
+      }),
+    ).toEqual({ direction: -1, kind: 'step', targetIndex: 1 });
+
+    expect(
+      resolveNavigation({
+        currentIndex: 1,
+        dataLength: 2,
+        enableLoop: true,
+        preferredDirection: 1,
+        targetIndex: 0,
+      }),
+    ).toEqual({ direction: 1, kind: 'step', targetIndex: 0 });
+  });
+
   it('no-ops empty, same-index, and out-of-range targets', () => {
     expect(
       resolveNavigation({ currentIndex: 0, dataLength: 0, enableLoop: true, targetIndex: 0 }),
