@@ -535,11 +535,7 @@ export const useGestureViewer = <ItemT>({
     dataLengthRef.current = dataLength;
     enableLoopRef.current = enableLoop;
 
-    if (dataLength > 0) {
-      hasResolvedInitialIndexRef.current = true;
-    } else {
-      hasResolvedInitialIndexRef.current = false;
-    }
+    hasResolvedInitialIndexRef.current = dataLength > 0;
 
     const nextIndex = shouldResolveInitialIndex
       ? clampIndex(initialIndex, dataLength)
@@ -570,7 +566,9 @@ export const useGestureViewer = <ItemT>({
 
     if (previousIndex !== nextIndex) {
       commitCurrentIndex(nextIndex);
-    } else {
+    }
+
+    if (previousIndex === nextIndex) {
       managerRef.current?.notifyStateChange();
     }
 
