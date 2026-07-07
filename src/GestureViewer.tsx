@@ -1,130 +1,110 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import {
-  Platform,
-  type ScrollViewProps,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { type ReactElement, useEffect, useMemo } from 'react';
+import { StyleSheet, useWindowDimensions, View, type ViewStyle } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated from 'react-native-reanimated';
+import Animated, {
+  type AnimatedStyle,
+  type SharedValue,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 
 import { registry } from './GestureViewerRegistry';
+import { getWebContentProps } from './getWebContentProps';
+import type { RenderWindowSlot } from './renderWindow';
 import type { GestureViewerProps } from './types';
 import { useGestureViewer } from './useGestureViewer';
-import {
-  createLoopData,
-  isFlashListLike,
-  isFlatListLike,
-  isScrollViewLike,
-  shouldUseNativeScrollGesture,
-} from './utils';
-import WebPagingFixStyle from './WebPagingFixStyle';
 
-export function GestureViewer<ItemT, LC>({
+type RenderWindowSlotViewProps<ItemT> = {
+  animatedStyle: AnimatedStyle<ViewStyle>;
+  height: number;
+  isActive: boolean;
+  pageStride: number;
+  renderItem: (item: ItemT, index: number) => ReactElement;
+  slot: RenderWindowSlot<ItemT>;
+  visualPage: SharedValue<number>;
+  width: number;
+};
+
+function RenderWindowSlotView<ItemT>({
+  animatedStyle,
+  height,
+  isActive,
+  pageStride,
+  renderItem,
+  slot,
+  visualPage,
+  width,
+}: RenderWindowSlotViewProps<ItemT>) {
+  const slotAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: (slot.virtualIndex - visualPage.get()) * pageStride }],
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        styles.slot,
+        {
+          height,
+          width,
+        },
+        slotAnimatedStyle,
+      ]}
+    >
+      <Animated.View style={[styles.page, isActive && animatedStyle]}>
+        <View style={[styles.item, { height, width }]}>
+          {renderItem(slot.item, slot.logicalIndex)}
+        </View>
+      </Animated.View>
+    </Animated.View>
+  );
+}
+
+export function GestureViewer<ItemT>({
   id = 'default',
   data,
-  renderItem: renderItemProp,
+  renderItem,
   renderContainer,
-  ListComponent,
   width: customWidth,
   height: customHeight,
-  listProps,
   backdropStyle: backdropStyleProps,
   containerStyle,
   initialIndex = 0,
-  itemSpacing = 0,
-  enableSnapMode = false,
+  pageSpacing = 0,
+  windowSize = 3,
   enableLoop = false,
   ...props
-}: GestureViewerProps<ItemT, LC>) {
-  const Component = ListComponent as React.ComponentType<any>;
-
-  const dataRef = useRef(data);
-
+}: GestureViewerProps<ItemT>) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
   const width = customWidth || screenWidth;
   const height = customHeight || screenHeight;
 
-  const loopData = useMemo(() => createLoopData(dataRef, enableLoop), [enableLoop]);
-
-  const isScrollView = isScrollViewLike(Component);
-
   const {
-    listRef,
-    isZoomed,
-    isRotated,
-    isPinching,
-    dismissGesture,
-    zoomGesture,
-    nativeScrollGesture,
-    onWebClick,
-    onMomentumScrollEnd,
-    onScroll,
-    onScrollBeginDrag,
     animatedStyle,
     backdropStyle,
+    centerVirtualIndex,
+    dismissGesture,
     handleDismiss,
+    horizontalPagingGesture,
+    onWebClick,
+    pageStride,
+    renderWindowSlots,
+    visualPage,
+    zoomGesture,
   } = useGestureViewer({
     id,
     data,
     width,
     height,
     initialIndex,
-    itemSpacing,
+    pageSpacing,
+    windowSize,
     enableLoop,
     ...props,
   });
 
-  const keyExtractor = useCallback(
-    (item: ItemT, index: number) => {
-      if (enableLoop) {
-        return typeof item === 'string' ? `${item}-${index}` : `item-${index}`;
-      }
-
-      return typeof item === 'string' ? item : `image-${index}`;
-    },
-    [enableLoop],
-  );
-
-  const renderItem = useCallback(
-    ({ item, index }: { item: ItemT; index: number }) => {
-      return (
-        <View
-          key={isScrollView ? keyExtractor(item, index) : undefined}
-          style={[
-            {
-              width,
-              height,
-              marginHorizontal: itemSpacing / 2,
-            },
-            styles.item,
-          ]}
-        >
-          {renderItemProp(item, index)}
-        </View>
-      );
-    },
-    [width, itemSpacing, renderItemProp, keyExtractor, isScrollView, height],
-  );
-
-  const getItemLayout = useCallback(
-    (_: ArrayLike<ItemT> | null | undefined, index: number) => ({
-      length: width + itemSpacing,
-      offset: (width + itemSpacing) * index,
-      index,
-    }),
-    [width, itemSpacing],
-  );
-
   const gesture = useMemo(() => {
-    return Gesture.Race(dismissGesture, zoomGesture);
-  }, [zoomGesture, dismissGesture]);
-
-  useEffect(() => {
-    dataRef.current = data;
-  }, [data]);
+    return Gesture.Race(dismissGesture, horizontalPagingGesture, zoomGesture);
+  }, [dismissGesture, horizontalPagingGesture, zoomGesture]);
 
   useEffect(() => {
     registry.createManager(id);
@@ -132,126 +112,59 @@ export function GestureViewer<ItemT, LC>({
     return () => registry.deleteManager(id);
   }, [id]);
 
-  const commonProps = useMemo(
-    () =>
-      ({
-        horizontal: true,
-        scrollEnabled: !isZoomed && !isRotated && !isPinching,
-        showsHorizontalScrollIndicator: false,
-        onMomentumScrollEnd,
-        onScroll,
-        onScrollBeginDrag,
-        ...(enableSnapMode
-          ? {
-              snapToInterval: width + itemSpacing,
-              snapToAlignment: 'center',
-              decelerationRate: 'fast',
-            }
-          : {
-              pagingEnabled: true,
-            }),
-        scrollEventThrottle: 16,
-        removeClippedSubviews: true,
-      }) satisfies ScrollViewProps,
-    [
-      width,
-      itemSpacing,
-      isZoomed,
-      isRotated,
-      isPinching,
-      onMomentumScrollEnd,
-      onScroll,
-      onScrollBeginDrag,
-      enableSnapMode,
-    ],
-  );
-
   const control = useMemo(() => ({ dismiss: handleDismiss }), [handleDismiss]);
+  const webContentProps = getWebContentProps(onWebClick);
 
-  const shouldWrapScrollableWithNativeGesture = shouldUseNativeScrollGesture(
-    Platform.OS,
-    Component,
-  );
-
-  const maybeWrapWithNativeScrollGesture = useCallback(
-    (children: React.ReactNode) => {
-      if (!shouldWrapScrollableWithNativeGesture) {
-        return children;
-      }
-
-      return <GestureDetector gesture={nativeScrollGesture}>{children}</GestureDetector>;
-    },
-    [nativeScrollGesture, shouldWrapScrollableWithNativeGesture],
-  );
-
-  const listComponent = (
+  const viewer = (
     <GestureHandlerRootView>
       <GestureDetector gesture={gesture}>
-        <View style={[{ width, height }, containerStyle]}>
+        <View style={[styles.container, { height, width }, containerStyle]}>
           <Animated.View style={[styles.background, backdropStyleProps, backdropStyle]} />
-          <Animated.View
-            style={[styles.content, animatedStyle]}
-            {...(Platform.OS === 'web' && {
-              onClick: onWebClick,
-            })}
-            {...(Platform.OS === 'web' &&
-              isFlashListLike(Component) && { dataSet: { 'flash-list-paging-enabled-fix': true } })}
-          >
-            {isScrollView
-              ? maybeWrapWithNativeScrollGesture(
-                  <Component ref={listRef} {...commonProps} {...listProps}>
-                    {loopData.map((item, index) => renderItem({ item, index }))}
-                  </Component>,
-                )
-              : isFlatListLike(Component) &&
-                maybeWrapWithNativeScrollGesture(
-                  <Component
-                    ref={listRef}
-                    {...commonProps}
-                    data={loopData}
-                    renderItem={renderItem}
-                    initialScrollIndex={
-                      enableLoop && data.length > 1 ? initialIndex + 1 : initialIndex
-                    }
-                    keyExtractor={keyExtractor}
-                    {...(isFlashListLike(Component)
-                      ? // NOTE - Deprecated estimatedItemSize for FlashList V2 (https://shopify.github.io/flash-list/docs/v2-changes#deprecated)
-                        { estimatedItemSize: width + itemSpacing }
-                      : { windowSize: 3, maxToRenderPerBatch: 3, getItemLayout })}
-                    // NOTE - https://github.com/necolas/react-native-web/issues/1299
-                    {...(Platform.OS === 'web' &&
-                      isFlatListLike(Component) && {
-                        dataSet: { 'flat-list-paging-enabled-fix': true },
-                      })}
-                    {...listProps}
-                  />,
-                )}
+          <Animated.View style={styles.content} {...webContentProps}>
+            {renderWindowSlots.map((slot) => (
+              <RenderWindowSlotView
+                animatedStyle={animatedStyle}
+                height={height}
+                isActive={slot.virtualIndex === centerVirtualIndex}
+                key={slot.slotKey}
+                pageStride={pageStride}
+                renderItem={renderItem}
+                slot={slot}
+                visualPage={visualPage}
+                width={width}
+              />
+            ))}
           </Animated.View>
-          <WebPagingFixStyle Component={Component} />
         </View>
       </GestureDetector>
     </GestureHandlerRootView>
   );
 
-  return renderContainer ? renderContainer(listComponent, control) : listComponent;
+  return renderContainer ? renderContainer(viewer, control) : viewer;
 }
 
 const styles = StyleSheet.create({
+  background: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: '#000',
+  },
+  container: {
+    overflow: 'hidden',
+  },
   content: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
+    ...StyleSheet.absoluteFill,
+    overflow: 'hidden',
   },
   item: {
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  background: {
+  page: {
+    flex: 1,
+  },
+  slot: {
+    left: 0,
     position: 'absolute',
     top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'black',
   },
 });

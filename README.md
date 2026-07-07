@@ -23,7 +23,7 @@ Existing libraries often have limited customization options or performance issue
 - 🎨 **Full Customization** - Total control over components, styles, and gesture behavior
 - 🎛️ **External Control API** - Trigger actions programmatically from buttons or other UI components
 - 🧩 **Multi-Instance Management** - Manage multiple viewers independently using unique IDs
-- 🧬 **Flexible Integration** - Use with Modal, [React Native Modal](https://www.npmjs.com/package/react-native-modal), ScrollView, FlatList, [FlashList](https://www.npmjs.com/package/@shopify/flash-list), [Expo Image](https://www.npmjs.com/package/expo-image), [FastImage](https://github.com/DylanVann/react-native-fast-image), and more
+- 🧬 **Flexible Integration** - Use with Modal, [React Native Modal](https://www.npmjs.com/package/react-native-modal), [Expo Image](https://www.npmjs.com/package/expo-image), [FastImage](https://github.com/DylanVann/react-native-fast-image), videos, and custom content
 - 🧠 **Full TypeScript Support** - Great developer experience with type inference and safety
 - 🌐 **Cross-Platform** - Runs on iOS, Android, and Web with Expo Go and New Architecture compatibility
 - 🪄 **Easy-to-Use API** - Simple and intuitive API that requires minimal setup
@@ -33,6 +33,8 @@ Existing libraries often have limited customization options or performance issue
 ### 📚 Documentation
 
 Full documentation is available at: <https://react-native-gesture-image-viewer.pages.dev>
+
+> v3 is currently in beta. Install it with `react-native-gesture-image-viewer@beta` and use the [v3 beta docs](https://react-native-gesture-image-viewer.pages.dev/3.x-beta/). The docs root still points to the stable v2 documentation.
 
 ### Examples & Demo
 
@@ -50,7 +52,7 @@ Full documentation is available at: <https://react-native-gesture-image-viewer.p
 
 ```tsx
 import { useCallback, useState } from 'react';
-import { ScrollView, Image, Modal, View, Text, Button, Pressable } from 'react-native';
+import { Image, Modal, View, Text, Button, Pressable } from 'react-native';
 import {
   GestureViewer,
   GestureTrigger,
@@ -95,7 +97,7 @@ function App() {
           data={images}
           initialIndex={selectedIndex}
           renderItem={renderImage}
-          ListComponent={ScrollView}
+          pageSpacing={16}
           onDismiss={() => setVisible(false)}
         />
         <View>

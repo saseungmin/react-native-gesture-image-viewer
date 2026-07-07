@@ -1,0 +1,100 @@
+import { Tab, Tabs } from '@rspress/core/theme';
+
+# Custom Components
+
+`react-native-gesture-image-viewer` offers powerful complete component customization. You can create gesture-supported items with not only images but any component you want.
+
+## Modal Components
+
+You can create a viewer using any `Modal` of your choice as shown below:
+
+<Tabs>
+  <Tab label="Use Modal">
+    ```tsx
+    import { Image, Modal } from 'react-native';
+    import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+    function App() {
+      const images = [...];
+      const [visible, setVisible] = useState(false);
+
+      return (
+        <Modal visible={visible} onRequestClose={() => setVisible(false)}>
+          <GestureViewer
+            data={images}
+            renderItem={renderImage}
+            onDismiss={() => setVisible(false)}
+          />
+        </Modal>
+      );
+    }
+    ```
+
+  </Tab>
+  <Tab label="Use react-nativee-modal">
+    ```tsx
+    import { Image } from 'react-native';
+    import Modal from 'react-native-modal';
+    import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+    function App() {
+      const images = [...];
+      const [visible, setVisible] = useState(false);
+
+      return (
+        <Modal
+          isVisible={visible}
+          onBackButtonPress={() => setVisible(false)}
+          onBackdropPress={() => setVisible(false)}
+          hasBackdrop={false}
+          style={styles.modal}
+          useNativeDriver={true}
+          hideModalContentWhileAnimating={true}
+          animationInTiming={300}
+          animationOutTiming={300}
+        >
+          <GestureViewer
+            data={images}
+            renderItem={renderImage}
+            onDismiss={() => setVisible(false)}
+          />
+        </Modal>
+      );
+    }
+    ```
+
+  </Tab>
+</Tabs>
+
+## Render Window
+
+Version 3 uses an internal render window instead of a consumer-supplied list component. Use `renderItem` for content customization, and tune `windowSize` or `pageSpacing` only when the default window is not enough.
+
+```tsx
+function App() {
+  return <GestureViewer data={images} renderItem={renderImage} windowSize={5} pageSpacing={16} />;
+}
+```
+
+## Content Components
+
+You can inject various types of content components like [`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/), [`FastImage`](https://github.com/DylanVann/react-native-fast-image), etc., through the `renderItem` prop to use gestures.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+import { Image } from 'expo-image';
+
+function App() {
+  const renderImage = useCallback((imageUrl: string) => {
+    return (
+      <Image
+        source={{ uri: imageUrl }}
+        style={{ width: '100%', height: '100%' }}
+        contentFit="contain"
+      />
+    );
+  }, []);
+
+  return <GestureViewer data={images} renderItem={renderImage} />;
+}
+```

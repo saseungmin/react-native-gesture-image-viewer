@@ -1,0 +1,35 @@
+# GestureViewer State
+
+`GestureViewer` provides a state management system to track the current state of the viewer. You can use the `useGestureViewerState` hook to access the state of the viewer.
+
+## useGestureViewerState
+
+```tsx
+import { GestureViewer, useGestureViewerState } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const { currentIndex, totalCount } = useGestureViewerState();
+
+  return (
+    <View>
+      <GestureViewer data={images} renderItem={renderImage} />
+      <View>
+        <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
+      </View>
+    </View>
+  );
+}
+```
+
+### Parameters
+
+- `id?: string`
+  - The ID of the `GestureViewer` instance.
+  - Default: `"default"`
+
+### API Reference
+
+| Property       | Description                                | Type     | Default Value |
+| :------------- | :----------------------------------------- | :------- | :-----------: |
+| `currentIndex` | The index of the currently displayed item. | `number` |      `0`      |
+| `totalCount`   | The total number of items.                 | `number` |      `0`      |

@@ -13,7 +13,7 @@ export default defineConfig({
   llms: true,
   multiVersion: {
     default: '2.x',
-    versions: ['1.x', '2.x'],
+    versions: ['1.x', '2.x', '3.x-beta'],
   },
   search: {
     versioned: true,

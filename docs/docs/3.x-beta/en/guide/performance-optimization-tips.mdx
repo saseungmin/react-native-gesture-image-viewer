@@ -1,0 +1,88 @@
+# Performance Optimization Tips
+
+#### Wrap the `renderItem` function with `useCallback` to prevent unnecessary re-renders.
+
+```tsx
+import { useCallback, useState } from 'react'; // [!code highlight]
+import { Image, Modal } from 'react-native';
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const images = [...];
+  const [visible, setVisible] = useState(false);
+
+  // [!code highlight:3]
+  const renderImage = useCallback((imageUrl: string) => {
+    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
+  }, []);
+
+  return (
+    <Modal visible={visible} onRequestClose={() => setVisible(false)}>
+      <GestureViewer
+        data={images}
+        renderItem={renderImage}
+        onDismiss={() => setVisible(false)}
+      />
+    </Modal>
+  );
+}
+```
+
+#### For large images, we recommend using [`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/) or [`FastImage`](https://github.com/DylanVann/react-native-fast-image).
+
+```tsx
+import { Modal } from 'react-native';
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+import { Image } from 'expo-image'; // [!code highlight]
+
+function App() {
+  const images = [...];
+  const [visible, setVisible] = useState(false);
+
+  const renderImage = useCallback((imageUrl: string) => {
+    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} contentFit="contain" />; // [!code highlight]
+  }, []);
+
+  return (
+    <Modal visible={visible} onRequestClose={() => setVisible(false)}>
+      <GestureViewer
+        data={images}
+        renderItem={renderImage}
+        onDismiss={() => setVisible(false)}
+      />
+    </Modal>
+  );
+}
+```
+
+#### Keep the render window small unless you need more adjacent pages mounted.
+
+The default `windowSize` is `3`, which mounts the previous, current, and next items. Larger windows can make adjacent pages feel more ready, but they also increase render, memory, and image decode work. The library does not cap `windowSize`; choosing a large value is an explicit performance tradeoff.
+
+```tsx
+import { useCallback, useState } from 'react';
+import { Image, Modal } from 'react-native';
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const images = [...];
+  const [visible, setVisible] = useState(false);
+
+  const renderImage = useCallback((imageUrl: string) => {
+    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
+  }, []);
+
+  return (
+    <Modal visible={visible} onRequestClose={() => setVisible(false)}>
+      <GestureViewer
+        data={images}
+        renderItem={renderImage}
+        windowSize={3} // [!code highlight]
+        onDismiss={() => setVisible(false)}
+      />
+    </Modal>
+  );
+}
+```
+
+#### Test on actual devices (performance may be limited in simulators).

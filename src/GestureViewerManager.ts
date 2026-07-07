@@ -6,29 +6,45 @@ import type {
   GestureViewerEventType,
   GestureViewerState,
 } from './types';
-import { createBoundsConstraint, createScrollAction } from './utils';
+import { createBoundsConstraint } from './utils';
+
+export type GestureViewerNavigationOptions = {
+  animated?: boolean;
+};
+
+export type GestureViewerNavigationAdapter = {
+  goToIndex: (index: number, options?: GestureViewerNavigationOptions) => void;
+  goToNext: () => void;
+  goToPrevious: () => void;
+};
+
+export type GestureViewerStateReader = () => GestureViewerState;
+
+type GestureViewerEventListenerPresenceCallback = (
+  eventType: GestureViewerEventType,
+  hasListeners: boolean,
+) => void;
+
+const DEFAULT_STATE_READER: GestureViewerStateReader = () => ({
+  currentIndex: 0,
+  totalCount: 0,
+});
 
 class GestureViewerManager {
-  private currentIndex = 0;
-  private dataLength = 0;
   private width = 0;
   private height = 0;
   private maxZoomScale = 2;
-  private enableHorizontalSwipe = true;
-  private enableLoop = false;
-  private listRef: any | null = null;
+  private navigationAdapter: GestureViewerNavigationAdapter | null = null;
+  private stateReader = DEFAULT_STATE_READER;
 
   private scale: SharedValue<number> | null = null;
   private rotation: SharedValue<number> | null = null;
   private translateX: SharedValue<number> | null = null;
   private translateY: SharedValue<number> | null = null;
-  private resetTransformCallback: (() => void) | null = null;
-
-  private loopCallback: (() => void) | null = null;
-  private programmaticScrollVersion = 0;
 
   private listeners = new Set<(state: GestureViewerState) => void>();
   private eventListeners = new Map<GestureViewerEventType, Set<(data: any) => void>>();
+  private eventListenerPresenceSubscribers = new Set<GestureViewerEventListenerPresenceCallback>();
 
   private notifyListeners() {
     const state = this.getState();
@@ -53,6 +69,7 @@ class GestureViewerManager {
     }
 
     this.eventListeners.get(eventType)?.add(callback);
+    this.notifyEventListenerPresence(eventType);
 
     return () => {
       const listeners = this.eventListeners.get(eventType);
@@ -64,7 +81,38 @@ class GestureViewerManager {
           this.eventListeners.delete(eventType);
         }
       }
+
+      this.notifyEventListenerPresence(eventType);
     };
+  }
+
+  subscribeToEventListenerPresence(callback: GestureViewerEventListenerPresenceCallback) {
+    this.eventListenerPresenceSubscribers.add(callback);
+
+    this.notifyEventListenerPresenceSubscriber(callback, 'zoomChange');
+    this.notifyEventListenerPresenceSubscriber(callback, 'rotationChange');
+    this.notifyEventListenerPresenceSubscriber(callback, 'tap');
+
+    return () => {
+      this.eventListenerPresenceSubscribers.delete(callback);
+    };
+  }
+
+  hasEventListeners(eventType: GestureViewerEventType) {
+    return (this.eventListeners.get(eventType)?.size ?? 0) > 0;
+  }
+
+  private notifyEventListenerPresence(eventType: GestureViewerEventType) {
+    this.eventListenerPresenceSubscribers.forEach((callback) => {
+      this.notifyEventListenerPresenceSubscriber(callback, eventType);
+    });
+  }
+
+  private notifyEventListenerPresenceSubscriber(
+    callback: GestureViewerEventListenerPresenceCallback,
+    eventType: GestureViewerEventType,
+  ) {
+    callback(eventType, this.hasEventListeners(eventType));
   }
 
   private emitEvent<T extends GestureViewerEventType>(
@@ -91,18 +139,7 @@ class GestureViewerManager {
   };
 
   getState(): GestureViewerState {
-    return {
-      currentIndex: this.currentIndex,
-      totalCount: this.dataLength,
-    };
-  }
-
-  getProgrammaticScrollVersion() {
-    return this.programmaticScrollVersion;
-  }
-
-  setEnableLoop(enabled: boolean) {
-    this.enableLoop = enabled;
+    return this.stateReader();
   }
 
   setWidth(width: number) {
@@ -113,22 +150,12 @@ class GestureViewerManager {
     this.height = height;
   }
 
-  setListRef(ref: any) {
-    this.listRef = ref;
+  setNavigationAdapter(adapter: GestureViewerNavigationAdapter | null) {
+    this.navigationAdapter = adapter;
   }
 
-  setDataLength(length: number) {
-    this.dataLength = length;
-  }
-
-  setEnableHorizontalSwipe(enabled: boolean) {
-    this.enableHorizontalSwipe = enabled;
-  }
-
-  setCurrentIndex(index: number) {
-    if (index !== this.currentIndex) {
-      this.currentIndex = index;
-    }
+  setStateReader(reader: GestureViewerStateReader | null) {
+    this.stateReader = reader ?? DEFAULT_STATE_READER;
   }
 
   setZoomSharedValues(
@@ -141,10 +168,6 @@ class GestureViewerManager {
     this.translateX = translateX;
     this.translateY = translateY;
     this.maxZoomScale = maxZoomScale;
-  }
-
-  setResetTransformCallback(callback: (() => void) | null) {
-    this.resetTransformCallback = callback;
   }
 
   notifyStateChange() {
@@ -266,110 +289,42 @@ class GestureViewerManager {
     this.translateY.set(withTiming(0));
   };
 
-  goToIndex = (index: number) => {
-    if (!this.enableHorizontalSwipe || !this.listRef) {
+  goToIndex = (index: number, options?: GestureViewerNavigationOptions) => {
+    if (!this.navigationAdapter) {
       return;
     }
 
-    this.cancelPendingLoopTransition();
-
-    const { scrollTo } = createScrollAction(this.listRef, this.width);
-
-    if (this.enableLoop && this.dataLength > 1) {
-      if (index < 0) {
-        this.loopCallback = () => {
-          scrollTo(this.dataLength, false);
-          this.updateCurrentIndex(this.dataLength - 1);
-          this.cancelPendingLoopTransition();
-        };
-
-        this.resetTransformCallback?.();
-        this.programmaticScrollVersion += 1;
-        scrollTo(0, true);
-        return;
-      }
-
-      if (index >= this.dataLength) {
-        this.loopCallback = () => {
-          scrollTo(1, false);
-          this.updateCurrentIndex(0);
-          this.cancelPendingLoopTransition();
-        };
-
-        this.resetTransformCallback?.();
-        this.programmaticScrollVersion += 1;
-        scrollTo(this.dataLength + 1, true);
-        return;
-      }
-
-      this.resetTransformCallback?.();
-      this.programmaticScrollVersion += 1;
-      scrollTo(index + 1, true);
-      this.updateCurrentIndex(index);
-
-      return;
-    }
-
-    if (index < 0 || index >= this.dataLength) {
-      return;
-    }
-
-    this.resetTransformCallback?.();
-    this.programmaticScrollVersion += 1;
-    scrollTo(index, true);
-    this.updateCurrentIndex(index);
-  };
-
-  handleMomentumScrollEnd = (scrollIndex: number) => {
-    if (!this.loopCallback) {
-      return false;
-    }
-
-    if (scrollIndex === 0 || scrollIndex === this.dataLength + 1) {
-      this.loopCallback();
-      return true;
-    }
-
-    this.cancelPendingLoopTransition();
-    return true;
-  };
-
-  cancelPendingLoopTransition = () => {
-    this.loopCallback = null;
-  };
-
-  handleScrollBeginDrag = () => {
-    this.cancelPendingLoopTransition();
+    this.navigationAdapter.goToIndex(index, options);
   };
 
   goToPrevious = () => {
-    this.goToIndex(this.currentIndex - 1);
+    if (!this.navigationAdapter) {
+      return;
+    }
+
+    this.navigationAdapter.goToPrevious();
   };
 
   goToNext = () => {
-    this.goToIndex(this.currentIndex + 1);
+    if (!this.navigationAdapter) {
+      return;
+    }
+
+    this.navigationAdapter.goToNext();
   };
 
   cleanUp() {
-    this.cancelPendingLoopTransition();
     this.listeners.clear();
-    this.listRef = null;
-    this.enableHorizontalSwipe = true;
-    this.currentIndex = 0;
-    this.dataLength = 0;
+    this.navigationAdapter = null;
+    this.stateReader = DEFAULT_STATE_READER;
     this.maxZoomScale = 2;
     this.scale = null;
     this.translateX = null;
     this.translateY = null;
     this.rotation = null;
-    this.resetTransformCallback = null;
     this.eventListeners.clear();
+    this.eventListenerPresenceSubscribers.clear();
   }
-
-  private updateCurrentIndex = (targetIndex: number) => {
-    this.currentIndex = targetIndex;
-    this.notifyListeners();
-  };
 }
 
 export default GestureViewerManager;

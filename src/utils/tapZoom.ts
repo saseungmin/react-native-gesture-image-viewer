@@ -35,10 +35,11 @@ export const applyTapZoomAtPoint = ({
     // NOTE 확대로 밀려난 거리만큼 반대로 이동해서 탭 지점을 제자리에 유지
     translateX.set(withTiming(-centerX * (nextScale - 1), timingConfig));
     translateY.set(withTiming(-centerY * (nextScale - 1), timingConfig));
-  } else {
-    translateX.set(withTiming(0, timingConfig));
-    translateY.set(withTiming(0, timingConfig));
+    scale.set(withTiming(nextScale, timingConfig));
+    return;
   }
 
+  translateX.set(withTiming(0, timingConfig));
+  translateY.set(withTiming(0, timingConfig));
   scale.set(withTiming(nextScale, timingConfig));
 };

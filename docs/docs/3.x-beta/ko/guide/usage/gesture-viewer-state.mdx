@@ -1,0 +1,35 @@
+# GestureViewer 상태 추적
+
+`GestureViewer`는 뷰어의 현재 상태를 추적하는 상태 관리 시스템을 제공합니다. `useGestureViewerState` 훅을 사용하여 뷰어의 상태를 접근할 수 있습니다.
+
+## useGestureViewerState
+
+```tsx
+import { GestureViewer, useGestureViewerState } from 'react-native-gesture-image-viewer';
+
+function App() {
+  const { currentIndex, totalCount } = useGestureViewerState();
+
+  return (
+    <View>
+      <GestureViewer data={images} renderItem={renderImage} />
+      <View>
+        <Text>{`${currentIndex + 1} / ${totalCount}`}</Text>
+      </View>
+    </View>
+  );
+}
+```
+
+### 매개변수
+
+- `id?: string`
+  - `GestureViewer` 인스턴스의 ID입니다.
+  - 기본값: `"default"`
+
+### API Reference
+
+| 속성           | 설명                                      | 타입     | 기본값 |
+| :------------- | :---------------------------------------- | :------- | :----: |
+| `currentIndex` | 현재 표시되고 있는 아이템의 인덱스입니다. | `number` |  `0`   |
+| `totalCount`   | 전체 아이템의 개수입니다.                 | `number` |  `0`   |

@@ -1,0 +1,69 @@
+# Handling Viewer Events
+
+`GestureViewer` provides a way to subscribe to specific events from the viewer using the `useGestureViewerEvent` hook. This allows you to respond to viewer interactions such as zoom, rotation, and taps.
+
+## useGestureViewerEvent
+
+```tsx
+import { GestureViewer, useGestureViewerEvent } from 'react-native-gesture-image-viewer';
+
+function App() {
+  useGestureViewerEvent('zoomChange', (data) => {
+    console.log(`Zoom changed from ${data.previousScale} to ${data.scale}`);
+  });
+
+  useGestureViewerEvent('rotationChange', (data) => {
+    console.log(`Rotation changed from ${data.previousRotation}° to ${data.rotation}°`);
+  });
+
+  useGestureViewerEvent('tap', (data) => {
+    if (data.kind === 'single') {
+      console.log(`Tapped item ${data.index} at (${data.x}, ${data.y})`);
+    }
+  });
+
+  return <GestureViewer data={images} renderItem={renderImage} />;
+}
+```
+
+### Listen to events on a specific instance
+
+You can listen to events on a specific instance by passing the instance ID as the first argument to the `useGestureViewerEvent` hook.
+
+```ts
+// Listen to events on a specific instance
+useGestureViewerEvent('gallery', 'zoomChange', (data) => {
+  console.log(`Gallery zoom: ${data.scale}x`);
+});
+```
+
+:::note
+The default `id` value is `default`.
+:::
+
+### API Reference
+
+```ts
+// Listen to events on the default instance
+function useGestureViewerEvent<T extends GestureViewerEventType>(
+  eventType: T,
+  callback: GestureViewerEventCallback<T>,
+): void;
+
+// Listen to events on a specific instance
+function useGestureViewerEvent<T extends GestureViewerEventType>(
+  id: string,
+  eventType: T,
+  callback: GestureViewerEventCallback<T>,
+): void;
+```
+
+| Event Type       | Description                                                                              | Callback Data                                             |
+| :--------------- | :--------------------------------------------------------------------------------------- | :-------------------------------------------------------- |
+| `zoomChange`     | Fired when the zoom scale changes during pinch gestures                                  | `{ scale: number, previousScale: number }`                |
+| `rotationChange` | Fired when the rotation angle changes during rotation gestures                           | `{ rotation: number, previousRotation: number }`          |
+| `tap`            | Fired when a tap is confirmed by the viewer. Currently emits confirmed single taps only. | `{ kind: 'single', x: number, y: number, index: number }` |
+
+:::tip
+If you want to handle the `tap` event directly from a `GestureViewer` prop, you can use [`onSingleTap`](/3.x-beta/guide/usage/gesture-viewer-props.html#onsingletap).
+:::

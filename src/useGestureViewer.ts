@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, type View, useWindowDimensions } from 'react-native';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { type View, useWindowDimensions } from 'react-native';
 import { Gesture, type GestureType } from 'react-native-gesture-handler';
 import {
   Easing,
+  cancelAnimation,
   interpolate,
   useAnimatedReaction,
   useAnimatedStyle,
@@ -14,26 +15,54 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import type GestureViewerManager from './GestureViewerManager';
 import { registry } from './GestureViewerRegistry';
-import { scheduleInitialScroll } from './scheduleInitialScroll';
+import { enableNativeTapGestures } from './platformTapGestures';
+import {
+  type NavigationOptions,
+  clampIndex,
+  createRenderWindow,
+  getLogicalIndex,
+  getPageStride,
+  getVirtualIndexForLogicalIndex,
+  normalizePageSpacing,
+  normalizeWindowSize,
+  resolveNavigation,
+  shouldRunNavigationDuringTransition,
+} from './renderWindow';
 import type { GestureViewerProps, TriggerRect } from './types';
-import { useGestureViewerPaging } from './useGestureViewerPaging';
-import { createBoundsConstraint, createScrollAction } from './utils';
+import { type EmitSingleTap, useWebClickHandler } from './useWebClickHandler';
+import { useWebSingleTapTimer } from './useWebSingleTapTimer';
+import { createBoundsConstraint } from './utils';
 import { getDismissDistance, shouldDismissByDirection } from './utils/dismiss';
 import { applyTapZoomAtPoint } from './utils/tapZoom';
 import { calculateFocalPointTranslation, shouldAcceptFocalPoint } from './utils/zoom';
 
-type UseGestureViewerProps<ItemT, LC> = Omit<
-  GestureViewerProps<ItemT, LC>,
-  | 'renderItem'
-  | 'renderContainer'
-  | 'ListComponent'
-  | 'listProps'
-  | 'containerStyle'
-  | 'backdropStyle'
-  | 'enableSnapMode'
+const PAGE_TRANSITION_CONFIG = {
+  duration: 240,
+  easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+};
+
+const PAGE_SPRING_CONFIG = {
+  damping: 35,
+  energyThreshold: 6e-9,
+  mass: 1,
+  overshootClamping: false,
+  stiffness: 360,
+};
+
+const SWIPE_THRESHOLD_RATIO = 0.25;
+const SWIPE_VELOCITY_THRESHOLD = 800;
+const EDGE_RESISTANCE = 0.35;
+
+const isValidTriggerRect = (rect: TriggerRect | null): rect is TriggerRect => {
+  return !!rect && rect.width > 0 && rect.height > 0;
+};
+
+type UseGestureViewerProps<ItemT> = Omit<
+  GestureViewerProps<ItemT>,
+  'renderItem' | 'renderContainer' | 'containerStyle' | 'backdropStyle'
 >;
 
-export const useGestureViewer = <ItemT, LC>({
+export const useGestureViewer = <ItemT>({
   data,
   initialIndex = 0,
   onDismiss,
@@ -46,17 +75,23 @@ export const useGestureViewer = <ItemT, LC>({
   enablePanWhenZoomed = true,
   enableLoop = false,
   maxZoomScale = 2,
-  itemSpacing = 0,
+  pageSpacing = 0,
+  windowSize = 3,
   height: customHeight,
   id = 'default',
   onDismissStart,
   triggerAnimation,
   autoPlay = false,
   autoPlayInterval = 3000,
-}: UseGestureViewerProps<ItemT, LC>) => {
+}: UseGestureViewerProps<ItemT>) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const width = customWidth || screenWidth;
   const height = customHeight || screenHeight;
+  const dataLength = data?.length || 0;
+  const normalizedPageSpacing = normalizePageSpacing(pageSpacing);
+  const normalizedWindowSize = normalizeWindowSize(windowSize);
+  const pageStride = getPageStride(width, normalizedPageSpacing);
+  const initialCurrentIndex = clampIndex(initialIndex, dataLength);
 
   const dismissGestureRef = useRef<GestureType>(undefined);
 
@@ -65,20 +100,31 @@ export const useGestureViewer = <ItemT, LC>({
   const [isPinching, setIsPinching] = useState(false);
   const [shouldStartTriggerAnimation, setShouldStartTriggerAnimation] = useState(false);
   const [manager, setManager] = useState<GestureViewerManager | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const [activeTriggerNode, setActiveTriggerNode] = useState<View | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(initialCurrentIndex);
+  const [centerVirtualIndex, setCenterVirtualIndex] = useState(initialCurrentIndex);
+  const [activeTriggerNode, setActiveTriggerNode] = useState<View | null>(() =>
+    registry.getActiveTriggerNode(id),
+  );
+  const [isTriggerOpening, setIsTriggerOpening] = useState(
+    () => !!registry.getActiveTriggerNode(id),
+  );
 
-  const listRef = useRef<any>(null);
   const triggerRectRef = useRef<TriggerRect | null>(null);
-  const pendingIndexRef = useRef(initialIndex);
+  const pendingIndexRef = useRef(initialCurrentIndex);
+  const currentIndexRef = useRef(initialCurrentIndex);
+  const centerVirtualIndexRef = useRef(initialCurrentIndex);
+  const previousInitialIndexRef = useRef(initialIndex);
+  const hasResolvedInitialIndexRef = useRef(dataLength > 0);
   const onAnimationCompleteRef = useRef(triggerAnimation?.onAnimationComplete);
   const onSingleTapRef = useRef(onSingleTap);
   const dataRef = useRef(data);
+  const dataLengthRef = useRef(dataLength);
+  const enableLoopRef = useRef(enableLoop);
   const managerRef = useRef(manager);
-
-  const isValidTriggerRect = useCallback((rect: TriggerRect | null): rect is TriggerRect => {
-    return !!rect && rect.width > 0 && rect.height > 0;
-  }, []);
+  const isTransitioningRef = useRef(false);
+  const isZoomedRef = useRef(isZoomed);
+  const isRotatedRef = useRef(isRotated);
+  const isPinchingRef = useRef(isPinching);
 
   const initialTranslateY = useSharedValue(0);
   const initialTranslateX = useSharedValue(0);
@@ -87,21 +133,27 @@ export const useGestureViewer = <ItemT, LC>({
   const translateY = useSharedValue(0);
   const translateX = useSharedValue(0);
   const scale = useSharedValue(1);
-  const backdropOpacity = useSharedValue(1);
   const rotation = useSharedValue(0);
 
   const triggerScale = useSharedValue(1);
   const triggerTranslateX = useSharedValue(0);
   const triggerTranslateY = useSharedValue(0);
-  const triggerOpacity = useSharedValue(1);
+  const triggerOpacity = useSharedValue(activeTriggerNode ? 0 : 1);
+
+  const visualPage = useSharedValue(initialCurrentIndex);
+  const pagingStartPage = useSharedValue(initialCurrentIndex);
+  const pagingAnimationActive = useSharedValue(false);
+  const pagingGestureActive = useSharedValue(false);
+  const pageTransitionLocked = useSharedValue(false);
+  const hasZoomChangeListeners = useSharedValue(false);
+  const hasRotationChangeListeners = useSharedValue(false);
 
   const lastFocalX = useSharedValue(0);
   const lastFocalY = useSharedValue(0);
   const startFocalX = useSharedValue(0);
   const startFocalY = useSharedValue(0);
   const hasActiveFocal = useSharedValue(false);
-
-  const dataLength = data?.length || 0;
+  const { clearPendingWebSingleTap, scheduleWebSingleTap } = useWebSingleTapTimer();
 
   const animationConfig = useMemo(
     () => ({
@@ -129,27 +181,48 @@ export const useGestureViewer = <ItemT, LC>({
     ],
   );
 
-  const adjustedInitialIndex = useMemo(() => {
-    if (enableLoop && dataLength > 1) {
-      return initialIndex + 1;
-    }
+  const renderCurrentIndex = clampIndex(currentIndex, dataLength);
+  const renderCenterVirtualIndex =
+    getVirtualIndexForLogicalIndex(
+      renderCurrentIndex,
+      centerVirtualIndex,
+      dataLength,
+      enableLoop,
+    ) ?? renderCurrentIndex;
 
-    return initialIndex;
-  }, [enableLoop, dataLength, initialIndex]);
+  const fullRenderWindowSlots = createRenderWindow({
+    centerVirtualIndex: renderCenterVirtualIndex,
+    data,
+    enableLoop,
+    windowSize: normalizedWindowSize,
+  });
+  const renderWindowSlots = isTriggerOpening
+    ? fullRenderWindowSlots.filter((slot) => slot.virtualIndex === renderCenterVirtualIndex)
+    : fullRenderWindowSlots;
 
   const constrainTranslation = useMemo(
     () => createBoundsConstraint({ height, width }),
     [width, height],
   );
 
-  const scrollTo = useCallback(
-    (index: number, animated: boolean) => {
-      const scrollAction = createScrollAction(listRef.current, width + itemSpacing);
+  const setTransitioning = useCallback(
+    (nextTransitioning: boolean) => {
+      isTransitioningRef.current = nextTransitioning;
+      pageTransitionLocked.set(nextTransitioning);
 
-      return scrollAction.scrollTo(index, animated);
+      if (nextTransitioning) {
+        clearPendingWebSingleTap();
+      }
     },
-    [width, itemSpacing],
+    [clearPendingWebSingleTap, pageTransitionLocked],
   );
+
+  const cancelPagingInteraction = useCallback(() => {
+    clearPendingWebSingleTap();
+    pagingAnimationActive.set(false);
+    pagingGestureActive.set(false);
+    setTransitioning(false);
+  }, [clearPendingWebSingleTap, pagingAnimationActive, pagingGestureActive, setTransitioning]);
 
   const resetTransformState = useCallback(() => {
     translateX.set(withTiming(0));
@@ -161,37 +234,149 @@ export const useGestureViewer = <ItemT, LC>({
     rotation.set(0);
   }, [initialTranslateX, initialTranslateY, rotation, scale, startScale, translateX, translateY]);
 
-  const syncPendingIndex = useCallback(
-    (nextIndex: number) => {
-      if (nextIndex < 0 || nextIndex >= dataLength) {
+  const resetTransformStateImmediately = useCallback(() => {
+    cancelAnimation(translateX);
+    cancelAnimation(translateY);
+    cancelAnimation(initialTranslateX);
+    cancelAnimation(initialTranslateY);
+    cancelAnimation(startScale);
+    cancelAnimation(scale);
+    cancelAnimation(rotation);
+    translateX.set(0);
+    translateY.set(0);
+    initialTranslateX.set(0);
+    initialTranslateY.set(0);
+    startScale.set(1);
+    scale.set(1);
+    rotation.set(0);
+  }, [initialTranslateX, initialTranslateY, rotation, scale, startScale, translateX, translateY]);
+
+  const commitCurrentIndex = useCallback((nextIndex: number) => {
+    pendingIndexRef.current = nextIndex;
+    currentIndexRef.current = nextIndex;
+    setCurrentIndex(nextIndex);
+    managerRef.current?.notifyStateChange();
+  }, []);
+
+  const commitVirtualIndex = useCallback(
+    (nextVirtualIndex: number) => {
+      const nextLogicalIndex = getLogicalIndex(
+        nextVirtualIndex,
+        dataLengthRef.current,
+        enableLoopRef.current,
+      );
+
+      setTransitioning(false);
+
+      if (nextLogicalIndex === null) {
         return;
       }
 
-      pendingIndexRef.current = nextIndex;
+      centerVirtualIndexRef.current = nextVirtualIndex;
+      setCenterVirtualIndex(nextVirtualIndex);
+      commitCurrentIndex(nextLogicalIndex);
     },
-    [dataLength],
+    [commitCurrentIndex, setTransitioning],
   );
 
-  const syncCurrentIndex = useCallback(
-    (nextIndex: number) => {
-      if (!manager || nextIndex < 0 || nextIndex >= dataLength) {
+  const navigateToIndex = useCallback(
+    (targetIndex: number, options?: NavigationOptions, preferredDirection?: -1 | 1) => {
+      const resolution = resolveNavigation({
+        currentIndex: currentIndexRef.current,
+        dataLength: dataLengthRef.current,
+        enableLoop: enableLoopRef.current,
+        preferredDirection,
+        targetIndex,
+      });
+
+      if (resolution.kind === 'noop') {
         return;
       }
 
-      pendingIndexRef.current = nextIndex;
-
-      const managerCurrentIndex = manager.getState().currentIndex;
-
-      if (nextIndex === managerCurrentIndex) {
+      if (isTransitioningRef.current && !shouldRunNavigationDuringTransition(resolution, options)) {
         return;
       }
 
-      manager.setCurrentIndex(nextIndex);
-      manager.notifyStateChange();
+      const targetVirtualIndex =
+        resolution.kind === 'step'
+          ? centerVirtualIndexRef.current + resolution.direction
+          : getVirtualIndexForLogicalIndex(
+              resolution.targetIndex,
+              centerVirtualIndexRef.current,
+              dataLengthRef.current,
+              enableLoopRef.current,
+            );
+
+      if (targetVirtualIndex === null) {
+        return;
+      }
+
+      cancelAnimation(visualPage);
+
+      if (resolution.kind !== 'step' || options?.animated === false) {
+        resetTransformStateImmediately();
+        cancelPagingInteraction();
+        visualPage.set(targetVirtualIndex);
+        commitVirtualIndex(targetVirtualIndex);
+        return;
+      }
+
       resetTransformState();
+      pagingAnimationActive.set(false);
+      setTransitioning(true);
+      visualPage.set(
+        withTiming(targetVirtualIndex, PAGE_TRANSITION_CONFIG, (finished) => {
+          if (finished) {
+            scheduleOnRN(commitVirtualIndex, targetVirtualIndex);
+            return;
+          }
+
+          scheduleOnRN(setTransitioning, false);
+        }),
+      );
     },
-    [dataLength, manager, resetTransformState],
+    [
+      cancelPagingInteraction,
+      commitVirtualIndex,
+      pagingAnimationActive,
+      resetTransformStateImmediately,
+      resetTransformState,
+      setTransitioning,
+      visualPage,
+    ],
   );
+
+  const navigateByDirection = useCallback(
+    (direction: -1 | 1) => {
+      const currentDataLength = dataLengthRef.current;
+
+      if (currentDataLength <= 0) {
+        return;
+      }
+
+      const nextIndex = currentIndexRef.current + direction;
+
+      if (nextIndex >= 0 && nextIndex < currentDataLength) {
+        navigateToIndex(nextIndex, undefined, direction);
+        return;
+      }
+
+      if (!enableLoopRef.current || currentDataLength <= 1) {
+        return;
+      }
+
+      navigateToIndex(direction === 1 ? 0 : currentDataLength - 1, undefined, direction);
+    },
+    [navigateToIndex],
+  );
+
+  const navigateToNext = useCallback(() => {
+    navigateByDirection(1);
+  }, [navigateByDirection]);
+
+  const navigateToPrevious = useCallback(() => {
+    navigateByDirection(-1);
+  }, [navigateByDirection]);
 
   const emitZoomChange = useCallback((currentScale: number, prevScale: number | null) => {
     managerRef.current?.emitZoomChange(currentScale, prevScale);
@@ -201,136 +386,268 @@ export const useGestureViewer = <ItemT, LC>({
     managerRef.current?.emitRotationChange(currentRotation, prevRotation);
   }, []);
 
-  const onAnimationComplete = useCallback(() => {
+  const finishTriggerOpening = useCallback(() => {
+    setIsTriggerOpening(false);
     onAnimationCompleteRef.current?.();
   }, []);
 
   useAnimatedReaction(
     () => scale.get(),
     (currentScale, previousScale) => {
-      if (currentScale !== previousScale) {
+      if (currentScale !== previousScale && hasZoomChangeListeners.get()) {
         scheduleOnRN(emitZoomChange, currentScale, previousScale);
       }
 
-      scheduleOnRN(setIsZoomed, currentScale > 1);
+      const currentIsZoomed = currentScale > 1;
+      const previousIsZoomed = (previousScale ?? 1) > 1;
+
+      if (previousScale === null || currentIsZoomed !== previousIsZoomed) {
+        scheduleOnRN(setIsZoomed, currentIsZoomed);
+      }
     },
   );
 
   useAnimatedReaction(
     () => rotation.get(),
     (currentRotation, previousRotation) => {
-      if (currentRotation !== previousRotation) {
+      if (currentRotation !== previousRotation && hasRotationChangeListeners.get()) {
         scheduleOnRN(emitRotationChange, currentRotation, previousRotation);
       }
 
-      scheduleOnRN(setIsRotated, currentRotation % 360 !== 0);
+      const currentIsRotated = currentRotation % 360 !== 0;
+      const previousIsRotated = (previousRotation ?? 0) % 360 !== 0;
+
+      if (previousRotation === null || currentIsRotated !== previousIsRotated) {
+        scheduleOnRN(setIsRotated, currentIsRotated);
+      }
     },
   );
 
   useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
-
-    const unsubscribeFromRegistry = registry.subscribeToManager(id, (managerInstance) => {
+    return registry.subscribeToManager(id, (managerInstance) => {
+      managerRef.current = managerInstance;
       setManager(managerInstance);
-      unsubscribe = managerInstance?.subscribe((state) => {
-        pendingIndexRef.current = state.currentIndex;
-        setCurrentIndex(state.currentIndex);
-      });
     });
-
-    return () => {
-      unsubscribeFromRegistry();
-      unsubscribe?.();
-    };
   }, [id]);
 
   useEffect(() => {
-    return registry.subscribeToActiveTrigger(id, setActiveTriggerNode);
-  }, [id]);
+    return registry.subscribeToActiveTrigger(id, (node) => {
+      setActiveTriggerNode(node);
 
-  useEffect(() => {
-    pendingIndexRef.current = initialIndex;
-
-    if (!manager) {
-      return;
-    }
-
-    manager.setDataLength(dataLength);
-    manager.setEnableHorizontalSwipe(enableHorizontalSwipe);
-    manager.setCurrentIndex(initialIndex);
-    manager.setWidth(width + itemSpacing);
-    manager.setHeight(height);
-    manager.setZoomSharedValues(scale, translateX, translateY, maxZoomScale);
-    manager.setResetTransformCallback(resetTransformState);
-    manager.setRotation(rotation);
-    manager.setEnableLoop(enableLoop);
-    manager.notifyStateChange();
-  }, [
-    dataLength,
-    enableHorizontalSwipe,
-    initialIndex,
-    manager,
-    width,
-    itemSpacing,
-    maxZoomScale,
-    enableLoop,
-    scale,
-    height,
-    resetTransformState,
-    translateX,
-    translateY,
-    rotation,
-  ]);
-
-  useEffect(() => {
-    if (!manager || !listRef.current) {
-      return;
-    }
-
-    manager.setListRef(listRef.current);
-  }, [manager]);
-
-  useEffect(() => {
-    translateY.set(0);
-    translateX.set(0);
-    scale.set(1);
-    backdropOpacity.set(1);
-    startScale.set(1);
-    rotation.set(0);
-
-    if (adjustedInitialIndex <= 0 || !listRef.current) {
-      return;
-    }
-
-    return scheduleInitialScroll(() => {
-      scrollTo(adjustedInitialIndex, false);
+      if (node) {
+        setIsTriggerOpening(true);
+      }
     });
-  }, [
-    adjustedInitialIndex,
-    translateY,
-    backdropOpacity,
-    translateX,
-    scale,
-    startScale,
-    rotation,
-    scrollTo,
-  ]);
-
-  useEffect(() => {
-    onAnimationCompleteRef.current = triggerAnimation?.onAnimationComplete;
-  }, [triggerAnimation?.onAnimationComplete]);
+  }, [id]);
 
   useEffect(() => {
     dataRef.current = data;
   }, [data]);
 
   useEffect(() => {
-    managerRef.current = manager;
-  }, [manager]);
+    isZoomedRef.current = isZoomed;
+  }, [isZoomed]);
+
+  useEffect(() => {
+    isRotatedRef.current = isRotated;
+  }, [isRotated]);
+
+  useEffect(() => {
+    isPinchingRef.current = isPinching;
+  }, [isPinching]);
 
   useEffect(() => {
     onSingleTapRef.current = onSingleTap;
   }, [onSingleTap]);
+
+  useEffect(() => {
+    onAnimationCompleteRef.current = triggerAnimation?.onAnimationComplete;
+  }, [triggerAnimation?.onAnimationComplete]);
+
+  useEffect(() => {
+    if (!manager) {
+      return;
+    }
+
+    manager.setWidth(width);
+    manager.setHeight(height);
+    manager.setZoomSharedValues(scale, translateX, translateY, maxZoomScale);
+    manager.setRotation(rotation);
+  }, [height, manager, maxZoomScale, rotation, scale, translateX, translateY, width]);
+
+  useEffect(() => {
+    if (!manager) {
+      hasZoomChangeListeners.set(false);
+      hasRotationChangeListeners.set(false);
+      return;
+    }
+
+    return manager.subscribeToEventListenerPresence((eventType, hasListeners) => {
+      if (eventType === 'zoomChange') {
+        hasZoomChangeListeners.set(hasListeners);
+        return;
+      }
+
+      if (eventType === 'rotationChange') {
+        hasRotationChangeListeners.set(hasListeners);
+      }
+    });
+  }, [hasRotationChangeListeners, hasZoomChangeListeners, manager]);
+
+  useEffect(() => {
+    if (!manager) {
+      return;
+    }
+
+    manager.setStateReader(() => ({
+      currentIndex: currentIndexRef.current,
+      totalCount: dataLengthRef.current,
+    }));
+    manager.notifyStateChange();
+
+    return () => {
+      manager.setStateReader(null);
+    };
+  }, [manager]);
+
+  useEffect(() => {
+    if (!manager) {
+      return;
+    }
+
+    manager.setNavigationAdapter({
+      goToIndex: navigateToIndex,
+      goToNext: navigateToNext,
+      goToPrevious: navigateToPrevious,
+    });
+
+    return () => {
+      manager.setNavigationAdapter(null);
+    };
+  }, [manager, navigateToIndex, navigateToNext, navigateToPrevious]);
+
+  useLayoutEffect(() => {
+    const initialIndexChanged = previousInitialIndexRef.current !== initialIndex;
+    const shouldResolveInitialIndex =
+      initialIndexChanged || (!hasResolvedInitialIndexRef.current && dataLength > 0);
+
+    previousInitialIndexRef.current = initialIndex;
+    dataLengthRef.current = dataLength;
+    enableLoopRef.current = enableLoop;
+
+    hasResolvedInitialIndexRef.current = dataLength > 0;
+
+    const nextIndex = shouldResolveInitialIndex
+      ? clampIndex(initialIndex, dataLength)
+      : clampIndex(currentIndexRef.current, dataLength);
+
+    const nextVirtualIndex =
+      getVirtualIndexForLogicalIndex(
+        nextIndex,
+        centerVirtualIndexRef.current,
+        dataLength,
+        enableLoop,
+      ) ?? nextIndex;
+
+    const previousIndex = currentIndexRef.current;
+    const previousVirtualIndex = centerVirtualIndexRef.current;
+    const shouldSyncVirtualPage =
+      isTransitioningRef.current || previousVirtualIndex !== nextVirtualIndex;
+    const shouldResetTransform =
+      initialIndexChanged || previousIndex !== nextIndex || shouldSyncVirtualPage;
+
+    if (shouldSyncVirtualPage) {
+      cancelAnimation(visualPage);
+      cancelPagingInteraction();
+      visualPage.set(nextVirtualIndex);
+      centerVirtualIndexRef.current = nextVirtualIndex;
+      setCenterVirtualIndex(nextVirtualIndex);
+    }
+
+    if (previousIndex !== nextIndex) {
+      commitCurrentIndex(nextIndex);
+    }
+
+    if (previousIndex === nextIndex) {
+      managerRef.current?.notifyStateChange();
+    }
+
+    if (shouldResetTransform) {
+      resetTransformState();
+    }
+  }, [
+    cancelPagingInteraction,
+    commitCurrentIndex,
+    dataLength,
+    enableLoop,
+    initialIndex,
+    resetTransformState,
+    visualPage,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      triggerRectRef.current = null;
+      clearPendingWebSingleTap();
+    };
+  }, [clearPendingWebSingleTap]);
+
+  useEffect(() => {
+    if (
+      !autoPlay ||
+      dataLength <= 1 ||
+      isTriggerOpening ||
+      isZoomed ||
+      isRotated ||
+      isPinching ||
+      (!enableLoop && currentIndex >= dataLength - 1)
+    ) {
+      return;
+    }
+
+    const interval = Math.max(250, Math.floor(autoPlayInterval || 0));
+
+    if (!Number.isFinite(interval)) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      if (
+        isTransitioningRef.current ||
+        isZoomedRef.current ||
+        isRotatedRef.current ||
+        isPinchingRef.current
+      ) {
+        return;
+      }
+
+      const nextIndex =
+        currentIndexRef.current >= dataLengthRef.current - 1
+          ? enableLoopRef.current
+            ? 0
+            : null
+          : currentIndexRef.current + 1;
+
+      if (nextIndex === null) {
+        return;
+      }
+
+      navigateToIndex(nextIndex);
+    }, interval);
+
+    return () => clearInterval(timer);
+  }, [
+    autoPlay,
+    autoPlayInterval,
+    currentIndex,
+    dataLength,
+    enableLoop,
+    isPinching,
+    isRotated,
+    isTriggerOpening,
+    isZoomed,
+    navigateToIndex,
+  ]);
 
   useEffect(() => {
     if (shouldStartTriggerAnimation && triggerRectRef.current) {
@@ -349,7 +666,7 @@ export const useGestureViewer = <ItemT, LC>({
       triggerScale.set(
         withTiming(1, animationConfig, (finished) => {
           if (finished) {
-            scheduleOnRN(onAnimationComplete);
+            scheduleOnRN(finishTriggerOpening);
           }
         }),
       );
@@ -374,11 +691,18 @@ export const useGestureViewer = <ItemT, LC>({
     triggerScale,
     triggerTranslateX,
     triggerTranslateY,
-    onAnimationComplete,
+    finishTriggerOpening,
   ]);
 
   useEffect(() => {
-    if (!activeTriggerNode || typeof activeTriggerNode.measure !== 'function') {
+    if (!activeTriggerNode) {
+      return;
+    }
+
+    if (typeof activeTriggerNode.measure !== 'function') {
+      setIsTriggerOpening(false);
+      triggerOpacity.set(1);
+      registry.clearActiveTriggerNode(id);
       return;
     }
 
@@ -391,6 +715,8 @@ export const useGestureViewer = <ItemT, LC>({
       } satisfies TriggerRect;
 
       if (!isValidTriggerRect(nextTriggerRect)) {
+        setIsTriggerOpening(false);
+        triggerOpacity.set(1);
         registry.clearActiveTriggerNode(id);
         return;
       }
@@ -400,13 +726,7 @@ export const useGestureViewer = <ItemT, LC>({
       setShouldStartTriggerAnimation(true);
       registry.clearActiveTriggerNode(id);
     });
-  }, [activeTriggerNode, id, isValidTriggerRect, triggerOpacity]);
-
-  useEffect(() => {
-    return () => {
-      triggerRectRef.current = null;
-    };
-  }, []);
+  }, [activeTriggerNode, id, triggerOpacity]);
 
   const animateDismissToRect = useCallback(
     (rect: TriggerRect) => {
@@ -444,6 +764,10 @@ export const useGestureViewer = <ItemT, LC>({
   }, [onDismiss]);
 
   const handleDismiss = useCallback(() => {
+    if (isTransitioningRef.current) {
+      return;
+    }
+
     onDismissStart?.();
 
     const dismissTargetIndex = pendingIndexRef.current;
@@ -479,10 +803,10 @@ export const useGestureViewer = <ItemT, LC>({
     }
 
     dismissWithoutTrigger();
-  }, [animateDismissToRect, dismissWithoutTrigger, id, isValidTriggerRect, onDismissStart]);
+  }, [animateDismissToRect, dismissWithoutTrigger, id, onDismissStart]);
 
   const dismissGesture = useMemo(() => {
-    const canDismiss = !isZoomed && dismissOptions.enabled;
+    const canDismiss = !isTriggerOpening && !isZoomed && dismissOptions.enabled;
 
     return Gesture.Pan()
       .minDistance(10)
@@ -493,9 +817,18 @@ export const useGestureViewer = <ItemT, LC>({
       .withRef(dismissGestureRef)
       .enabled(canDismiss)
       .onUpdate((event) => {
+        if (pageTransitionLocked.get()) {
+          return;
+        }
+
         translateY.set(event.translationY / dismissOptions.resistance);
       })
       .onEnd((event) => {
+        if (pageTransitionLocked.get()) {
+          translateY.set(withSpring(0, PAGE_SPRING_CONFIG));
+          return;
+        }
+
         if (
           canDismiss &&
           shouldDismissByDirection(
@@ -508,28 +841,176 @@ export const useGestureViewer = <ItemT, LC>({
           return;
         }
 
-        translateY.set(
-          withSpring(0, {
-            damping: 50,
-            energyThreshold: 6e-9,
-            mass: 4,
-            overshootClamping: false,
-            stiffness: 600,
+        translateY.set(withSpring(0, PAGE_SPRING_CONFIG));
+      });
+  }, [translateY, dismissOptions, handleDismiss, isTriggerOpening, isZoomed, pageTransitionLocked]);
+
+  const horizontalPagingGesture = useMemo(() => {
+    const canSwipe =
+      enableHorizontalSwipe &&
+      dataLength > 1 &&
+      !isTriggerOpening &&
+      !isZoomed &&
+      !isRotated &&
+      !isPinching &&
+      pageStride > 0;
+    const settleToCenter = () => {
+      'worklet';
+      pagingAnimationActive.set(true);
+      visualPage.set(
+        withSpring(centerVirtualIndex, PAGE_SPRING_CONFIG, (finished) => {
+          pagingAnimationActive.set(false);
+          if (finished) {
+            scheduleOnRN(setTransitioning, false);
+          }
+        }),
+      );
+    };
+
+    return Gesture.Pan()
+      .minDistance(10)
+      .averageTouches(true)
+      .activeCursor('grabbing')
+      .activeOffsetX([-10, 10])
+      .failOffsetY([-10, 10])
+      .enabled(canSwipe)
+      .onStart(() => {
+        if (pageTransitionLocked.get()) {
+          return;
+        }
+
+        // Pan enters BEGAN for ordinary taps, so lock paging only after swipe activation.
+        cancelAnimation(visualPage);
+        pagingAnimationActive.set(false);
+        pagingGestureActive.set(true);
+        pageTransitionLocked.set(true);
+        pagingStartPage.set(visualPage.get());
+        scheduleOnRN(setTransitioning, true);
+      })
+      .onUpdate((event) => {
+        if (!pagingGestureActive.get()) {
+          return;
+        }
+
+        const dragPageDelta = -event.translationX / pageStride;
+        const basePage = pagingStartPage.get();
+        let nextPage = basePage + dragPageDelta;
+
+        if (!enableLoop) {
+          if (currentIndex === 0 && nextPage < centerVirtualIndex) {
+            nextPage = centerVirtualIndex + (nextPage - centerVirtualIndex) * EDGE_RESISTANCE;
+          }
+
+          if (currentIndex === dataLength - 1 && nextPage > centerVirtualIndex) {
+            nextPage = centerVirtualIndex + (nextPage - centerVirtualIndex) * EDGE_RESISTANCE;
+          }
+        }
+
+        visualPage.set(nextPage);
+      })
+      .onEnd((event) => {
+        if (!pagingGestureActive.get()) {
+          return;
+        }
+
+        pagingGestureActive.set(false);
+
+        const passedLeftThreshold =
+          -event.translationX > width * SWIPE_THRESHOLD_RATIO ||
+          event.velocityX < -SWIPE_VELOCITY_THRESHOLD;
+        const passedRightThreshold =
+          event.translationX > width * SWIPE_THRESHOLD_RATIO ||
+          event.velocityX > SWIPE_VELOCITY_THRESHOLD;
+        const direction = passedLeftThreshold ? 1 : passedRightThreshold ? -1 : 0;
+
+        if (direction === 0) {
+          settleToCenter();
+          return;
+        }
+
+        const nextIndex = currentIndex + direction;
+        const canMove =
+          enableLoop ||
+          (direction === 1 && nextIndex < dataLength) ||
+          (direction === -1 && nextIndex >= 0);
+
+        if (!canMove) {
+          settleToCenter();
+          return;
+        }
+
+        const targetVirtualIndex = centerVirtualIndex + direction;
+
+        pagingAnimationActive.set(true);
+        visualPage.set(
+          withTiming(targetVirtualIndex, PAGE_TRANSITION_CONFIG, (finished) => {
+            pagingAnimationActive.set(false);
+            if (finished) {
+              scheduleOnRN(commitVirtualIndex, targetVirtualIndex);
+              return;
+            }
+
+            scheduleOnRN(setTransitioning, false);
           }),
         );
+      })
+      .onFinalize(() => {
+        if (pagingAnimationActive.get()) {
+          return;
+        }
+
+        if (!pagingGestureActive.get()) {
+          return;
+        }
+
+        pagingGestureActive.set(false);
+
+        if (Math.abs(visualPage.get() - centerVirtualIndex) > 0.001) {
+          settleToCenter();
+          return;
+        }
+
+        scheduleOnRN(setTransitioning, false);
       });
-  }, [translateY, dismissOptions, handleDismiss, isZoomed]);
+  }, [
+    centerVirtualIndex,
+    commitVirtualIndex,
+    currentIndex,
+    dataLength,
+    enableHorizontalSwipe,
+    enableLoop,
+    isTriggerOpening,
+    isPinching,
+    isRotated,
+    isZoomed,
+    pagingAnimationActive,
+    pagingGestureActive,
+    pageTransitionLocked,
+    pageStride,
+    pagingStartPage,
+    setTransitioning,
+    visualPage,
+    width,
+  ]);
 
   const zoomPinchGesture = useMemo(
     () =>
       Gesture.Pinch()
         .enabled(enablePinchZoom)
         .onTouchesDown((event) => {
+          if (pageTransitionLocked.get()) {
+            return;
+          }
+
           if (event.numberOfTouches === 2) {
             scheduleOnRN(setIsPinching, true);
           }
         })
         .onStart((event) => {
+          if (pageTransitionLocked.get()) {
+            return;
+          }
+
           startScale.set(scale.get());
           initialTranslateX.set(translateX.get());
           initialTranslateY.set(translateY.get());
@@ -540,6 +1021,10 @@ export const useGestureViewer = <ItemT, LC>({
           hasActiveFocal.set(false);
         })
         .onUpdate((event) => {
+          if (pageTransitionLocked.get()) {
+            return;
+          }
+
           const initialScale = startScale.get();
           const newScale = initialScale * event.scale;
 
@@ -601,6 +1086,10 @@ export const useGestureViewer = <ItemT, LC>({
           translateY.set(constrainedTranslateY);
         })
         .onEnd(() => {
+          if (pageTransitionLocked.get()) {
+            return;
+          }
+
           const currentScale = scale.get();
 
           if (currentScale > maxZoomScale) {
@@ -673,6 +1162,7 @@ export const useGestureViewer = <ItemT, LC>({
       startFocalX,
       startFocalY,
       hasActiveFocal,
+      pageTransitionLocked,
     ],
   );
 
@@ -683,10 +1173,18 @@ export const useGestureViewer = <ItemT, LC>({
         .activeCursor('grabbing')
         .averageTouches(true)
         .onBegin(() => {
+          if (pageTransitionLocked.get()) {
+            return;
+          }
+
           initialTranslateX.set(translateX.get());
           initialTranslateY.set(translateY.get());
         })
         .onUpdate((event) => {
+          if (pageTransitionLocked.get()) {
+            return;
+          }
+
           const currentScale = scale.get();
 
           if (currentScale > 1) {
@@ -713,49 +1211,74 @@ export const useGestureViewer = <ItemT, LC>({
       initialTranslateX,
       initialTranslateY,
       constrainTranslation,
+      pageTransitionLocked,
     ],
   );
 
-  const emitSingleTap = useCallback((x: number, y: number) => {
+  const getCurrentTapTarget = useCallback((): { index: number; item: ItemT } | null => {
     const index = pendingIndexRef.current;
-    const currentData = dataRef.current;
 
-    if (index < 0 || index >= currentData.length) {
-      return;
+    if (index < 0 || index >= dataRef.current.length || !(index in dataRef.current)) {
+      return null;
     }
 
-    managerRef.current?.emitTap({ kind: 'single', x, y, index });
-
-    const item = currentData[index];
-
-    if (item === undefined) {
-      return;
-    }
-
-    onSingleTapRef.current?.({ x, y, index, item });
+    return { index, item: dataRef.current[index] as ItemT };
   }, []);
+
+  const isWebInteractionLocked = useCallback(
+    () => isTransitioningRef.current || pageTransitionLocked.get(),
+    [pageTransitionLocked],
+  );
+
+  const emitSingleTap = useCallback<EmitSingleTap<ItemT>>(
+    (x, y, tapTarget) => {
+      if (isTransitioningRef.current) {
+        return;
+      }
+
+      const target = tapTarget ?? getCurrentTapTarget();
+
+      if (!target) {
+        return;
+      }
+
+      const { index: targetIndex, item: targetItem } = target;
+
+      if (targetIndex < 0) {
+        return;
+      }
+
+      managerRef.current?.emitTap({ kind: 'single', x, y, index: targetIndex });
+      onSingleTapRef.current?.({ x, y, index: targetIndex, item: targetItem });
+    },
+    [getCurrentTapTarget],
+  );
 
   const singleTapGesture = useMemo(
     () =>
       Gesture.Tap()
-        .enabled(Platform.OS !== 'web')
+        .enabled(enableNativeTapGestures)
         .numberOfTaps(1)
         .onEnd((event, success) => {
-          if (!success) {
+          if (!success || pageTransitionLocked.get()) {
             return;
           }
 
           scheduleOnRN(emitSingleTap, event.x, event.y);
         }),
-    [emitSingleTap],
+    [emitSingleTap, pageTransitionLocked],
   );
 
   const doubleTapGesture = useMemo(
     () =>
       Gesture.Tap()
-        .enabled(enableDoubleTapZoom && Platform.OS !== 'web')
+        .enabled(enableDoubleTapZoom && enableNativeTapGestures)
         .numberOfTaps(2)
         .onEnd((event) => {
+          if (pageTransitionLocked.get()) {
+            return;
+          }
+
           applyTapZoomAtPoint({
             x: event.x,
             y: event.y,
@@ -767,7 +1290,16 @@ export const useGestureViewer = <ItemT, LC>({
             translateY,
           });
         }),
-    [enableDoubleTapZoom, height, maxZoomScale, scale, translateX, translateY, width],
+    [
+      enableDoubleTapZoom,
+      height,
+      maxZoomScale,
+      pageTransitionLocked,
+      scale,
+      translateX,
+      translateY,
+      width,
+    ],
   );
 
   const tapGesture = useMemo(
@@ -779,6 +1311,21 @@ export const useGestureViewer = <ItemT, LC>({
     () => Gesture.Race(zoomPinchGesture, Gesture.Exclusive(zoomPanGesture, tapGesture)),
     [zoomPinchGesture, zoomPanGesture, tapGesture],
   );
+
+  const onWebClick = useWebClickHandler({
+    clearPendingWebSingleTap,
+    emitSingleTap,
+    enableDoubleTapZoom,
+    getCurrentTapTarget,
+    height,
+    maxZoomScale,
+    scale,
+    scheduleWebSingleTap,
+    isInteractionLocked: isWebInteractionLocked,
+    translateX,
+    translateY,
+    width,
+  });
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: triggerOpacity.get(),
@@ -807,52 +1354,22 @@ export const useGestureViewer = <ItemT, LC>({
     return { opacity: baseOpacity * dismissOpacity };
   }, [dismissOptions.direction, dismissOptions.fadeBackdrop]);
 
-  const nativeScrollGesture = useMemo(() => {
-    return Gesture.Native().requireExternalGestureToFail(dismissGestureRef);
-  }, []);
-
-  const { onMomentumScrollEnd, onScroll, onScrollBeginDrag, onWebClick } = useGestureViewerPaging({
-    adjustedInitialIndex,
-    autoPlay,
-    autoPlayInterval,
-    currentIndex,
-    dataLength,
-    enableDoubleTapZoom,
-    enableHorizontalSwipe,
-    enableLoop,
-    height,
-    isRotated,
-    isZoomed,
-    itemSpacing,
-    manager,
-    maxZoomScale,
-    onSingleTap: emitSingleTap,
-    scale,
-    scrollTo,
-    syncCurrentIndex,
-    syncPendingIndex,
-    translateX,
-    translateY,
-    width,
-  });
-
   return {
     animatedStyle,
     backdropStyle,
+    centerVirtualIndex: renderCenterVirtualIndex,
+    currentIndex: renderCurrentIndex,
     dataLength,
     dismissGesture,
     handleDismiss,
+    horizontalPagingGesture,
     isPinching,
     isRotated,
-
     isZoomed,
-    listRef,
-    nativeScrollGesture,
     onWebClick,
-    onMomentumScrollEnd,
-    onScroll,
-
-    onScrollBeginDrag,
+    pageStride,
+    renderWindowSlots,
+    visualPage,
     zoomGesture,
   };
 };

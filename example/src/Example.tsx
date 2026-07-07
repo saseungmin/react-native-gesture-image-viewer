@@ -1,5 +1,4 @@
 import { Feather } from '@expo/vector-icons';
-import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { useCallback, useState } from 'react';
 import { Button, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -110,10 +109,10 @@ function Example() {
             onDismiss={() => setVisible(false)}
             onDismissStart={() => setShowExternalUI(false)}
             enableLoop={enableLoop}
-            ListComponent={FlashList}
+            pageSpacing={16}
             renderItem={renderImage}
             dismiss={{
-              direction: 'down',
+              direction: 'both',
             }}
             onSingleTap={() => setShowExternalUI((prev) => !prev)}
             backdropStyle={{ backgroundColor: '#181818' }}
