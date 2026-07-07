@@ -321,6 +321,36 @@ describe('GestureViewer render-window integration', () => {
     expect(rendered.queryByText('first')).toBeNull();
   });
 
+  it('reapplies initialIndex when data is cleared and repopulated', async () => {
+    const rendered = await render(
+      <Harness data={data} initialIndex={2} viewerId="reloaded-initial-index" />,
+    );
+
+    await expectState(rendered, 'reloaded-initial-index', '2/4');
+    expect(rendered.getByText('third')).toBeTruthy();
+
+    await act(async () => {
+      await rendered.rerender(
+        <Harness data={[]} initialIndex={2} viewerId="reloaded-initial-index" />,
+      );
+    });
+
+    await expectState(rendered, 'reloaded-initial-index', '0/0');
+    expect(rendered.queryByText('third')).toBeNull();
+
+    await act(async () => {
+      await rendered.rerender(
+        <Harness data={data} initialIndex={2} viewerId="reloaded-initial-index" />,
+      );
+    });
+
+    await expectState(rendered, 'reloaded-initial-index', '2/4');
+    expect(rendered.getByText('second')).toBeTruthy();
+    expect(rendered.getByText('third')).toBeTruthy();
+    expect(rendered.getByText('fourth')).toBeTruthy();
+    expect(rendered.queryByText('first')).toBeNull();
+  });
+
   it('keeps initialIndex pending when it changes before data arrives', async () => {
     const rendered = await render(
       <Harness data={[]} initialIndex={0} viewerId="pending-initial-index" />,

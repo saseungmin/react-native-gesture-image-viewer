@@ -537,7 +537,7 @@ export const useGestureViewer = <ItemT>({
 
     if (dataLength > 0) {
       hasResolvedInitialIndexRef.current = true;
-    } else if (initialIndexChanged) {
+    } else {
       hasResolvedInitialIndexRef.current = false;
     }
 
