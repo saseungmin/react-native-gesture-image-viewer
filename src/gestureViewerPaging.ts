@@ -9,6 +9,21 @@ export type HorizontalPagingTarget =
       kind: 'settle';
     };
 
+export function normalizeHorizontalSwipeThreshold(
+  value: number | undefined,
+  fallback: number,
+): number {
+  if (value === undefined) {
+    return fallback;
+  }
+
+  if (Number.isFinite(value) && value >= 0) {
+    return value;
+  }
+
+  return fallback;
+}
+
 export function resolveHorizontalSwipeDirection(
   translationX: number,
   velocityX: number,

@@ -7,8 +7,6 @@ import {
   EDGE_RESISTANCE,
   PAGE_SPRING_CONFIG,
   PAGE_TRANSITION_CONFIG,
-  SWIPE_THRESHOLD_RATIO,
-  SWIPE_VELOCITY_THRESHOLD,
 } from './gestureViewerAnimation';
 import {
   applyHorizontalEdgeResistance,
@@ -22,8 +20,10 @@ type UseGestureViewerPagingOptions = {
   commitVirtualIndexOnly: (targetVirtualIndex: number) => void;
   currentIndex: number;
   dataLength: number;
-  enableHorizontalSwipe: boolean;
   enableLoop: boolean;
+  horizontalSwipeDistanceThresholdRatio: number;
+  horizontalSwipeEnabled: boolean;
+  horizontalSwipeVelocityThreshold: number;
   initialPage: number;
   isPinching: boolean;
   isRotated: boolean;
@@ -42,8 +42,10 @@ export function useGestureViewerPaging({
   commitVirtualIndexOnly,
   currentIndex,
   dataLength,
-  enableHorizontalSwipe,
   enableLoop,
+  horizontalSwipeDistanceThresholdRatio,
+  horizontalSwipeEnabled,
+  horizontalSwipeVelocityThreshold,
   initialPage,
   isPinching,
   isRotated,
@@ -144,7 +146,7 @@ export function useGestureViewerPaging({
 
   const horizontalPagingGesture = useMemo(() => {
     const canSwipe =
-      enableHorizontalSwipe &&
+      horizontalSwipeEnabled &&
       dataLength > 1 &&
       !isTriggerOpening &&
       !isZoomed &&
@@ -213,8 +215,8 @@ export function useGestureViewerPaging({
           event.translationX,
           event.velocityX,
           width,
-          SWIPE_THRESHOLD_RATIO,
-          SWIPE_VELOCITY_THRESHOLD,
+          horizontalSwipeDistanceThresholdRatio,
+          horizontalSwipeVelocityThreshold,
         );
 
         if (direction === 0) {
@@ -275,8 +277,10 @@ export function useGestureViewerPaging({
     completeAnimatedVirtualPage,
     currentIndex,
     dataLength,
-    enableHorizontalSwipe,
     enableLoop,
+    horizontalSwipeDistanceThresholdRatio,
+    horizontalSwipeEnabled,
+    horizontalSwipeVelocityThreshold,
     isTriggerOpening,
     isPinching,
     isRotated,

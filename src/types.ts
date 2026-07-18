@@ -159,11 +159,28 @@ export interface GestureViewerProps<ItemT> {
     fadeBackdrop?: boolean;
   };
   /**
-   * Controls left/right swipe gestures.
-   * @remarks When `false`, horizontal gestures are disabled.
-   * @defaultValue true
+   * Horizontal swipe gesture options.
+   * @remarks Controls user-driven left/right page swipe gestures. Controller navigation and autoplay remain available when disabled.
    */
-  enableHorizontalSwipe?: boolean;
+  horizontalSwipe?: {
+    /**
+     * When `false`, user-driven horizontal page swipe gestures are disabled.
+     * @defaultValue true
+     */
+    enabled?: boolean;
+    /**
+     * Distance threshold as a ratio of viewer width.
+     * @remarks A page commits when absolute horizontal translation is strictly greater than `width * distanceThresholdRatio`, or when velocity passes `velocityThreshold`. Zero and finite values greater than `1` are accepted; negative and non-finite values fall back to the default.
+     * @defaultValue 0.25
+     */
+    distanceThresholdRatio?: number;
+    /**
+     * Horizontal velocity threshold in points per second.
+     * @remarks A page commits when absolute horizontal velocity is strictly greater than `velocityThreshold`, or when distance passes `distanceThresholdRatio`. Zero and every finite non-negative value are accepted; negative and non-finite values fall back to the default.
+     * @defaultValue 800
+     */
+    velocityThreshold?: number;
+  };
   /**
    * Only works when zoom is active, allows moving item position when zoomed.
    * @remarks When `false`, gesture movement is disabled during zoom.

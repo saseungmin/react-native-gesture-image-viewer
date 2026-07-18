@@ -13,8 +13,13 @@ import {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { PAGE_SPRING_CONFIG } from './gestureViewerAnimation';
+import {
+  PAGE_SPRING_CONFIG,
+  SWIPE_THRESHOLD_RATIO,
+  SWIPE_VELOCITY_THRESHOLD,
+} from './gestureViewerAnimation';
 import type GestureViewerManager from './GestureViewerManager';
+import { normalizeHorizontalSwipeThreshold } from './gestureViewerPaging';
 import { registry } from './GestureViewerRegistry';
 import { resolveGestureViewerRenderWindow } from './gestureViewerRenderWindow';
 import { enableNativeTapGestures } from './platformTapGestures';
@@ -56,7 +61,7 @@ export const useGestureViewer = <ItemT>({
   dismiss,
   enableDoubleTapZoom = true,
   enablePinchZoom = true,
-  enableHorizontalSwipe = true,
+  horizontalSwipe,
   enablePanWhenZoomed = true,
   enableLoop = false,
   maxZoomScale = 2,
@@ -76,6 +81,15 @@ export const useGestureViewer = <ItemT>({
   const normalizedPageSpacing = normalizePageSpacing(pageSpacing);
   const pageStride = getPageStride(width, normalizedPageSpacing);
   const initialCurrentIndex = clampIndex(initialIndex, dataLength);
+  const horizontalSwipeEnabled = horizontalSwipe?.enabled ?? true;
+  const horizontalSwipeDistanceThresholdRatio = normalizeHorizontalSwipeThreshold(
+    horizontalSwipe?.distanceThresholdRatio,
+    SWIPE_THRESHOLD_RATIO,
+  );
+  const horizontalSwipeVelocityThreshold = normalizeHorizontalSwipeThreshold(
+    horizontalSwipe?.velocityThreshold,
+    SWIPE_VELOCITY_THRESHOLD,
+  );
 
   const dismissGestureRef = useRef<GestureType>(undefined);
 
@@ -242,8 +256,10 @@ export const useGestureViewer = <ItemT>({
     commitVirtualIndexOnly,
     currentIndex,
     dataLength,
-    enableHorizontalSwipe,
     enableLoop,
+    horizontalSwipeDistanceThresholdRatio,
+    horizontalSwipeEnabled,
+    horizontalSwipeVelocityThreshold,
     initialPage: initialCurrentIndex,
     isPinching,
     isRotated,
