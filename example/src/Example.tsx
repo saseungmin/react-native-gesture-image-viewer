@@ -5,6 +5,7 @@ import { Button, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   GestureTrigger,
   GestureViewer,
+  type GestureViewerProps,
   useGestureViewerController,
   useGestureViewerEvent,
   useGestureViewerState,
@@ -34,11 +35,61 @@ const photos = [
   },
 ] as const;
 
+type HorizontalSwipeOptions = GestureViewerProps<string>['horizontalSwipe'];
+
+type ScenarioId = 'default' | 'disabled' | 'distance' | 'velocity' | 'disabledAutoplay';
+
+type Scenario = {
+  label: string;
+  description: string;
+  horizontalSwipe?: HorizontalSwipeOptions;
+  autoPlay?: boolean;
+  autoPlayInterval?: number;
+};
+
+const scenarios: Record<ScenarioId, Scenario> = {
+  default: {
+    label: 'Default',
+    description: 'Omitted horizontalSwipe prop',
+  },
+  disabled: {
+    label: 'Disabled',
+    description: 'Horizontal drag disabled; controls still work',
+    horizontalSwipe: { enabled: false },
+  },
+  distance: {
+    label: 'Distance',
+    description: 'ratio 0.5, velocity 100000',
+    horizontalSwipe: { distanceThresholdRatio: 0.5, velocityThreshold: 100_000 },
+  },
+  velocity: {
+    label: 'Velocity',
+    description: 'ratio 10, velocity 100',
+    horizontalSwipe: { distanceThresholdRatio: 10, velocityThreshold: 100 },
+  },
+  disabledAutoplay: {
+    label: 'No drag + autoplay',
+    description: 'Drag disabled, autoplay every 1000ms',
+    autoPlay: true,
+    autoPlayInterval: 1000,
+    horizontalSwipe: { enabled: false },
+  },
+};
+
+const scenarioIds: ScenarioId[] = [
+  'default',
+  'disabled',
+  'distance',
+  'velocity',
+  'disabledAutoplay',
+];
+
 function Example() {
   const [visible, setVisible] = useState(false);
   const [enableLoop, setEnableLoop] = useState(false);
   const [showExternalUI, setShowExternalUI] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedScenarioId, setSelectedScenarioId] = useState<ScenarioId>('default');
 
   const { goToIndex, goToPrevious, goToNext, zoomIn, zoomOut, resetZoom, rotate } =
     useGestureViewerController();
@@ -46,6 +97,7 @@ function Example() {
   const { currentIndex, totalCount } = useGestureViewerState();
 
   const insets = useSafeAreaInsets();
+  const selectedScenario = scenarios[selectedScenarioId];
 
   const modalOpen = useCallback((index: number) => {
     setSelectedIndex(index);
@@ -85,6 +137,33 @@ function Example() {
           title={`Loop: ${enableLoop ? 'ON' : 'OFF'}`}
           onPress={() => setEnableLoop(!enableLoop)}
         />
+        <View style={styles.scenarioGroup}>
+          <Text style={styles.scenarioTitle}>Horizontal swipe preset</Text>
+          <View style={styles.scenarioOptions}>
+            {scenarioIds.map((scenarioId) => {
+              const scenario = scenarios[scenarioId];
+              const selected = scenarioId === selectedScenarioId;
+
+              return (
+                <Pressable
+                  key={scenarioId}
+                  onPress={() => setSelectedScenarioId(scenarioId)}
+                  style={[styles.scenarioButton, selected && styles.scenarioButtonSelected]}
+                >
+                  <Text
+                    style={[
+                      styles.scenarioButtonText,
+                      selected && styles.scenarioButtonTextSelected,
+                    ]}
+                  >
+                    {scenario.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text style={styles.subtext}>{selectedScenario.description}</Text>
+        </View>
         <Text style={styles.text}>Click on a thumbnail to open the viewer.</Text>
         <View style={styles.galleryContainer}>
           {photos.map(({ uri }, index) => (
@@ -108,9 +187,14 @@ function Example() {
             initialIndex={selectedIndex}
             onDismiss={() => setVisible(false)}
             onDismissStart={() => setShowExternalUI(false)}
+            autoPlay={selectedScenario.autoPlay}
+            autoPlayInterval={selectedScenario.autoPlayInterval}
             enableLoop={enableLoop}
             pageSpacing={16}
             renderItem={renderImage}
+            {...(selectedScenario.horizontalSwipe
+              ? { horizontalSwipe: selectedScenario.horizontalSwipe }
+              : {})}
             dismiss={{
               direction: 'both',
             }}
@@ -282,6 +366,42 @@ const styles = StyleSheet.create({
     color: '#222',
     fontSize: 22,
     fontWeight: 'bold',
+  },
+  scenarioButton: {
+    borderColor: '#aaa',
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  scenarioButtonSelected: {
+    backgroundColor: '#222',
+    borderColor: '#222',
+  },
+  scenarioButtonText: {
+    color: '#222',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  scenarioButtonTextSelected: {
+    color: 'white',
+  },
+  scenarioGroup: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 8,
+  },
+  scenarioOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    justifyContent: 'center',
+  },
+  scenarioTitle: {
+    color: '#222',
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   subtext: {
     textAlign: 'center',

@@ -47,7 +47,16 @@ By default, v3 mounts three pages: previous, current, and next. Increase `window
 
 ### Keep programmatic navigation
 
-`goToIndex`, `goToPrevious`, and `goToNext` still work. `enableHorizontalSwipe={false}` disables only user horizontal swipe gestures; controller navigation remains available.
+`goToIndex`, `goToPrevious`, and `goToNext` still work. `horizontalSwipe={{ enabled: false }}` disables only user/mouse horizontal swipe gestures; controller navigation and autoplay remain available.
+
+```diff
+<GestureViewer
+  data={images}
+  renderItem={renderImage}
+- enableHorizontalSwipe={false}
++ horizontalSwipe={{ enabled: false }}
+/>
+```
 
 ```tsx
 const { goToIndex } = useGestureViewerController();
@@ -71,15 +80,15 @@ goToIndex(2, { animated: false });
 
 v3 no longer forwards props to `ScrollView`, `FlatList`, or `FlashList`. Move common `listProps` usage to the v3 viewer APIs instead:
 
-| 2.x `listProps` usage                                                                | v3 direction                                                                                                               |
-| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| `keyExtractor`                                                                       | Removed. The render window owns slot keys; keep stable item identity in `data` and render content through `renderItem`.    |
-| `initialScrollIndex`                                                                 | Use `initialIndex`.                                                                                                        |
-| `scrollEnabled`, `pagingEnabled`, `horizontal`, `snapToInterval`, `decelerationRate` | Removed. Paging is gesture-owned. Use `enableHorizontalSwipe` to lock user swipes and `pageSpacing` for visible page gaps. |
-| `onScroll`, `onMomentumScrollEnd`, `onViewableItemsChanged`                          | Removed. Use `useGestureViewerState` for `currentIndex`/`totalCount`; use viewer events for supported viewer interactions. |
-| `ref.current.scrollToIndex(...)`                                                     | Use `useGestureViewerController().goToIndex(...)`, `goToNext()`, or `goToPrevious()`.                                      |
-| `windowSize`, `maxToRenderPerBatch`, `removeClippedSubviews`, `estimatedItemSize`    | Replace list virtualization tuning with `windowSize`. The default mounts previous/current/next only.                       |
-| `showsHorizontalScrollIndicator`, `contentContainerStyle`, list separators           | Removed. Compose visual content inside `renderItem` or use `pageSpacing` for inter-page gaps.                              |
+| 2.x `listProps` usage                                                                | v3 direction                                                                                                                              |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `keyExtractor`                                                                       | Removed. The render window owns slot keys; keep stable item identity in `data` and render content through `renderItem`.                   |
+| `initialScrollIndex`                                                                 | Use `initialIndex`.                                                                                                                       |
+| `scrollEnabled`, `pagingEnabled`, `horizontal`, `snapToInterval`, `decelerationRate` | Removed. Paging is gesture-owned. Use `horizontalSwipe={{ enabled: false }}` to lock user swipes and `pageSpacing` for visible page gaps. |
+| `onScroll`, `onMomentumScrollEnd`, `onViewableItemsChanged`                          | Removed. Use `useGestureViewerState` for `currentIndex`/`totalCount`; use viewer events for supported viewer interactions.                |
+| `ref.current.scrollToIndex(...)`                                                     | Use `useGestureViewerController().goToIndex(...)`, `goToNext()`, or `goToPrevious()`.                                                     |
+| `windowSize`, `maxToRenderPerBatch`, `removeClippedSubviews`, `estimatedItemSize`    | Replace list virtualization tuning with `windowSize`. The default mounts previous/current/next only.                                      |
+| `showsHorizontalScrollIndicator`, `contentContainerStyle`, list separators           | Removed. Compose visual content inside `renderItem` or use `pageSpacing` for inter-page gaps.                                             |
 
 ## Notes
 

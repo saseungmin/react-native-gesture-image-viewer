@@ -17,7 +17,11 @@ function App() {
         resistance: 2,
         fadeBackdrop: true,
       }}
-      enableHorizontalSwipe={true}
+      horizontalSwipe={{
+        enabled: true,
+        distanceThresholdRatio: 0.25,
+        velocityThreshold: 800,
+      }}
       enablePinchZoom={true}
       enableDoubleTapZoom={true}
       enablePanWhenZoomed={true}
@@ -40,9 +44,47 @@ Dismiss gesture options. Controls which vertical swipe direction can trigger `on
 | `resistance`   | `resistance` controls the range of vertical movement by applying resistance during dismiss gestures.      | `number`             |   `2`   |
 | `fadeBackdrop` | By default, the background `opacity` gradually decreases as you drag in the configured dismiss direction. | `boolean`            | `true`  |
 
-### `enableHorizontalSwipe` (default: `true`)
+### `horizontalSwipe`
 
-Controls left/right swipe gestures. When `false`, horizontal gestures are disabled.
+Horizontal swipe gesture options. Controls user-driven left/right page swipe gestures. Controller navigation and autoplay remain available when disabled.
+
+| Property                 | Description                                                                                                                                                                      | Type      | Default |
+| :----------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------- | :-----: |
+| `enabled`                | When `false`, user-driven horizontal page swipe gestures are disabled.                                                                                                           | `boolean` | `true`  |
+| `distanceThresholdRatio` | Distance threshold as a ratio of viewer width. A page commits when absolute translation is strictly greater than `width * distanceThresholdRatio`, or velocity passes threshold. | `number`  | `0.25`  |
+| `velocityThreshold`      | Horizontal velocity threshold in points per second. A page commits when absolute velocity is strictly greater than this value, or distance passes threshold.                     | `number`  |  `800`  |
+
+Distance and velocity use strict `>` OR semantics. Zero and every finite non-negative value are accepted, including `distanceThresholdRatio` values greater than `1`; negative and non-finite values fall back to defaults.
+
+```tsx
+<GestureViewer data={images} renderItem={renderImage} horizontalSwipe={{ enabled: false }} />
+```
+
+```tsx
+<GestureViewer
+  data={images}
+  renderItem={renderImage}
+  horizontalSwipe={{ distanceThresholdRatio: 0.5, velocityThreshold: 100_000 }}
+/>
+```
+
+```tsx
+<GestureViewer
+  data={images}
+  renderItem={renderImage}
+  horizontalSwipe={{ distanceThresholdRatio: 10, velocityThreshold: 100 }}
+/>
+```
+
+```tsx
+<GestureViewer
+  data={images}
+  renderItem={renderImage}
+  horizontalSwipe={{ enabled: false }}
+  autoPlay={true}
+  autoPlayInterval={1000}
+/>
+```
 
 ### `enablePinchZoom` (default: `true`)
 

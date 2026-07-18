@@ -47,7 +47,16 @@ import { Steps } from '@rspress/core/theme';
 
 ### 프로그래밍 방식 이동 유지
 
-`goToIndex`, `goToPrevious`, `goToNext`는 계속 동작합니다. `enableHorizontalSwipe={false}`는 사용자의 가로 스와이프 제스처만 비활성화하며, controller 이동은 계속 사용할 수 있습니다.
+`goToIndex`, `goToPrevious`, `goToNext`는 계속 동작합니다. `horizontalSwipe={{ enabled: false }}`는 사용자/마우스 가로 스와이프 제스처만 비활성화하며, controller 이동과 autoplay는 계속 사용할 수 있습니다.
+
+```diff
+<GestureViewer
+  data={images}
+  renderItem={renderImage}
+- enableHorizontalSwipe={false}
++ horizontalSwipe={{ enabled: false }}
+/>
+```
 
 ```tsx
 const { goToIndex } = useGestureViewerController();
@@ -71,15 +80,15 @@ goToIndex(2, { animated: false });
 
 3.x는 더 이상 `ScrollView`, `FlatList`, `FlashList`로 props를 전달하지 않습니다. 자주 쓰던 `listProps` 설정은 아래 v3 API로 옮기세요.
 
-| 2.x `listProps` 사용                                                                 | 3.x 방향                                                                                                                                       |
-| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `keyExtractor`                                                                       | 제거됨. render window가 slot key를 직접 관리합니다. 아이템 식별성은 `data`에서 안정적으로 유지하고, 콘텐츠는 `renderItem`에서 렌더링하세요.    |
-| `initialScrollIndex`                                                                 | `initialIndex`를 사용하세요.                                                                                                                   |
-| `scrollEnabled`, `pagingEnabled`, `horizontal`, `snapToInterval`, `decelerationRate` | 제거됨. 페이징은 내부 제스처가 소유합니다. 사용자 스와이프를 잠글 때는 `enableHorizontalSwipe`, 페이지 사이 간격은 `pageSpacing`을 사용하세요. |
-| `onScroll`, `onMomentumScrollEnd`, `onViewableItemsChanged`                          | 제거됨. `currentIndex`/`totalCount`는 `useGestureViewerState`를 사용하고, 지원되는 뷰어 인터랙션은 viewer event를 사용하세요.                  |
-| `ref.current.scrollToIndex(...)`                                                     | `useGestureViewerController().goToIndex(...)`, `goToNext()`, `goToPrevious()`를 사용하세요.                                                    |
-| `windowSize`, `maxToRenderPerBatch`, `removeClippedSubviews`, `estimatedItemSize`    | 리스트 virtualization 튜닝 대신 `windowSize`를 사용하세요. 기본값은 이전/현재/다음만 마운트합니다.                                             |
-| `showsHorizontalScrollIndicator`, `contentContainerStyle`, list separators           | 제거됨. 시각적 구성은 `renderItem` 내부에서 조합하거나, 페이지 사이 간격은 `pageSpacing`을 사용하세요.                                         |
+| 2.x `listProps` 사용                                                                 | 3.x 방향                                                                                                                                                      |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `keyExtractor`                                                                       | 제거됨. render window가 slot key를 직접 관리합니다. 아이템 식별성은 `data`에서 안정적으로 유지하고, 콘텐츠는 `renderItem`에서 렌더링하세요.                   |
+| `initialScrollIndex`                                                                 | `initialIndex`를 사용하세요.                                                                                                                                  |
+| `scrollEnabled`, `pagingEnabled`, `horizontal`, `snapToInterval`, `decelerationRate` | 제거됨. 페이징은 내부 제스처가 소유합니다. 사용자 스와이프를 잠글 때는 `horizontalSwipe={{ enabled: false }}`, 페이지 사이 간격은 `pageSpacing`을 사용하세요. |
+| `onScroll`, `onMomentumScrollEnd`, `onViewableItemsChanged`                          | 제거됨. `currentIndex`/`totalCount`는 `useGestureViewerState`를 사용하고, 지원되는 뷰어 인터랙션은 viewer event를 사용하세요.                                 |
+| `ref.current.scrollToIndex(...)`                                                     | `useGestureViewerController().goToIndex(...)`, `goToNext()`, `goToPrevious()`를 사용하세요.                                                                   |
+| `windowSize`, `maxToRenderPerBatch`, `removeClippedSubviews`, `estimatedItemSize`    | 리스트 virtualization 튜닝 대신 `windowSize`를 사용하세요. 기본값은 이전/현재/다음만 마운트합니다.                                                            |
+| `showsHorizontalScrollIndicator`, `contentContainerStyle`, list separators           | 제거됨. 시각적 구성은 `renderItem` 내부에서 조합하거나, 페이지 사이 간격은 `pageSpacing`을 사용하세요.                                                        |
 
 ## 참고
 

@@ -2,8 +2,9 @@ import { act, cleanup, render, waitFor } from '@testing-library/react-native';
 import { Text, type View } from 'react-native';
 
 import { GestureViewer } from '../GestureViewer';
+import { PAGE_TRANSITION_CONFIG } from '../gestureViewerAnimation';
 import { registry } from '../GestureViewerRegistry';
-import type { GestureViewerController } from '../types';
+import type { GestureViewerController, GestureViewerProps } from '../types';
 import { useGestureViewerController } from '../useGestureViewerController';
 import { useGestureViewerState } from '../useGestureViewerState';
 
@@ -44,8 +45,8 @@ type HarnessProps = {
   autoPlay?: boolean;
   autoPlayInterval?: number;
   data?: Array<string | undefined>;
-  enableHorizontalSwipe?: boolean;
   enableLoop?: boolean;
+  horizontalSwipe?: GestureViewerProps<string | undefined>['horizontalSwipe'];
   initialIndex?: number;
   onSingleTap?: (event: { x: number; y: number; index: number; item: string | undefined }) => void;
   viewerId: string;
@@ -55,8 +56,8 @@ function Harness({
   autoPlay = false,
   autoPlayInterval,
   data: viewerData = data,
-  enableHorizontalSwipe = true,
   enableLoop = false,
+  horizontalSwipe,
   initialIndex = 0,
   onSingleTap,
   viewerId,
@@ -73,9 +74,9 @@ function Harness({
         autoPlay={autoPlay}
         autoPlayInterval={autoPlayInterval}
         data={viewerData}
-        enableHorizontalSwipe={enableHorizontalSwipe}
         enableLoop={enableLoop}
         height={240}
+        horizontalSwipe={horizontalSwipe}
         id={viewerId}
         initialIndex={initialIndex}
         onSingleTap={onSingleTap}
@@ -164,10 +165,26 @@ describe('GestureViewer render-window integration', () => {
 
   it('keeps controller navigation available when horizontal swipe is disabled', async () => {
     const rendered = await render(
-      <Harness enableHorizontalSwipe={false} viewerId="controller-locked-swipe" />,
+      <Harness
+        horizontalSwipe={{ enabled: false }}
+        initialIndex={1}
+        viewerId="controller-locked-swipe"
+      />,
     );
 
+    await expectState(rendered, 'controller-locked-swipe', '1/4');
+
+    await act(async () => {
+      getController().goToPrevious();
+    });
+
     await expectState(rendered, 'controller-locked-swipe', '0/4');
+
+    await act(async () => {
+      getController().goToNext();
+    });
+
+    await expectState(rendered, 'controller-locked-swipe', '1/4');
 
     await act(async () => {
       getController().goToIndex(2, { animated: false });
@@ -178,6 +195,32 @@ describe('GestureViewer render-window integration', () => {
     expect(rendered.getByText('second')).toBeTruthy();
     expect(rendered.getByText('third')).toBeTruthy();
     expect(rendered.getByText('fourth')).toBeTruthy();
+  });
+
+  it('keeps autoplay available when horizontal swipe is disabled', async () => {
+    jest.useFakeTimers();
+
+    const rendered = await render(
+      <Harness
+        autoPlay
+        autoPlayInterval={1000}
+        data={['first', 'second']}
+        horizontalSwipe={{ enabled: false }}
+        viewerId="autoplay-locked-swipe"
+      />,
+    );
+
+    await expectState(rendered, 'autoplay-locked-swipe', '0/2');
+
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(PAGE_TRANSITION_CONFIG.duration);
+    });
+
+    await expectState(rendered, 'autoplay-locked-swipe', '1/2');
   });
 
   it('preserves tap events for explicit undefined items', async () => {
