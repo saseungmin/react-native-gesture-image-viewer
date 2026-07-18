@@ -1,3 +1,4 @@
+import { resolveGestureViewerRenderWindow } from '../gestureViewerRenderWindow';
 import {
   clampIndex,
   createRenderWindow,
@@ -148,6 +149,77 @@ describe('render window slot mapping', () => {
     expect(getVirtualIndexForLogicalIndex(0, 3, 4, true)).toBe(4);
     expect(getVirtualIndexForLogicalIndex(3, 0, 4, true)).toBe(-1);
     expect(getVirtualIndexForLogicalIndex(2, 0, 4, false)).toBe(2);
+  });
+});
+
+describe('gesture viewer render window resolution', () => {
+  const data = ['a', 'b', 'c', 'd'];
+
+  it('resolves adjacent slots around the current center in non-loop mode', () => {
+    const state = resolveGestureViewerRenderWindow({
+      centerVirtualIndex: 2,
+      currentIndex: 2,
+      data,
+      enableLoop: false,
+      isTriggerOpening: false,
+      windowSize: 3,
+    });
+
+    expect(state.currentIndex).toBe(2);
+    expect(state.centerVirtualIndex).toBe(2);
+    expect(state.slots.map((slot) => slot.logicalIndex)).toEqual([1, 2, 3]);
+    expect(state.slots.map((slot) => slot.virtualIndex)).toEqual([1, 2, 3]);
+  });
+
+  it('clamps out-of-range current indexes before creating slots', () => {
+    const state = resolveGestureViewerRenderWindow({
+      centerVirtualIndex: 1,
+      currentIndex: 99,
+      data,
+      enableLoop: false,
+      isTriggerOpening: false,
+      windowSize: 3,
+    });
+
+    expect(state.currentIndex).toBe(3);
+    expect(state.centerVirtualIndex).toBe(3);
+    expect(state.slots.map((slot) => slot.logicalIndex)).toEqual([2, 3]);
+  });
+
+  it('keeps only the center slot while trigger opening animation is active', () => {
+    const state = resolveGestureViewerRenderWindow({
+      centerVirtualIndex: 2,
+      currentIndex: 2,
+      data,
+      enableLoop: false,
+      isTriggerOpening: true,
+      windowSize: 5,
+    });
+
+    expect(state.slots).toEqual([
+      {
+        item: 'c',
+        logicalIndex: 2,
+        slotKey: 'slot-2',
+        virtualIndex: 2,
+      },
+    ]);
+  });
+
+  it('uses the nearest loop virtual center before creating wrapped slots', () => {
+    const state = resolveGestureViewerRenderWindow({
+      centerVirtualIndex: 4,
+      currentIndex: 0,
+      data: ['a', 'b', 'c'],
+      enableLoop: true,
+      isTriggerOpening: false,
+      windowSize: 3,
+    });
+
+    expect(state.currentIndex).toBe(0);
+    expect(state.centerVirtualIndex).toBe(3);
+    expect(state.slots.map((slot) => slot.logicalIndex)).toEqual([2, 0, 1]);
+    expect(state.slots.map((slot) => slot.virtualIndex)).toEqual([2, 3, 4]);
   });
 });
 
