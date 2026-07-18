@@ -1,3 +1,25 @@
 .rp-flex:has(.custom-code) {
   width: 100%;
 }
+
+.rp-banner {
+  box-sizing: border-box;
+  padding-inline: 64px;
+}
+
+.rp-banner__link {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .rp-banner {
+    padding-inline: 48px;
+  }
+
+  .rp-banner__close {
+    right: 0.75rem;
+  }
+}
