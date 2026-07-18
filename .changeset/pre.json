@@ -6,5 +6,10 @@
     "react-native-gesture-image-viewer-example": "1.0.0",
     "docs": "1.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "clean-gesture-viewer-paging",
+    "configurable-horizontal-swipe",
+    "expose-active-render-item",
+    "v3-gesture-render-window"
+  ]
 }

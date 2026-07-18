@@ -1,5 +1,163 @@
 # react-native-gesture-image-viewer
 
+## 3.0.0-beta.0
+
+### Major Changes
+
+- [#177](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/177) [`660006c`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/660006c84c79d13b3d9ebda7751c2002d0f7c1a4) Thanks [@saseungmin](https://github.com/saseungmin)! - Replace the boolean `enableHorizontalSwipe` prop with configurable `horizontalSwipe` options.
+
+  This is a breaking API change. Migrate gesture disabling from the removed boolean prop:
+
+  ```tsx
+  // Before
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    enableHorizontalSwipe={false}
+  />
+
+  // After
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    horizontalSwipe={{ enabled: false }}
+  />
+  ```
+
+  The new options also allow applications to control the distance and velocity required to change pages:
+
+  ```tsx
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    horizontalSwipe={{
+      enabled: true,
+      distanceThresholdRatio: 0.4,
+      velocityThreshold: 1200,
+    }}
+  />
+  ```
+
+  All fields are optional. `enabled` defaults to `true`, `distanceThresholdRatio` defaults to `0.25` of the viewer width, and `velocityThreshold` defaults to `800` points per second.
+
+  A page transition is committed when either the absolute drag distance is strictly greater than the configured width ratio or the absolute velocity is strictly greater than the configured velocity threshold. Finite non-negative values, including `0` and distance ratios greater than `1`, are supported. Invalid values fall back to their defaults.
+
+  Setting `horizontalSwipe.enabled` to `false` disables only touch and mouse horizontal gestures. Controller navigation and autoplay continue to work.
+
+- [#173](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/173) [`da58c6f`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/da58c6f31f7f6230023ead29326e0747cbaeda2b) Thanks [@saseungmin](https://github.com/saseungmin)! - Prepare the v3 beta by replacing consumer-supplied list paging with an internal gesture-driven render window.
+
+  `GestureViewer` no longer depends on a consumer-provided `ScrollView`, `FlatList`, or `FlashList` to move between items. Instead, v3 owns paging internally with Reanimated shared values and a small render window around the current item.
+
+  By default, the viewer mounts three render-window slots: previous, current, and next. When the user swipes, or when app code moves to an adjacent item with `goToIndex`, `goToNext`, or `goToPrevious`, the viewer moves the visual page first, then rebases the internal center virtual index and recalculates the mounted slots. Non-adjacent `goToIndex` calls rebase immediately because the target page is not guaranteed to be mounted inside the small render window.
+
+  Breaking changes:
+
+  - Removed `ListComponent`.
+  - Removed `listProps`.
+  - Removed `enableSnapMode`.
+  - Removed `itemSpacing`; use `pageSpacing` instead.
+  - Paging props that previously belonged to `FlatList`, `FlashList`, or `ScrollView` are no longer forwarded.
+
+  New and updated APIs:
+
+  - Added `windowSize` to control how many internal render-window slots are mounted. The value is normalized to an odd number of at least `3`.
+  - Added `pageSpacing` to render visible horizontal space between pages.
+  - Updated `goToIndex` to accept `goToIndex(index, { animated?: boolean })`.
+  - Kept `enableHorizontalSwipe` scoped to user gestures only. Programmatic navigation through the controller still works when horizontal swipe gestures are disabled.
+
+  Migration example:
+
+  ```tsx
+  // v2
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    ListComponent={FlatList}
+    listProps={{
+      keyExtractor: (item) => item.id,
+      initialScrollIndex: 2,
+      showsHorizontalScrollIndicator: false,
+    }}
+    enableSnapMode
+    itemSpacing={16}
+  />
+  ```
+
+  ```tsx
+  // v3
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    initialIndex={2}
+    pageSpacing={16}
+    windowSize={3}
+  />
+  ```
+
+  Programmatic navigation example:
+
+  ```tsx
+  const controller = useGestureViewerController();
+
+  controller.goToIndex(2);
+  controller.goToIndex(2, { animated: false });
+  controller.goToNext();
+  controller.goToPrevious();
+  ```
+
+  Gesture lock example:
+
+  ```tsx
+  function Viewer() {
+    const controller = useGestureViewerController();
+
+    return (
+      <>
+        <Button title="Next" onPress={() => controller.goToNext()} />
+        <GestureViewer
+          data={images}
+          renderItem={renderImage}
+          enableHorizontalSwipe={false}
+        />
+      </>
+    );
+  }
+  ```
+
+  In the example above, users cannot swipe horizontally, but the button can still move the viewer because gesture locking and controller navigation are intentionally separated.
+
+  Common `listProps` replacements:
+
+  | v2 list prop or pattern                                  | v3 replacement                                                                          |
+  | -------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+  | `initialScrollIndex`                                     | `initialIndex`                                                                          |
+  | `keyExtractor`                                           | Removed. Render-window slots are keyed internally. Keep item identity stable in `data`. |
+  | `scrollToIndex(...)` through a list ref                  | `useGestureViewerController().goToIndex(...)`                                           |
+  | `snapToInterval`, `pagingEnabled`, `decelerationRate`    | Removed. Paging is gesture-owned.                                                       |
+  | `itemSpacing`                                            | `pageSpacing`                                                                           |
+  | `windowSize`, `maxToRenderPerBatch`, `estimatedItemSize` | `windowSize` on `GestureViewer`                                                         |
+
+### Minor Changes
+
+- [#178](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/178) [`d6eec7c`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/d6eec7c28470c0ca4ae99877b9fb78cca9a61345) Thanks [@saseungmin](https://github.com/saseungmin)! - Expose the committed active item through the third `renderItem` argument.
+
+  ```tsx
+  <GestureViewer
+    data={mediaItems}
+    renderItem={(item, index, { isActive }) => (
+      <MediaItem item={item} paused={!isActive} />
+    )}
+  />
+  ```
+
+  `isActive` is `true` for exactly one mounted virtual slot when data is present, including loop windows that contain duplicate logical indices. The current item remains active while an animated page transition is in progress, and the target becomes active only after the transition commits. Existing two-argument `renderItem` callbacks remain compatible.
+
+### Patch Changes
+
+- [#176](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/176) [`9708b96`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/9708b966a0c487c28769e08a5e4f69b1586beab3) Thanks [@saseungmin](https://github.com/saseungmin)! - Refactor the gesture viewer's internal paging responsibilities into focused hooks without changing the public API.
+
+  Paging shared values, transition commands, horizontal gestures, and manager bridge effects now have dedicated ownership. This keeps `useGestureViewer` focused on navigation policy and reduces the risk of inconsistent paging state during future changes.
+
 ## 2.3.3
 
 ### Patch Changes
