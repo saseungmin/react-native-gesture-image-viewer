@@ -1,3 +1,4 @@
+import { normalizeImagePath } from '@rspress/core/runtime';
 import { ResponsiveDemo } from '../../../../../components/ResponsiveDemo';
 
 # 개요
@@ -14,9 +15,17 @@ React Native에서 이미지 갤러리나 콘텐츠 뷰어를 구현할 때, 복
 
 3.x는 더 이상 사용자가 넘긴 `ScrollView`, `FlatList`, `FlashList`에 의존해서 페이징하지 않습니다. `GestureViewer`가 제스처 기반 render window로 가로 페이징을 내부에서 직접 처리합니다.
 
-기본적으로 뷰어는 이전, 현재, 다음 총 세 페이지만 마운트합니다. 사용자가 스와이프하거나 `goToIndex`, `goToNext`, `goToPrevious`를 호출하면 Reanimated가 먼저 시각적인 page 위치를 이동합니다. 전환이 끝난 뒤에는 뷰어가 center virtual index를 갱신하고, 새로운 현재 아이템을 기준으로 작은 수의 마운트된 slot을 다시 계산합니다.
+`windowSize`는 현재 아이템 주변에 유지할 render window의 크기를 결정하며 기본값은 `3`입니다. 기본 설정에서는 이전, 현재, 다음 페이지를 마운트합니다. non-loop의 데이터 경계에서는 범위를 벗어난 페이지를 생략합니다.
 
-loop가 꺼져 있으면 데이터 범위를 벗어나는 edge slot은 생략됩니다. loop가 켜져 있으면 virtual index를 logical data index로 다시 매핑하므로, 마지막 아이템 다음에서 첫 번째 아이템을 보여주는 동작을 리스트 구현에 맡기지 않고 처리할 수 있습니다.
+애니메이션으로 페이지를 전환하는 동안 Reanimated가 기존 페이지들을 먼저 이동합니다. 전환이 끝나면 새로운 현재 아이템을 기준으로 render window를 갱신합니다. 이때 계속 범위 안에 있는 페이지는 마운트 상태를 유지하고, 범위를 벗어난 페이지는 언마운트하며, 새로 인접한 페이지를 마운트합니다.
+
+<img
+  src={normalizeImagePath('/guide/getting-started/v3-paging-render-window-ko.png')}
+  alt="3번 아이템에서 4번 아이템으로 이동할 때 3번과 4번 페이지를 유지하는 세 페이지 render window"
+  style={{ justifySelf: 'center', maxWidth: 960, width: '100%' }}
+/>
+
+`enableLoop`가 켜져 있으면 내부 render window가 마지막 아이템에서 첫 번째 아이템으로, 첫 번째 아이템에서 마지막 아이템으로 이어집니다. 이 동작도 리스트 구현에 의존하지 않습니다.
 
 인접 콘텐츠를 더 많이 마운트해야 할 때만 `windowSize`를 늘리고, 페이지 사이에 보이는 간격이 필요할 때는 `pageSpacing`을 사용하세요.
 

@@ -1,3 +1,4 @@
+import { normalizeImagePath } from '@rspress/core/runtime';
 import { ResponsiveDemo } from '../../../../../components/ResponsiveDemo';
 
 # Overview
@@ -14,9 +15,17 @@ Existing libraries often have limited customization options or performance issue
 
 Version 3 no longer depends on a consumer-provided `ScrollView`, `FlatList`, or `FlashList` for paging. `GestureViewer` owns horizontal paging internally with a gesture-driven render window.
 
-By default, the viewer mounts only three pages: previous, current, and next. When the user swipes or when you call `goToIndex`, `goToNext`, or `goToPrevious`, Reanimated moves the visual page position first. After the transition settles, the viewer updates the center virtual index and recalculates the small set of mounted slots around the new current item.
+`windowSize` controls the size of the render window kept around the current item and defaults to `3`. With the default setting, the viewer mounts the previous, current, and next pages. In non-loop mode, pages outside the data range are omitted at the boundaries.
 
-In non-loop mode, edge slots outside the data range are omitted. In loop mode, virtual indexes are mapped back to logical data indexes, so moving past the last item can show the first item without handing paging behavior to a list implementation.
+During an animated page change, Reanimated moves the existing pages first. After the transition finishes, the viewer updates the render window around the new current item. Pages that remain inside the window stay mounted, the page leaving the window unmounts, and the newly adjacent page mounts.
+
+<img
+  src={normalizeImagePath('/guide/getting-started/v3-paging-render-window-en.png')}
+  alt="A three-page render window retaining pages 3 and 4 while moving from item 3 to item 4"
+  style={{ justifySelf: 'center', maxWidth: 960, width: '100%' }}
+/>
+
+When `enableLoop` is enabled, the internal render window wraps from the last item to the first and from the first item to the last. This behavior also does not rely on a list implementation.
 
 Use `windowSize` only when you need more adjacent content mounted, and use `pageSpacing` when you need visible space between pages.
 
