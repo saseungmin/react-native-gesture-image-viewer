@@ -41,6 +41,9 @@ const data = ['first', 'second', 'third', 'fourth'];
 
 let controller: GestureViewerController | null = null;
 
+type RenderedGestureViewer = Awaited<ReturnType<typeof render>>;
+type ActiveState = 'active' | 'inactive';
+
 type HarnessProps = {
   autoPlay?: boolean;
   autoPlayInterval?: number;
@@ -49,7 +52,9 @@ type HarnessProps = {
   horizontalSwipe?: GestureViewerProps<string | undefined>['horizontalSwipe'];
   initialIndex?: number;
   onSingleTap?: (event: { x: number; y: number; index: number; item: string | undefined }) => void;
+  renderItem?: GestureViewerProps<string | undefined>['renderItem'];
   viewerId: string;
+  windowSize?: number;
 };
 
 function Harness({
@@ -60,7 +65,9 @@ function Harness({
   horizontalSwipe,
   initialIndex = 0,
   onSingleTap,
+  renderItem,
   viewerId,
+  windowSize,
 }: HarnessProps) {
   controller = useGestureViewerController(viewerId);
   const state = useGestureViewerState(viewerId);
@@ -80,9 +87,23 @@ function Harness({
         id={viewerId}
         initialIndex={initialIndex}
         onSingleTap={onSingleTap}
-        renderItem={(item, index) => <Text testID={`${viewerId}-item-${index}`}>{item}</Text>}
+        renderItem={
+          renderItem ?? ((item, index) => <Text testID={`${viewerId}-item-${index}`}>{item}</Text>)
+        }
         width={320}
+        windowSize={windowSize}
       />
+    </>
+  );
+}
+
+function createActiveStateRenderer(
+  viewerId: string,
+): GestureViewerProps<string | undefined>['renderItem'] {
+  return (item, index, { isActive }) => (
+    <>
+      <Text>{item}</Text>
+      <Text testID={`${viewerId}-active-${index}`}>{isActive ? 'active' : 'inactive'}</Text>
     </>
   );
 }
@@ -95,17 +116,39 @@ function getController() {
   return controller;
 }
 
-async function expectState(
-  rendered: Awaited<ReturnType<typeof render>>,
-  viewerId: string,
-  state: string,
-) {
+async function expectState(rendered: RenderedGestureViewer, viewerId: string, state: string) {
   await waitFor(() => {
     const children = rendered.getByTestId(`${viewerId}-state`).props.children;
     const stateText = Array.isArray(children) ? children.join('') : children;
 
     expect(stateText).toBe(state);
   });
+}
+
+function expectActiveState(
+  rendered: RenderedGestureViewer,
+  viewerId: string,
+  index: number,
+  activeState: ActiveState,
+): void {
+  expect(rendered.getByTestId(`${viewerId}-active-${index}`).props.children).toBe(activeState);
+}
+
+function expectActiveSlotCounts(
+  rendered: RenderedGestureViewer,
+  viewerId: string,
+  index: number,
+  expectedCounts: Record<ActiveState, number>,
+): void {
+  const slots = rendered.getAllByTestId(`${viewerId}-active-${index}`);
+
+  expect(slots).toHaveLength(expectedCounts.active + expectedCounts.inactive);
+  expect(slots.filter((slot) => slot.props.children === 'active')).toHaveLength(
+    expectedCounts.active,
+  );
+  expect(slots.filter((slot) => slot.props.children === 'inactive')).toHaveLength(
+    expectedCounts.inactive,
+  );
 }
 
 describe('GestureViewer render-window integration', () => {
@@ -129,6 +172,102 @@ describe('GestureViewer render-window integration', () => {
     expect(rendered.getByText('third')).toBeTruthy();
     expect(rendered.getByText('fourth')).toBeTruthy();
     expect(rendered.queryByText('first')).toBeNull();
+  });
+
+  it('provides active state for the committed render-window slot', async () => {
+    const viewerId = 'active-state';
+    const rendered = await render(
+      <Harness
+        initialIndex={1}
+        renderItem={createActiveStateRenderer(viewerId)}
+        viewerId={viewerId}
+      />,
+    );
+
+    await expectState(rendered, viewerId, '1/4');
+
+    expectActiveState(rendered, viewerId, 0, 'inactive');
+    expectActiveState(rendered, viewerId, 1, 'active');
+    expectActiveState(rendered, viewerId, 2, 'inactive');
+
+    await act(async () => {
+      getController().goToIndex(2, { animated: false });
+    });
+
+    await expectState(rendered, viewerId, '2/4');
+
+    expectActiveState(rendered, viewerId, 1, 'inactive');
+    expectActiveState(rendered, viewerId, 2, 'active');
+    expectActiveState(rendered, viewerId, 3, 'inactive');
+  });
+
+  it('keeps the current item active until animated navigation commits', async () => {
+    jest.useFakeTimers();
+
+    const viewerId = 'active-state-transition';
+    const rendered = await render(
+      <Harness
+        initialIndex={1}
+        renderItem={createActiveStateRenderer(viewerId)}
+        viewerId={viewerId}
+      />,
+    );
+
+    await expectState(rendered, viewerId, '1/4');
+
+    await act(async () => {
+      getController().goToNext();
+    });
+
+    expectActiveState(rendered, viewerId, 1, 'active');
+    expectActiveState(rendered, viewerId, 2, 'inactive');
+
+    await act(async () => {
+      jest.advanceTimersByTime(PAGE_TRANSITION_CONFIG.duration);
+    });
+
+    await expectState(rendered, viewerId, '2/4');
+
+    expectActiveState(rendered, viewerId, 1, 'inactive');
+    expectActiveState(rendered, viewerId, 2, 'active');
+  });
+
+  it('keeps exactly one virtual slot active when loop mode repeats a logical item', async () => {
+    const viewerId = 'active-state-loop';
+    const rendered = await render(
+      <Harness
+        data={['first', 'second']}
+        enableLoop
+        renderItem={createActiveStateRenderer(viewerId)}
+        viewerId={viewerId}
+        windowSize={5}
+      />,
+    );
+
+    await expectState(rendered, viewerId, '0/2');
+
+    expectActiveSlotCounts(rendered, viewerId, 0, { active: 1, inactive: 2 });
+    expectActiveSlotCounts(rendered, viewerId, 1, { active: 0, inactive: 2 });
+  });
+
+  it('renders no active slot for empty data and one active slot for a single item', async () => {
+    const viewerId = 'active-state-data-size';
+    const renderItem = jest.fn(createActiveStateRenderer(viewerId));
+    const rendered = await render(
+      <Harness data={[]} renderItem={renderItem} viewerId={viewerId} />,
+    );
+
+    await expectState(rendered, viewerId, '0/0');
+    expect(renderItem).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await rendered.rerender(
+        <Harness data={['only']} renderItem={renderItem} viewerId={viewerId} />,
+      );
+    });
+
+    await expectState(rendered, viewerId, '0/1');
+    expectActiveState(rendered, viewerId, 0, 'active');
   });
 
   it('updates state and render-window slots through immediate controller navigation', async () => {
@@ -200,17 +339,21 @@ describe('GestureViewer render-window integration', () => {
   it('keeps autoplay available when horizontal swipe is disabled', async () => {
     jest.useFakeTimers();
 
+    const viewerId = 'autoplay-locked-swipe';
+
     const rendered = await render(
       <Harness
         autoPlay
         autoPlayInterval={1000}
         data={['first', 'second']}
         horizontalSwipe={{ enabled: false }}
-        viewerId="autoplay-locked-swipe"
+        renderItem={createActiveStateRenderer(viewerId)}
+        viewerId={viewerId}
       />,
     );
 
-    await expectState(rendered, 'autoplay-locked-swipe', '0/2');
+    await expectState(rendered, viewerId, '0/2');
+    expectActiveState(rendered, viewerId, 0, 'active');
 
     await act(async () => {
       jest.advanceTimersByTime(1000);
@@ -220,7 +363,9 @@ describe('GestureViewer render-window integration', () => {
       jest.advanceTimersByTime(PAGE_TRANSITION_CONFIG.duration);
     });
 
-    await expectState(rendered, 'autoplay-locked-swipe', '1/2');
+    await expectState(rendered, viewerId, '1/2');
+    expectActiveState(rendered, viewerId, 0, 'inactive');
+    expectActiveState(rendered, viewerId, 1, 'active');
   });
 
   it('preserves tap events for explicit undefined items', async () => {

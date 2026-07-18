@@ -7,6 +7,7 @@ export type {
   GestureViewerEventData,
   GestureViewerEventType,
   GestureViewerProps,
+  GestureViewerRenderItemInfo,
   GestureViewerState,
   GestureViewerSingleTapEvent,
 } from './types';

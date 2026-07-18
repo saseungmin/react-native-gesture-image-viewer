@@ -1,4 +1,4 @@
-import { type ReactElement, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { StyleSheet, useWindowDimensions, View, type ViewStyle } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
@@ -18,7 +18,7 @@ type RenderWindowSlotViewProps<ItemT> = {
   height: number;
   isActive: boolean;
   pageStride: number;
-  renderItem: (item: ItemT, index: number) => ReactElement;
+  renderItem: GestureViewerProps<ItemT>['renderItem'];
   slot: RenderWindowSlot<ItemT>;
   visualPage: SharedValue<number>;
   width: number;
@@ -51,7 +51,7 @@ function RenderWindowSlotView<ItemT>({
     >
       <Animated.View style={[styles.page, isActive && animatedStyle]}>
         <View style={[styles.item, { height, width }]}>
-          {renderItem(slot.item, slot.logicalIndex)}
+          {renderItem(slot.item, slot.logicalIndex, { isActive })}
         </View>
       </Animated.View>
     </Animated.View>
