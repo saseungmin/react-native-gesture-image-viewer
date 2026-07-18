@@ -6,6 +6,7 @@ import {
   GestureTrigger,
   GestureViewer,
   type GestureViewerProps,
+  type GestureViewerRenderItemInfo,
   useGestureViewerController,
   useGestureViewerEvent,
   useGestureViewerState,
@@ -119,16 +120,21 @@ function Example() {
     }
   });
 
-  const renderImage = useCallback((imageUrl: string) => {
-    return (
-      <Image
-        source={{ uri: imageUrl }}
-        style={{ width: '100%', height: '100%' }}
-        pointerEvents="none"
-        contentFit="contain"
-      />
-    );
-  }, []);
+  const renderImage = useCallback(
+    (imageUrl: string, _index: number, { isActive }: GestureViewerRenderItemInfo) => {
+      return (
+        <Image
+          accessibilityLabel={isActive ? 'Current image' : undefined}
+          accessible={isActive}
+          contentFit="contain"
+          pointerEvents="none"
+          source={{ uri: imageUrl }}
+          style={{ width: '100%', height: '100%' }}
+        />
+      );
+    },
+    [],
+  );
 
   return (
     <View style={styles.container}>

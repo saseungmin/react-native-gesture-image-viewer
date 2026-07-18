@@ -210,6 +210,14 @@ function App() {
 [Go to source](https://github.com/saseungmin/react-native-gesture-image-viewer/blob/next/src/types.ts)
 
 ````tsx title="GestureViewerProps"
+export type GestureViewerRenderItemInfo = {
+  /**
+   * 렌더링된 아이템이 현재 활성 상태인지 여부입니다.
+   * @remarks 페이지 전환 중에는 기존 아이템이 활성 상태를 유지합니다. 전환이 완료되어 다른 아이템으로 이동하면 해당 아이템이 활성화됩니다.
+   */
+  readonly isActive: boolean;
+};
+
 export interface GestureViewerProps<ItemT> {
   /**
    * 여러 개의 `GestureViewer` 인스턴스를 효율적으로 관리하고 싶다면 `id` prop을 사용해 각각의 `GestureViewer`를 구분할 수 있습니다.
@@ -237,8 +245,11 @@ export interface GestureViewerProps<ItemT> {
   onDismissStart?: () => void;
   /**
    * 아이템을 렌더링할 때 호출되는 콜백 함수입니다.
+   * @param item - 렌더링할 아이템입니다.
+   * @param index - `data` 배열에서 아이템의 인덱스입니다.
+   * @param info - 마운트된 이 slot의 렌더링 상태입니다.
    */
-  renderItem: (item: ItemT, index: number) => React.ReactElement;
+  renderItem: (item: ItemT, index: number, info: GestureViewerRenderItemInfo) => React.ReactElement;
   /**
    * 뷰어 콘텐츠에서 싱글 탭이 확정되었을 때 호출되는 콜백 함수입니다.
    * @remarks
