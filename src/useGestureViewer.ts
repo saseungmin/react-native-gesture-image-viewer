@@ -102,6 +102,7 @@ export const useGestureViewer = <ItemT, LC>({
   const hasActiveFocal = useSharedValue(false);
 
   const dataLength = data?.length || 0;
+  const previousDataLengthRef = useRef(dataLength);
 
   const animationConfig = useMemo(
     () => ({
@@ -291,6 +292,9 @@ export const useGestureViewer = <ItemT, LC>({
   }, [manager]);
 
   useEffect(() => {
+    const hasDataLengthChanged = previousDataLengthRef.current !== dataLength;
+
+    previousDataLengthRef.current = dataLength;
     translateY.set(0);
     translateX.set(0);
     scale.set(1);
@@ -298,7 +302,7 @@ export const useGestureViewer = <ItemT, LC>({
     startScale.set(1);
     rotation.set(0);
 
-    if (adjustedInitialIndex <= 0 || !listRef.current) {
+    if ((!hasDataLengthChanged && adjustedInitialIndex <= 0) || !listRef.current) {
       return;
     }
 
@@ -307,6 +311,7 @@ export const useGestureViewer = <ItemT, LC>({
     });
   }, [
     adjustedInitialIndex,
+    dataLength,
     translateY,
     backdropOpacity,
     translateX,

@@ -95,4 +95,53 @@ describe('useGestureViewer initial scroll scheduling', () => {
       index: 2,
     });
   });
+
+  it('scrolls to the initial page when the data length changes', async () => {
+    idleGlobal.requestIdleCallback = jest.fn((callback: () => void) => {
+      callback();
+      return 10;
+    });
+    idleGlobal.cancelIdleCallback = jest.fn();
+
+    const renderItem = (item: string) => <Text>{item}</Text>;
+    const { rerender } = await render(
+      <GestureViewer
+        data={['first', 'second', 'third']}
+        height={480}
+        ListComponent={TestFlashList}
+        renderItem={renderItem}
+        width={320}
+      />,
+    );
+
+    expect(scrollToIndex).not.toHaveBeenCalled();
+
+    await rerender(
+      <GestureViewer
+        data={['first', 'second', 'third']}
+        height={480}
+        ListComponent={TestFlashList}
+        renderItem={renderItem}
+        width={400}
+      />,
+    );
+
+    expect(scrollToIndex).not.toHaveBeenCalled();
+
+    await rerender(
+      <GestureViewer
+        data={['first', 'second', 'third', 'fourth']}
+        height={480}
+        ListComponent={TestFlashList}
+        renderItem={renderItem}
+        width={400}
+      />,
+    );
+
+    expect(scrollToIndex).toHaveBeenCalledTimes(1);
+    expect(scrollToIndex).toHaveBeenCalledWith({
+      animated: false,
+      index: 0,
+    });
+  });
 });
