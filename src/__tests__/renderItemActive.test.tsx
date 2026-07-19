@@ -249,6 +249,7 @@ describe('GestureViewer renderItem active state', () => {
     });
 
     expectActiveStates(['inactive', 'inactive', 'active', 'inactive']);
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(1);
   });
 
   it('keeps FlashList measurement renders inactive', async () => {

@@ -91,6 +91,7 @@ export function useGestureViewerPaging({
       }
 
       if (isLoopHandled) {
+        syncCurrentIndex(realIndex);
         setActiveListIndex(jumpToIndex ?? scrollIndex);
         return;
       }
