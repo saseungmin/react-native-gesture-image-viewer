@@ -25,7 +25,7 @@ Delete `ListComponent` and `listProps` from `GestureViewer`.
 
 ### Replace snap spacing with page spacing
 
-`enableSnapMode` and `itemSpacing` have been removed. Use `pageSpacing` when you need visible space between pages.
+`enableSnapMode` and `itemSpacing` have been removed. Use [`pageSpacing`](/guide/usage/gesture-viewer-props#pagespacing) when you need visible space between pages.
 
 ```diff
 <GestureViewer
@@ -39,7 +39,7 @@ Delete `ListComponent` and `listProps` from `GestureViewer`.
 
 ### Tune the render window only when needed
 
-By default, v3 mounts three pages: previous, current, and next. Increase `windowSize` only when you need more adjacent content mounted.
+By default, v3 mounts three pages: previous, current, and next. Increase [`windowSize`](/guide/usage/gesture-viewer-props#windowsize) only when you need more adjacent content mounted.
 
 ```tsx
 <GestureViewer data={images} renderItem={renderImage} windowSize={5} />
@@ -47,7 +47,7 @@ By default, v3 mounts three pages: previous, current, and next. Increase `window
 
 ### Keep programmatic navigation
 
-`goToIndex`, `goToPrevious`, and `goToNext` still work. `horizontalSwipe={{ enabled: false }}` disables only user/mouse horizontal swipe gestures; controller navigation and autoplay remain available.
+The [`goToIndex`, `goToPrevious`, and `goToNext` controller methods](/guide/usage/programmatic-control) still work. [`horizontalSwipe`](/guide/usage/gesture-features#horizontalswipe) with `enabled: false` disables only user/mouse horizontal swipe gestures; controller navigation and autoplay remain available.
 
 ```diff
 <GestureViewer
@@ -69,29 +69,29 @@ goToIndex(2, { animated: false });
 
 ## Removed Props
 
-| 2.x prop         | 3.x replacement                                      |
-| ---------------- | ---------------------------------------------------- |
-| `ListComponent`  | Removed. Paging is internal.                         |
-| `listProps`      | Removed. Use `renderItem` for content customization. |
-| `enableSnapMode` | Removed. Internal paging is always gesture-driven.   |
-| `itemSpacing`    | `pageSpacing`                                        |
+| 2.x prop         | 3.x replacement                                                                        |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| `ListComponent`  | Removed. Paging is internal.                                                           |
+| `listProps`      | Removed. Use [`renderItem`](/guide/usage/custom-components) for content customization. |
+| `enableSnapMode` | Removed. Internal paging is always gesture-driven.                                     |
+| `itemSpacing`    | [`pageSpacing`](/guide/usage/gesture-viewer-props#pagespacing)                         |
 
 ## Common `listProps` Migrations
 
 v3 no longer forwards props to `ScrollView`, `FlatList`, or `FlashList`. Move common `listProps` usage to the v3 viewer APIs instead:
 
-| 2.x `listProps` usage                                                                | v3 direction                                                                                                                              |
-| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `keyExtractor`                                                                       | Removed. The render window owns slot keys; keep stable item identity in `data` and render content through `renderItem`.                   |
-| `initialScrollIndex`                                                                 | Use `initialIndex`.                                                                                                                       |
-| `scrollEnabled`, `pagingEnabled`, `horizontal`, `snapToInterval`, `decelerationRate` | Removed. Paging is gesture-owned. Use `horizontalSwipe={{ enabled: false }}` to lock user swipes and `pageSpacing` for visible page gaps. |
-| `onScroll`, `onMomentumScrollEnd`, `onViewableItemsChanged`                          | Removed. Use `useGestureViewerState` for `currentIndex`/`totalCount`; use viewer events for supported viewer interactions.                |
-| `ref.current.scrollToIndex(...)`                                                     | Use `useGestureViewerController().goToIndex(...)`, `goToNext()`, or `goToPrevious()`.                                                     |
-| `windowSize`, `maxToRenderPerBatch`, `removeClippedSubviews`, `estimatedItemSize`    | Replace list virtualization tuning with `windowSize`. The default mounts previous/current/next only.                                      |
-| `showsHorizontalScrollIndicator`, `contentContainerStyle`, list separators           | Removed. Compose visual content inside `renderItem` or use `pageSpacing` for inter-page gaps.                                             |
+| 2.x `listProps` usage                                                                | v3 direction                                                                                                                                                                                                                                 |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `keyExtractor`                                                                       | Removed. The render window owns slot keys; keep stable item identity in `data` and render content through `renderItem`.                                                                                                                      |
+| `initialScrollIndex`                                                                 | Use [`initialIndex`](/guide/usage/gesture-viewer-props#initialindex).                                                                                                                                                                        |
+| `scrollEnabled`, `pagingEnabled`, `horizontal`, `snapToInterval`, `decelerationRate` | Removed. Paging is gesture-owned. Use [`horizontalSwipe`](/guide/usage/gesture-features#horizontalswipe) with `enabled: false` to lock user swipes and [`pageSpacing`](/guide/usage/gesture-viewer-props#pagespacing) for visible page gaps. |
+| `onScroll`, `onMomentumScrollEnd`, `onViewableItemsChanged`                          | Removed. Use [`useGestureViewerState`](/guide/usage/gesture-viewer-state) for `currentIndex`/`totalCount`; use [viewer events](/guide/usage/handling-viewer-events) for supported viewer interactions.                                       |
+| `ref.current.scrollToIndex(...)`                                                     | Use [`useGestureViewerController().goToIndex(...)`, `goToNext()`, or `goToPrevious()`](/guide/usage/programmatic-control).                                                                                                                   |
+| `windowSize`, `maxToRenderPerBatch`, `removeClippedSubviews`, `estimatedItemSize`    | Replace list virtualization tuning with [`windowSize`](/guide/usage/gesture-viewer-props#windowsize). The default mounts previous/current/next only.                                                                                         |
+| `showsHorizontalScrollIndicator`, `contentContainerStyle`, list separators           | Removed. Compose visual content inside [`renderItem`](/guide/usage/custom-components) or use [`pageSpacing`](/guide/usage/gesture-viewer-props#pagespacing) for inter-page gaps.                                                             |
 
 ## Notes
 
-- `renderItem` remains the customization point for images, videos, and custom content.
-- `useGestureViewerState` continues to expose `currentIndex` and `totalCount`.
-- `useGestureViewerController` remains the programmatic control surface.
+- [`renderItem`](/guide/usage/custom-components) remains the customization point for images, videos, and custom content.
+- [`useGestureViewerState`](/guide/usage/gesture-viewer-state) continues to expose `currentIndex` and `totalCount`.
+- [`useGestureViewerController`](/guide/usage/programmatic-control) remains the programmatic control surface.

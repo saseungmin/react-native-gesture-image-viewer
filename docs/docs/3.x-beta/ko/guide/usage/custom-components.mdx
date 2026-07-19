@@ -99,12 +99,17 @@ function App() {
 }
 ```
 
+<span id="renderitem-active-state" />
+
+### `renderItem` 활성 상태 (`isActive`)
+
 비디오처럼 현재 표시 중인 콘텐츠에서만 재생이나 작업을 수행해야 한다면 세 번째 `renderItem` 인자의 `isActive`를 사용할 수 있습니다. 이 값은 현재 선택된 콘텐츠에서만 `true`입니다. 페이지 전환 중에는 기존 콘텐츠가 활성 상태를 유지하고, 이동이 완료되면 새로 선택된 콘텐츠가 활성화됩니다. 아이템 외부 UI에서 전역 `currentIndex`가 필요할 때는 [`useGestureViewerState`](/guide/usage/gesture-viewer-state)를 사용하세요.
 
 ```tsx
 import type { GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';
 
 const renderMedia = useCallback(
+  // [!code highlight:1]
   (item: MediaItem, _index: number, { isActive }: GestureViewerRenderItemInfo) => {
     return (
       <Video
