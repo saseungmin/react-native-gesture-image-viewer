@@ -26,9 +26,6 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Setup npm for trusted publishing
-        run: npm install -g npm@latest
-
       - name: Build
         run: pnpm build
 
