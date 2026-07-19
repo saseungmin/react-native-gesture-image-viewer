@@ -52,6 +52,7 @@ export function GestureViewer<ItemT, LC>({
   const isScrollView = isScrollViewLike(Component);
 
   const {
+    activeListIndex,
     listRef,
     isZoomed,
     isRotated,
@@ -102,11 +103,11 @@ export function GestureViewer<ItemT, LC>({
             styles.item,
           ]}
         >
-          {renderItemProp(item, index)}
+          {renderItemProp(item, index, { isActive: index === activeListIndex })}
         </View>
       );
     },
-    [width, itemSpacing, renderItemProp, keyExtractor, isScrollView, height],
+    [activeListIndex, width, itemSpacing, renderItemProp, keyExtractor, isScrollView, height],
   );
 
   const getItemLayout = useCallback(

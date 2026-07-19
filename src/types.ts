@@ -82,6 +82,14 @@ export type GestureViewerSingleTapEvent<ItemT> = {
   item: ItemT;
 };
 
+export type GestureViewerRenderItemInfo = {
+  /**
+   * Whether the rendered item is currently active.
+   * @remarks The current item remains active during a page transition. When the transition finishes on another item, that item becomes active.
+   */
+  readonly isActive: boolean;
+};
+
 export type GestureViewerDismissDirection = 'down' | 'up' | 'both';
 
 export interface TriggerAnimationConfig extends WithTimingConfig {
@@ -128,8 +136,11 @@ export interface GestureViewerProps<ItemT, LC> {
   onDismissStart?: () => void;
   /**
    * A callback function that is called to render the item.
+   * @param item - The item to render.
+   * @param index - The list index of the rendered item.
+   * @param info - Render state for this list cell.
    */
-  renderItem: (item: ItemT, index: number) => React.ReactElement;
+  renderItem: (item: ItemT, index: number, info: GestureViewerRenderItemInfo) => React.ReactElement;
   /**
    * A callback function that is called when a single tap is confirmed on the viewer content.
    * @remarks

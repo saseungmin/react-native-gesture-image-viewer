@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 import type {
@@ -8,6 +8,7 @@ import type {
 import { getLoopAdjustedIndex } from './utils';
 
 export function useGestureViewerPaging({
+  adjustedInitialIndex,
   autoPlay,
   autoPlayInterval,
   currentIndex,
@@ -23,6 +24,12 @@ export function useGestureViewerPaging({
   syncPendingIndex,
   width,
 }: UseGestureViewerPagingArgs): UseGestureViewerPagingResult {
+  const [activeListIndex, setActiveListIndex] = useState(adjustedInitialIndex);
+
+  useEffect(() => {
+    setActiveListIndex(adjustedInitialIndex);
+  }, [adjustedInitialIndex]);
+
   useEffect(() => {
     if (
       !autoPlay ||
@@ -69,24 +76,32 @@ export function useGestureViewerPaging({
 
       const { contentOffset } = event.nativeEvent;
       const scrollIndex = Math.round(contentOffset.x / (width + itemSpacing));
-
-      const isLoopHandled = manager?.handleMomentumScrollEnd(scrollIndex);
-
-      if (isLoopHandled) {
-        return;
-      }
-
       const { realIndex, needsJump, jumpToIndex } = getLoopAdjustedIndex(
         scrollIndex,
         dataLength,
         enableLoop,
       );
 
+      const isLoopHandled = manager?.handleMomentumScrollEnd(scrollIndex);
+
+      if (isLoopHandled) {
+        if (needsJump && jumpToIndex !== undefined) {
+          setActiveListIndex(jumpToIndex);
+        }
+
+        return;
+      }
+
+      if (realIndex < 0 || realIndex >= dataLength) {
+        return;
+      }
+
       if (needsJump && jumpToIndex !== undefined) {
         scrollTo(jumpToIndex, false);
       }
 
       syncCurrentIndex(realIndex);
+      setActiveListIndex(jumpToIndex ?? scrollIndex);
     },
     [
       dataLength,
@@ -120,6 +135,7 @@ export function useGestureViewerPaging({
   }, [manager]);
 
   return {
+    activeListIndex,
     onMomentumScrollEnd,
     onScroll,
     onScrollBeginDrag,

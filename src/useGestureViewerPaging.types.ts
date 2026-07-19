@@ -34,6 +34,7 @@ export type WebClickTarget = {
 };
 
 export type UseGestureViewerPagingResult = {
+  activeListIndex: number;
   onMomentumScrollEnd?: ScrollViewProps['onMomentumScrollEnd'];
   onScroll?: ScrollViewProps['onScroll'];
   onScrollBeginDrag?: ScrollViewProps['onScrollBeginDrag'];

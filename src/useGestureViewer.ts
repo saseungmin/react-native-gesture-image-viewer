@@ -811,32 +811,34 @@ export const useGestureViewer = <ItemT, LC>({
     return Gesture.Native().requireExternalGestureToFail(dismissGestureRef);
   }, []);
 
-  const { onMomentumScrollEnd, onScroll, onScrollBeginDrag, onWebClick } = useGestureViewerPaging({
-    adjustedInitialIndex,
-    autoPlay,
-    autoPlayInterval,
-    currentIndex,
-    dataLength,
-    enableDoubleTapZoom,
-    enableHorizontalSwipe,
-    enableLoop,
-    height,
-    isRotated,
-    isZoomed,
-    itemSpacing,
-    manager,
-    maxZoomScale,
-    onSingleTap: emitSingleTap,
-    scale,
-    scrollTo,
-    syncCurrentIndex,
-    syncPendingIndex,
-    translateX,
-    translateY,
-    width,
-  });
+  const { activeListIndex, onMomentumScrollEnd, onScroll, onScrollBeginDrag, onWebClick } =
+    useGestureViewerPaging({
+      adjustedInitialIndex,
+      autoPlay,
+      autoPlayInterval,
+      currentIndex,
+      dataLength,
+      enableDoubleTapZoom,
+      enableHorizontalSwipe,
+      enableLoop,
+      height,
+      isRotated,
+      isZoomed,
+      itemSpacing,
+      manager,
+      maxZoomScale,
+      onSingleTap: emitSingleTap,
+      scale,
+      scrollTo,
+      syncCurrentIndex,
+      syncPendingIndex,
+      translateX,
+      translateY,
+      width,
+    });
 
   return {
+    activeListIndex,
     animatedStyle,
     backdropStyle,
     dataLength,

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, type MouseEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 import type {
@@ -50,6 +50,7 @@ export function useGestureViewerPaging({
   translateY,
   width,
 }: UseGestureViewerPagingArgs): UseGestureViewerPagingResult {
+  const [activeListIndex, setActiveListIndex] = useState(adjustedInitialIndex);
   const webSingleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const webScrollRuntimeRef = useRef<WebScrollRuntime>({
@@ -187,6 +188,7 @@ export function useGestureViewerPaging({
       runtime.latestOffsetX = settledPhysicalIndex * (width + itemSpacing);
       runtime.actor = 'idle';
       manager?.cancelPendingLoopTransition();
+      setActiveListIndex(settledPhysicalIndex);
       syncCurrentIndex(logicalIndex);
 
       if (settledByActor === 'user') {
@@ -230,6 +232,7 @@ export function useGestureViewerPaging({
     runtime.latestOffsetX = adjustedInitialIndex * (width + itemSpacing);
     runtime.latestRawPhysicalIndex = adjustedInitialIndex;
     runtime.lastProgrammaticScrollVersion = manager?.getProgrammaticScrollVersion() ?? 0;
+    setActiveListIndex(adjustedInitialIndex);
     clearWebSettleTimer();
     clearWebAutoplayResumeTimer();
   }, [
@@ -426,6 +429,7 @@ export function useGestureViewerPaging({
   );
 
   return {
+    activeListIndex,
     onMomentumScrollEnd,
     onScroll,
     onScrollBeginDrag,

@@ -9,6 +9,7 @@ import {
   useGestureViewerController,
   useGestureViewerEvent,
   useGestureViewerState,
+  type GestureViewerRenderItemInfo,
 } from 'react-native-gesture-image-viewer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -68,16 +69,19 @@ function Example() {
     }
   });
 
-  const renderImage = useCallback((imageUrl: string) => {
-    return (
-      <Image
-        source={{ uri: imageUrl }}
-        style={{ width: '100%', height: '100%' }}
-        pointerEvents="none"
-        contentFit="contain"
-      />
-    );
-  }, []);
+  const renderImage = useCallback(
+    (imageUrl: string, _index: number, { isActive }: GestureViewerRenderItemInfo) => {
+      return (
+        <Image
+          source={{ uri: imageUrl }}
+          style={{ width: '100%', height: '100%', opacity: isActive ? 1 : 0.5 }}
+          pointerEvents="none"
+          contentFit="contain"
+        />
+      );
+    },
+    [],
+  );
 
   return (
     <View style={styles.container}>
