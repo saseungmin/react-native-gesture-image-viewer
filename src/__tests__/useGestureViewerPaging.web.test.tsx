@@ -84,6 +84,26 @@ describe('useGestureViewerPaging web active state', () => {
     expect(result.current.activeListIndex).toBe(1);
   });
 
+  it('keeps the settled cell when a layout change does not reschedule initial scrolling', async () => {
+    const { rerender, result } = await renderHook<UseGestureViewerPagingResult, { width: number }>(
+      ({ width }) => useGestureViewerPaging(createArgs({ width })),
+      {
+        initialProps: { width: 320 },
+      },
+    );
+
+    await act(async () => {
+      result.current.onScroll?.(createScrollEvent(640));
+      jest.advanceTimersByTime(180);
+    });
+
+    expect(result.current.activeListIndex).toBe(2);
+
+    await rerender({ width: 400 });
+
+    expect(result.current.activeListIndex).toBe(2);
+  });
+
   it('resets the active cell when the adjusted initial index changes', async () => {
     const { rerender, result } = await renderHook<
       UseGestureViewerPagingResult,
