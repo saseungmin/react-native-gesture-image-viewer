@@ -143,5 +143,17 @@ describe('useGestureViewer initial scroll scheduling', () => {
       animated: false,
       index: 0,
     });
+
+    await rerender(
+      <GestureViewer
+        data={[]}
+        height={480}
+        ListComponent={TestFlashList}
+        renderItem={renderItem}
+        width={400}
+      />,
+    );
+
+    expect(scrollToIndex).toHaveBeenCalledTimes(1);
   });
 });

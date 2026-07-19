@@ -293,6 +293,7 @@ export const useGestureViewer = <ItemT, LC>({
 
   useEffect(() => {
     const hasDataLengthChanged = previousDataLengthRef.current !== dataLength;
+    const hasValidInitialIndex = initialIndex >= 0 && initialIndex < dataLength;
 
     previousDataLengthRef.current = dataLength;
     translateY.set(0);
@@ -302,7 +303,11 @@ export const useGestureViewer = <ItemT, LC>({
     startScale.set(1);
     rotation.set(0);
 
-    if ((!hasDataLengthChanged && adjustedInitialIndex <= 0) || !listRef.current) {
+    if (
+      !hasValidInitialIndex ||
+      (!hasDataLengthChanged && adjustedInitialIndex <= 0) ||
+      !listRef.current
+    ) {
       return;
     }
 
@@ -312,6 +317,7 @@ export const useGestureViewer = <ItemT, LC>({
   }, [
     adjustedInitialIndex,
     dataLength,
+    initialIndex,
     translateY,
     backdropOpacity,
     translateX,
