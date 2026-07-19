@@ -92,6 +92,8 @@ export function GestureViewer<ItemT, LC>({
 
   const renderItem = useCallback(
     ({ item, index, target }: { item: ItemT; index: number; target?: string }) => {
+      const isFlashListCell = !isFlashList || target === undefined || target === 'Cell';
+
       return (
         <View
           key={isScrollView ? keyExtractor(item, index) : undefined}
@@ -105,7 +107,7 @@ export function GestureViewer<ItemT, LC>({
           ]}
         >
           {renderItemProp(item, index, {
-            isActive: index === activeListIndex && (!isFlashList || target !== 'Measurement'),
+            isActive: index === activeListIndex && isFlashListCell,
           })}
         </View>
       );

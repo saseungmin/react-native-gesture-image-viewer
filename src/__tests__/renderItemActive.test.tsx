@@ -30,6 +30,7 @@ type TestListProps = {
   onScroll?: ScrollViewProps['onScroll'];
   renderItem?: (info: { item: string; index: number; target?: string }) => ReactElement | null;
   renderMeasurement?: boolean;
+  renderStickyHeader?: boolean;
 };
 
 const PAGE_WIDTH = 320;
@@ -59,6 +60,11 @@ const TestFlashList = memo(
         {props.renderMeasurement && props.data?.[0] !== undefined ? (
           <View testID="measurement-render">
             {props.renderItem?.({ item: props.data[0], index: 0, target: 'Measurement' })}
+          </View>
+        ) : null}
+        {props.renderStickyHeader && props.data?.[0] !== undefined ? (
+          <View testID="sticky-header-render">
+            {props.renderItem?.({ item: props.data[0], index: 0, target: 'StickyHeader' })}
           </View>
         ) : null}
       </View>
@@ -252,14 +258,14 @@ describe('GestureViewer renderItem active state', () => {
     expect(registry.getManager(id)?.getState().currentIndex).toBe(1);
   });
 
-  it('keeps FlashList measurement renders inactive', async () => {
+  it('keeps FlashList measurement and sticky header renders inactive', async () => {
     await render(
       <GestureViewer
         data={['first', 'second']}
         height={480}
         id="measurement-active"
         ListComponent={TestFlashList}
-        listProps={{ renderMeasurement: true }}
+        listProps={{ renderMeasurement: true, renderStickyHeader: true }}
         renderItem={(_item, index, { isActive }) => (
           <ActiveItem index={index} isActive={isActive} />
         )}
@@ -268,8 +274,10 @@ describe('GestureViewer renderItem active state', () => {
     );
 
     const measurement = within(screen.getByTestId('measurement-render'));
+    const stickyHeader = within(screen.getByTestId('sticky-header-render'));
 
     expect(measurement.getByTestId('active-0').props.children).toBe('inactive');
+    expect(stickyHeader.getByTestId('active-0').props.children).toBe('inactive');
     expect(screen.getAllByText('active')).toHaveLength(1);
   });
 
