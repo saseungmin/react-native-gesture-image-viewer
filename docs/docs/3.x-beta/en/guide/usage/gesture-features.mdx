@@ -46,41 +46,72 @@ Dismiss gesture options. Controls which vertical swipe direction can trigger `on
 
 ### `horizontalSwipe`
 
-Horizontal swipe gesture options. Controls user-driven left/right page swipe gestures. Controller navigation and autoplay remain available when disabled.
+Controls user-driven left/right page swipe gestures. Controller navigation and autoplay remain available when disabled.
 
-| Property                 | Description                                                                                                                                                                      | Type      | Default |
-| :----------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------- | :-----: |
-| `enabled`                | When `false`, user-driven horizontal page swipe gestures are disabled.                                                                                                           | `boolean` | `true`  |
-| `distanceThresholdRatio` | Distance threshold as a ratio of viewer width. A page commits when absolute translation is strictly greater than `width * distanceThresholdRatio`, or velocity passes threshold. | `number`  | `0.25`  |
-| `velocityThreshold`      | Horizontal velocity threshold in points per second. A page commits when absolute velocity is strictly greater than this value, or distance passes threshold.                     | `number`  |  `800`  |
+Defaults:
 
-Distance and velocity use strict `>` OR semantics. Zero and every finite non-negative value are accepted, including `distanceThresholdRatio` values greater than `1`; negative and non-finite values fall back to defaults.
+- `enabled`: `true`
+- `distanceThresholdRatio`: `0.25` of viewer width
+- `velocityThreshold`: `800` points/sec
+
+A page commits when absolute horizontal distance is strictly greater than `width * distanceThresholdRatio`, or absolute horizontal velocity is strictly greater than `velocityThreshold`. Distance and velocity use strict `>` OR semantics. Zero and every finite non-negative value are accepted, including distance ratios greater than `1`; negative and non-finite values fall back to defaults.
 
 ```tsx
-<GestureViewer data={images} renderItem={renderImage} horizontalSwipe={{ enabled: false }} />
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  return (
+    <GestureViewer
+      data={data}
+      renderItem={renderItem}
+      // [!code highlight:5]
+      horizontalSwipe={{
+        enabled: true,
+        distanceThresholdRatio: 0.25,
+        velocityThreshold: 800,
+      }}
+    />
+  );
+}
 ```
+
+Disable only user/mouse horizontal gestures:
 
 ```tsx
 <GestureViewer
-  data={images}
-  renderItem={renderImage}
-  horizontalSwipe={{ distanceThresholdRatio: 0.5, velocityThreshold: 100_000 }}
+  data={data}
+  renderItem={renderItem}
+  horizontalSwipe={{ enabled: false }} // [!code highlight]
 />
 ```
 
-```tsx
-<GestureViewer
-  data={images}
-  renderItem={renderImage}
-  horizontalSwipe={{ distanceThresholdRatio: 10, velocityThreshold: 100 }}
-/>
-```
+Use a distance-focused configuration:
 
 ```tsx
 <GestureViewer
-  data={images}
-  renderItem={renderImage}
-  horizontalSwipe={{ enabled: false }}
+  data={data}
+  renderItem={renderItem}
+  horizontalSwipe={{ distanceThresholdRatio: 0.5, velocityThreshold: 100_000 }} // [!code highlight]
+/>
+```
+
+Use a velocity-focused configuration:
+
+```tsx
+<GestureViewer
+  data={data}
+  renderItem={renderItem}
+  horizontalSwipe={{ distanceThresholdRatio: 10, velocityThreshold: 100 }} // [!code highlight]
+/>
+```
+
+Disable user gestures while autoplay continues:
+
+```tsx
+<GestureViewer
+  data={data}
+  renderItem={renderItem}
+  horizontalSwipe={{ enabled: false }} // [!code highlight:3]
   autoPlay={true}
   autoPlayInterval={1000}
 />

@@ -113,3 +113,30 @@ function App() {
   return <GestureViewer data={images} renderItem={renderImage} />;
 }
 ```
+
+<span id="renderitem-active-state" />
+
+### `renderItem` active state (`isActive`)
+
+For content such as video that should play or perform work only while it is visible, use `isActive` from the third `renderItem` argument. It is `true` only for the currently selected content. During a page transition, the previous content remains active; when the move finishes, the newly selected content becomes active. Use [`useGestureViewerState`](/guide/usage/gesture-viewer-state) instead when UI outside the item needs the global `currentIndex`.
+
+```tsx
+import type { GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';
+
+const renderMedia = useCallback(
+  // [!code highlight:1]
+  (item: MediaItem, _index: number, { isActive }: GestureViewerRenderItemInfo) => {
+    return (
+      <Video
+        source={{ uri: item.uri }}
+        style={{ width: '100%', height: '100%' }}
+        paused={!isActive}
+        resizeMode="contain"
+      />
+    );
+  },
+  [],
+);
+
+return <GestureViewer data={mediaItems} renderItem={renderMedia} />;
+```

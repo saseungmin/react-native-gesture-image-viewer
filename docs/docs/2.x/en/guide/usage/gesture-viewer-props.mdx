@@ -1,5 +1,9 @@
 # GestureViewer Props
 
+### `renderItem`
+
+`renderItem` renders each item in `data` and receives `isActive` through its third argument: `renderItem(item, index, { isActive })`. Use it for work that should run only on the active item, such as video playback. See [`renderItem` active state (`isActive`)](/guide/usage/custom-components#renderitem-active-state) for behavior and examples.
+
 ### `enableLoop` (default: `false`)
 
 Enables loop mode. When `true`, navigating next from the last item goes to the first item, and navigating previous from the first item goes to the last item.
@@ -135,9 +139,17 @@ Controls the maximum zoom scale multiplier.
 
 ## `GestureViewerProps` interface
 
-[Go to source](https://github.com/saseungmin/react-native-gesture-image-viewer/blob/a7b58a5fc9aa396e5b72ec1e6fe6ae27d94ed044/src/types.ts#L88)
+[Go to source](https://github.com/saseungmin/react-native-gesture-image-viewer/blob/d7981fb/src/types.ts#L112)
 
 ````tsx title="GestureViewerProps"
+export type GestureViewerRenderItemInfo = {
+  /**
+   * Whether the rendered item is currently active.
+   * @remarks The current item remains active during a page transition. When the transition finishes on another item, that item becomes active.
+   */
+  readonly isActive: boolean;
+};
+
 export interface GestureViewerProps<ItemT, LC> {
   /**
    * When you want to efficiently manage multiple `GestureViewer` instances, you can use the `id` prop to use multiple `GestureViewer` components.
@@ -165,8 +177,11 @@ export interface GestureViewerProps<ItemT, LC> {
   onDismissStart?: () => void;
   /**
    * A callback function that is called to render the item.
+   * @param item - The item to render.
+   * @param index - The list index of the rendered item.
+   * @param info - Render state for this list cell.
    */
-  renderItem: (item: ItemT, index: number) => React.ReactElement;
+  renderItem: (item: ItemT, index: number, info: GestureViewerRenderItemInfo) => React.ReactElement;
   /**
    * A callback function that is called when a single tap is confirmed on the viewer content.
    * @remarks

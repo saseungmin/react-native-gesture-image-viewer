@@ -46,41 +46,72 @@ function App() {
 
 ### `horizontalSwipe`
 
-가로 스와이프 제스처 옵션입니다. 사용자가 직접 수행하는 좌우 페이지 스와이프 제스처를 제어합니다. 비활성화해도 controller 이동과 autoplay는 계속 사용할 수 있습니다.
+사용자가 직접 수행하는 좌우 페이지 스와이프 제스처를 제어합니다. 비활성화해도 controller 이동과 autoplay는 계속 사용할 수 있습니다.
 
-| 속성                     | 설명                                                                                                                                                  | 타입      | 기본값 |
-| :----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- | :-------- | :----: |
-| `enabled`                | `false`이면 사용자가 직접 수행하는 가로 페이지 스와이프 제스처가 비활성화됩니다.                                                                      | `boolean` | `true` |
-| `distanceThresholdRatio` | 뷰어 너비에 대한 거리 임계값 비율입니다. 절대 이동 거리가 `width * distanceThresholdRatio`보다 엄격히 클 때, 또는 속도가 임계값을 넘을 때 전환됩니다. | `number`  | `0.25` |
-| `velocityThreshold`      | 초당 points 단위의 가로 속도 임계값입니다. 절대 속도가 이 값보다 엄격히 클 때, 또는 거리가 임계값을 넘을 때 전환됩니다.                               | `number`  | `800`  |
+기본값:
 
-거리와 속도는 엄격한 `>` OR 조건으로 동작합니다. `0`과 모든 유한한 0 이상의 값은 허용되며, `1`보다 큰 `distanceThresholdRatio` 값도 허용됩니다. 음수와 유한하지 않은 값은 기본값으로 대체됩니다.
+- `enabled`: `true`
+- `distanceThresholdRatio`: 뷰어 너비의 `0.25`
+- `velocityThreshold`: 초당 `800` points
+
+절대 가로 이동 거리가 `width * distanceThresholdRatio`보다 엄격히 클 때, 또는 절대 가로 속도가 `velocityThreshold`보다 엄격히 클 때 페이지가 전환됩니다. 거리와 속도는 엄격한 `>` OR 조건으로 동작합니다. `0`과 모든 유한한 0 이상의 값은 허용되며, `1`보다 큰 거리 비율도 허용됩니다. 음수와 유한하지 않은 값은 기본값으로 대체됩니다.
 
 ```tsx
-<GestureViewer data={images} renderItem={renderImage} horizontalSwipe={{ enabled: false }} />
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function App() {
+  return (
+    <GestureViewer
+      data={data}
+      renderItem={renderItem}
+      // [!code highlight:5]
+      horizontalSwipe={{
+        enabled: true,
+        distanceThresholdRatio: 0.25,
+        velocityThreshold: 800,
+      }}
+    />
+  );
+}
 ```
+
+사용자/마우스 가로 제스처만 비활성화합니다.
 
 ```tsx
 <GestureViewer
-  data={images}
-  renderItem={renderImage}
-  horizontalSwipe={{ distanceThresholdRatio: 0.5, velocityThreshold: 100_000 }}
+  data={data}
+  renderItem={renderItem}
+  horizontalSwipe={{ enabled: false }} // [!code highlight]
 />
 ```
 
-```tsx
-<GestureViewer
-  data={images}
-  renderItem={renderImage}
-  horizontalSwipe={{ distanceThresholdRatio: 10, velocityThreshold: 100 }}
-/>
-```
+거리 중심 설정을 사용합니다.
 
 ```tsx
 <GestureViewer
-  data={images}
-  renderItem={renderImage}
-  horizontalSwipe={{ enabled: false }}
+  data={data}
+  renderItem={renderItem}
+  horizontalSwipe={{ distanceThresholdRatio: 0.5, velocityThreshold: 100_000 }} // [!code highlight]
+/>
+```
+
+속도 중심 설정을 사용합니다.
+
+```tsx
+<GestureViewer
+  data={data}
+  renderItem={renderItem}
+  horizontalSwipe={{ distanceThresholdRatio: 10, velocityThreshold: 100 }} // [!code highlight]
+/>
+```
+
+사용자 제스처를 비활성화해도 autoplay는 계속 동작합니다.
+
+```tsx
+<GestureViewer
+  data={data}
+  renderItem={renderItem}
+  horizontalSwipe={{ enabled: false }} // [!code highlight:3]
   autoPlay={true}
   autoPlayInterval={1000}
 />

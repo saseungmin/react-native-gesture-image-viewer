@@ -1,5 +1,9 @@
 # GestureViewer Props
 
+### `renderItem`
+
+`renderItem` renders each item in `data` and receives `isActive` through its third argument: `renderItem(item, index, { isActive })`. Use it for work that should run only on the active item, such as video playback. See [`renderItem` active state (`isActive`)](/guide/usage/custom-components#renderitem-active-state) for behavior and examples.
+
 ### `enableLoop` (default: `false`)
 
 Enables loop mode. When `true`, navigating next from the last item goes to the first item, and navigating previous from the first item goes to the last item.
@@ -17,6 +21,8 @@ function App() {
   );
 }
 ```
+
+<span id="windowsize" />
 
 ### `windowSize` (default: `3`)
 
@@ -38,6 +44,8 @@ function App() {
 }
 ```
 
+<span id="pagespacing" />
+
 ### `pageSpacing` (default: `0`)
 
 Sets horizontal visual space between pages. The page stride is `width + pageSpacing`, while zoom bounds still use `width` and `height`.
@@ -54,78 +62,6 @@ function App() {
     />
   );
 }
-```
-
-### `horizontalSwipe`
-
-Controls user-driven left/right page swipe gestures. Controller navigation and autoplay remain available when disabled.
-
-Defaults:
-
-- `enabled`: `true`
-- `distanceThresholdRatio`: `0.25` of viewer width
-- `velocityThreshold`: `800` points/sec
-
-A page commits when absolute horizontal distance is strictly greater than `width * distanceThresholdRatio`, or absolute horizontal velocity is strictly greater than `velocityThreshold`. Distance and velocity use strict `>` OR semantics. Zero and every finite non-negative value are accepted, including distance ratios greater than `1`; negative and non-finite values fall back to defaults.
-
-```tsx
-import { GestureViewer } from 'react-native-gesture-image-viewer';
-
-function App() {
-  return (
-    <GestureViewer
-      data={data}
-      renderItem={renderItem}
-      horizontalSwipe={{
-        enabled: true,
-        distanceThresholdRatio: 0.25,
-        velocityThreshold: 800,
-      }} // [!code highlight:5]
-    />
-  );
-}
-```
-
-Disable only user/mouse horizontal gestures:
-
-```tsx
-<GestureViewer
-  data={data}
-  renderItem={renderItem}
-  horizontalSwipe={{ enabled: false }} // [!code highlight]
-/>
-```
-
-Use a distance-focused configuration:
-
-```tsx
-<GestureViewer
-  data={data}
-  renderItem={renderItem}
-  horizontalSwipe={{ distanceThresholdRatio: 0.5, velocityThreshold: 100_000 }} // [!code highlight]
-/>
-```
-
-Use a velocity-focused configuration:
-
-```tsx
-<GestureViewer
-  data={data}
-  renderItem={renderItem}
-  horizontalSwipe={{ distanceThresholdRatio: 10, velocityThreshold: 100 }} // [!code highlight]
-/>
-```
-
-Disable user gestures while autoplay continues:
-
-```tsx
-<GestureViewer
-  data={data}
-  renderItem={renderItem}
-  horizontalSwipe={{ enabled: false }} // [!code highlight:3]
-  autoPlay={true}
-  autoPlayInterval={1000}
-/>
 ```
 
 ### `autoPlay` (default: `false`)
@@ -196,6 +132,8 @@ function App() {
   );
 }
 ```
+
+<span id="initialindex" />
 
 ### `initialIndex` (default: `0`)
 
