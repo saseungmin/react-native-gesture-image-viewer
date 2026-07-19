@@ -4,6 +4,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
   type RenderResult,
 } from '@testing-library/react-native';
 import { forwardRef, memo, useImperativeHandle, type ReactElement } from 'react';
@@ -27,7 +28,8 @@ type TestListProps = {
   extraData?: unknown;
   onMomentumScrollEnd?: ScrollViewProps['onMomentumScrollEnd'];
   onScroll?: ScrollViewProps['onScroll'];
-  renderItem?: (info: { item: string; index: number }) => ReactElement | null;
+  renderItem?: (info: { item: string; index: number; target?: string }) => ReactElement | null;
+  renderMeasurement?: boolean;
 };
 
 const PAGE_WIDTH = 320;
@@ -54,6 +56,11 @@ const TestFlashList = memo(
 
           return <View key={`${item}-${occurrence}`}>{props.renderItem?.({ item, index })}</View>;
         })}
+        {props.renderMeasurement && props.data?.[0] !== undefined ? (
+          <View testID="measurement-render">
+            {props.renderItem?.({ item: props.data[0], index: 0, target: 'Measurement' })}
+          </View>
+        ) : null}
       </View>
     );
   }),
@@ -215,6 +222,54 @@ describe('GestureViewer renderItem active state', () => {
 
     expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 1 });
     expectActiveStates(['inactive', 'active', 'inactive', 'inactive']);
+  });
+
+  it('activates the settled cell when a programmatic loop transition stops before a sentinel', async () => {
+    const id = 'interrupted-programmatic-loop-active';
+
+    await renderActiveViewer({
+      data: ['first', 'second'],
+      enableLoop: true,
+      id,
+    });
+
+    await waitFor(() => {
+      expect(registry.getManager(id)).not.toBeNull();
+    });
+
+    await act(async () => {
+      registry.getManager(id)?.goToPrevious();
+    });
+
+    expect(scrollToIndex).toHaveBeenCalledWith({ animated: true, index: 0 });
+    expectActiveStates(['inactive', 'active', 'inactive', 'inactive']);
+
+    await act(async () => {
+      getListProps().onMomentumScrollEnd?.(createScrollEvent(PAGE_WIDTH * 2));
+    });
+
+    expectActiveStates(['inactive', 'inactive', 'active', 'inactive']);
+  });
+
+  it('keeps FlashList measurement renders inactive', async () => {
+    await render(
+      <GestureViewer
+        data={['first', 'second']}
+        height={480}
+        id="measurement-active"
+        ListComponent={TestFlashList}
+        listProps={{ renderMeasurement: true }}
+        renderItem={(_item, index, { isActive }) => (
+          <ActiveItem index={index} isActive={isActive} />
+        )}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    const measurement = within(screen.getByTestId('measurement-render'));
+
+    expect(measurement.getByTestId('active-0').props.children).toBe('inactive');
+    expect(screen.getAllByText('active')).toHaveLength(1);
   });
 
   it('keeps two-argument render callbacks and consumer extraData intact', async () => {

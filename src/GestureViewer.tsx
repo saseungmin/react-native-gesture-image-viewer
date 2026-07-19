@@ -50,6 +50,7 @@ export function GestureViewer<ItemT, LC>({
   const loopData = useMemo(() => createLoopData(dataRef, enableLoop), [enableLoop]);
 
   const isScrollView = isScrollViewLike(Component);
+  const isFlashList = isFlashListLike(Component);
 
   const {
     activeListIndex,
@@ -90,7 +91,7 @@ export function GestureViewer<ItemT, LC>({
   );
 
   const renderItem = useCallback(
-    ({ item, index }: { item: ItemT; index: number }) => {
+    ({ item, index, target }: { item: ItemT; index: number; target?: string }) => {
       return (
         <View
           key={isScrollView ? keyExtractor(item, index) : undefined}
@@ -103,11 +104,22 @@ export function GestureViewer<ItemT, LC>({
             styles.item,
           ]}
         >
-          {renderItemProp(item, index, { isActive: index === activeListIndex })}
+          {renderItemProp(item, index, {
+            isActive: index === activeListIndex && (!isFlashList || target !== 'Measurement'),
+          })}
         </View>
       );
     },
-    [activeListIndex, width, itemSpacing, renderItemProp, keyExtractor, isScrollView, height],
+    [
+      activeListIndex,
+      width,
+      itemSpacing,
+      renderItemProp,
+      keyExtractor,
+      isScrollView,
+      isFlashList,
+      height,
+    ],
   );
 
   const getItemLayout = useCallback(
@@ -196,7 +208,7 @@ export function GestureViewer<ItemT, LC>({
               onClick: onWebClick,
             })}
             {...(Platform.OS === 'web' &&
-              isFlashListLike(Component) && { dataSet: { 'flash-list-paging-enabled-fix': true } })}
+              isFlashList && { dataSet: { 'flash-list-paging-enabled-fix': true } })}
           >
             {isScrollView
               ? maybeWrapWithNativeScrollGesture(
@@ -215,7 +227,7 @@ export function GestureViewer<ItemT, LC>({
                       enableLoop && data.length > 1 ? initialIndex + 1 : initialIndex
                     }
                     keyExtractor={keyExtractor}
-                    {...(isFlashListLike(Component)
+                    {...(isFlashList
                       ? // NOTE - Deprecated estimatedItemSize for FlashList V2 (https://shopify.github.io/flash-list/docs/v2-changes#deprecated)
                         { estimatedItemSize: width + itemSpacing }
                       : { windowSize: 3, maxToRenderPerBatch: 3, getItemLayout })}

@@ -25,10 +25,12 @@ export function useGestureViewerPaging({
   width,
 }: UseGestureViewerPagingArgs): UseGestureViewerPagingResult {
   const [activeListIndex, setActiveListIndex] = useState(adjustedInitialIndex);
+  const activeResetItemSpacing = adjustedInitialIndex > 0 ? itemSpacing : 0;
+  const activeResetWidth = adjustedInitialIndex > 0 ? width : 0;
 
   useEffect(() => {
     setActiveListIndex(adjustedInitialIndex);
-  }, [adjustedInitialIndex]);
+  }, [adjustedInitialIndex, activeResetItemSpacing, activeResetWidth, dataLength]);
 
   useEffect(() => {
     if (
@@ -84,15 +86,12 @@ export function useGestureViewerPaging({
 
       const isLoopHandled = manager?.handleMomentumScrollEnd(scrollIndex);
 
-      if (isLoopHandled) {
-        if (needsJump && jumpToIndex !== undefined) {
-          setActiveListIndex(jumpToIndex);
-        }
-
+      if (realIndex < 0 || realIndex >= dataLength) {
         return;
       }
 
-      if (realIndex < 0 || realIndex >= dataLength) {
+      if (isLoopHandled) {
+        setActiveListIndex(jumpToIndex ?? scrollIndex);
         return;
       }
 

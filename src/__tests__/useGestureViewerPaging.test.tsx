@@ -2,11 +2,11 @@ import { act, renderHook } from '@testing-library/react-native';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 
+import { useGestureViewerPaging } from '../useGestureViewerPaging';
 import type {
   UseGestureViewerPagingArgs,
   UseGestureViewerPagingResult,
 } from '../useGestureViewerPaging.types';
-import { useGestureViewerPaging } from '../useGestureViewerPaging.web';
 
 function createScrollEvent(offsetX: number): NativeSyntheticEvent<NativeScrollEvent> {
   return {
@@ -52,49 +52,41 @@ function createArgs(
   };
 }
 
-describe('useGestureViewerPaging web active state', () => {
-  beforeEach(() => {
-    jest.useFakeTimers();
-  });
-
-  afterEach(() => {
-    jest.clearAllTimers();
-    jest.useRealTimers();
-  });
-
-  it('keeps the previous cell active until the web scroll settles', async () => {
-    const syncCurrentIndex = jest.fn();
-    const { result } = await renderHook(() =>
-      useGestureViewerPaging(createArgs({ syncCurrentIndex })),
+describe('useGestureViewerPaging native active state', () => {
+  it('resets the active cell when the page layout changes', async () => {
+    const { rerender, result } = await renderHook<UseGestureViewerPagingResult, { width: number }>(
+      ({ width }) => useGestureViewerPaging(createArgs({ adjustedInitialIndex: 1, width })),
+      {
+        initialProps: { width: 320 },
+      },
     );
 
-    expect(result.current.activeListIndex).toBe(0);
-
     await act(async () => {
-      result.current.onScroll?.(createScrollEvent(320));
+      result.current.onMomentumScrollEnd?.(createScrollEvent(640));
     });
 
-    expect(result.current.activeListIndex).toBe(0);
+    expect(result.current.activeListIndex).toBe(2);
 
-    await act(async () => {
-      jest.advanceTimersByTime(180);
-    });
+    await rerender({ width: 400 });
 
-    expect(syncCurrentIndex).toHaveBeenCalledWith(1);
     expect(result.current.activeListIndex).toBe(1);
   });
 
-  it('resets the active cell when the adjusted initial index changes', async () => {
-    const { rerender, result } = await renderHook<
-      UseGestureViewerPagingResult,
-      { adjustedInitialIndex: number }
-    >(({ adjustedInitialIndex }) => useGestureViewerPaging(createArgs({ adjustedInitialIndex })), {
-      initialProps: { adjustedInitialIndex: 0 },
+  it('keeps the settled cell when a layout change does not reschedule initial scrolling', async () => {
+    const { rerender, result } = await renderHook<UseGestureViewerPagingResult, { width: number }>(
+      ({ width }) => useGestureViewerPaging(createArgs({ width })),
+      {
+        initialProps: { width: 320 },
+      },
+    );
+
+    await act(async () => {
+      result.current.onMomentumScrollEnd?.(createScrollEvent(640));
     });
 
-    expect(result.current.activeListIndex).toBe(0);
+    expect(result.current.activeListIndex).toBe(2);
 
-    await rerender({ adjustedInitialIndex: 2 });
+    await rerender({ width: 400 });
 
     expect(result.current.activeListIndex).toBe(2);
   });
@@ -108,8 +100,7 @@ describe('useGestureViewerPaging web active state', () => {
     });
 
     await act(async () => {
-      result.current.onScroll?.(createScrollEvent(640));
-      jest.advanceTimersByTime(180);
+      result.current.onMomentumScrollEnd?.(createScrollEvent(640));
     });
 
     expect(result.current.activeListIndex).toBe(2);
@@ -117,30 +108,5 @@ describe('useGestureViewerPaging web active state', () => {
     await rerender({ dataLength: 1 });
 
     expect(result.current.activeListIndex).toBe(0);
-  });
-
-  it('normalizes a loop sentinel to the canonical cell after settling', async () => {
-    const scrollTo = jest.fn();
-    const syncCurrentIndex = jest.fn();
-    const { result } = await renderHook(() =>
-      useGestureViewerPaging(
-        createArgs({
-          adjustedInitialIndex: 1,
-          dataLength: 2,
-          enableLoop: true,
-          scrollTo,
-          syncCurrentIndex,
-        }),
-      ),
-    );
-
-    await act(async () => {
-      result.current.onScroll?.(createScrollEvent(0));
-      jest.advanceTimersByTime(180);
-    });
-
-    expect(scrollTo).toHaveBeenCalledWith(2, false);
-    expect(syncCurrentIndex).toHaveBeenCalledWith(1);
-    expect(result.current.activeListIndex).toBe(2);
   });
 });

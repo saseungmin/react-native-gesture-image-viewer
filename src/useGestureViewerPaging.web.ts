@@ -239,6 +239,7 @@ export function useGestureViewerPaging({
     adjustedInitialIndex,
     clearWebAutoplayResumeTimer,
     clearWebSettleTimer,
+    dataLength,
     itemSpacing,
     manager,
     width,
