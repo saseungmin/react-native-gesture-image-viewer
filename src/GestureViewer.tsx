@@ -1,12 +1,13 @@
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, useWindowDimensions, View, type ViewStyle } from 'react-native';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   type AnimatedStyle,
   type SharedValue,
   useAnimatedStyle,
 } from 'react-native-reanimated';
 
+import { composeGestureViewerGestures } from './gestureViewerGestures';
 import { registry } from './GestureViewerRegistry';
 import { getWebContentProps } from './getWebContentProps';
 import type { RenderWindowSlot } from './renderWindow';
@@ -90,6 +91,7 @@ export function GestureViewer<ItemT>({
     renderWindowSlots,
     visualPage,
     zoomGesture,
+    zoomPinchGesture,
   } = useGestureViewer({
     id,
     data,
@@ -103,8 +105,13 @@ export function GestureViewer<ItemT>({
   });
 
   const gesture = useMemo(() => {
-    return Gesture.Race(dismissGesture, horizontalPagingGesture, zoomGesture);
-  }, [dismissGesture, horizontalPagingGesture, zoomGesture]);
+    return composeGestureViewerGestures({
+      dismissGesture,
+      horizontalPagingGesture,
+      zoomGesture,
+      zoomPinchGesture,
+    });
+  }, [dismissGesture, horizontalPagingGesture, zoomGesture, zoomPinchGesture]);
 
   useEffect(() => {
     registry.createManager(id);

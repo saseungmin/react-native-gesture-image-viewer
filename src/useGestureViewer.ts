@@ -740,12 +740,18 @@ export const useGestureViewer = <ItemT>({
 
     return Gesture.Pan()
       .minDistance(10)
+      .maxPointers(1)
       .averageTouches(true)
       .activeCursor('grabbing')
       .activeOffsetY([-10, 10])
       .failOffsetX([-10, 10])
       .withRef(dismissGestureRef)
       .enabled(canDismiss)
+      .onTouchesDown((event, stateManager) => {
+        if (event.numberOfTouches > 1) {
+          stateManager.fail();
+        }
+      })
       .onUpdate((event) => {
         if (pageTransitionLocked.get()) {
           return;
@@ -1044,8 +1050,14 @@ export const useGestureViewer = <ItemT>({
     () =>
       Gesture.Pan()
         .enabled(enablePanWhenZoomed && isZoomed)
+        .maxPointers(1)
         .activeCursor('grabbing')
         .averageTouches(true)
+        .onTouchesDown((event, stateManager) => {
+          if (event.numberOfTouches > 1) {
+            stateManager.fail();
+          }
+        })
         .onBegin(() => {
           if (pageTransitionLocked.get()) {
             return;
@@ -1090,8 +1102,8 @@ export const useGestureViewer = <ItemT>({
   );
 
   const zoomGesture = useMemo(
-    () => Gesture.Race(zoomPinchGesture, Gesture.Exclusive(zoomPanGesture, tapGesture)),
-    [zoomPinchGesture, zoomPanGesture, tapGesture],
+    () => Gesture.Exclusive(zoomPanGesture, tapGesture),
+    [zoomPanGesture, tapGesture],
   );
 
   const onWebClick = useWebClickHandler({
@@ -1153,5 +1165,6 @@ export const useGestureViewer = <ItemT>({
     renderWindowSlots,
     visualPage,
     zoomGesture,
+    zoomPinchGesture,
   };
 };

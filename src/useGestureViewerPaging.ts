@@ -166,14 +166,34 @@ export function useGestureViewerPaging({
         }),
       );
     };
+    const releasePagingForPinch = () => {
+      'worklet';
+      if (!pagingGestureActive.get()) {
+        return;
+      }
+
+      cancelAnimation(visualPage);
+      pagingAnimationActive.set(false);
+      pagingGestureActive.set(false);
+      pageTransitionLocked.set(false);
+      visualPage.set(withSpring(centerVirtualIndex, PAGE_SPRING_CONFIG));
+      scheduleOnRN(setPageTransitioning, false);
+    };
 
     return Gesture.Pan()
       .minDistance(10)
+      .maxPointers(1)
       .averageTouches(true)
       .activeCursor('grabbing')
       .activeOffsetX([-10, 10])
       .failOffsetY([-10, 10])
       .enabled(canSwipe)
+      .onTouchesDown((event, stateManager) => {
+        if (event.numberOfTouches > 1) {
+          releasePagingForPinch();
+          stateManager.fail();
+        }
+      })
       .onStart(() => {
         if (pageTransitionLocked.get()) {
           return;

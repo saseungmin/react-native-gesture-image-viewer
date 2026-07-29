@@ -1,4 +1,4 @@
-import { act, cleanup, render, waitFor } from '@testing-library/react-native';
+import { act, cleanup, render, renderHook, waitFor } from '@testing-library/react-native';
 import { Text, View } from 'react-native';
 import {
   GestureDetector,
@@ -355,5 +355,44 @@ describe('useGestureViewer horizontal swipe options', () => {
     expect(manager.getState()).toEqual({ currentIndex: 0, totalCount: 4 });
 
     unsubscribe();
+  });
+
+  it('reserves multi-pointer input for pinch across every competing pan gesture', async () => {
+    const viewerId = 'single-pointer-pan-guards';
+
+    registry.createManager(viewerId);
+    createdManagerIds.add(viewerId);
+
+    const { result } = await renderHook(() =>
+      useGestureViewer({
+        data: ['first', 'second'],
+        height: 240,
+        id: viewerId,
+        width: 320,
+      }),
+    );
+
+    const zoomPanGesture = result.current.zoomGesture
+      .toGestureArray()
+      .find((gesture) => gesture.handlerName === 'PanGestureHandler');
+
+    expect(result.current.dismissGesture.config.maxPointers).toBe(1);
+    expect(result.current.horizontalPagingGesture.config.maxPointers).toBe(1);
+    expect(zoomPanGesture?.config.maxPointers).toBe(1);
+
+    const dismissStateManager = { fail: jest.fn() };
+    const zoomPanStateManager = { fail: jest.fn() };
+
+    result.current.dismissGesture.handlers.onTouchesDown?.(
+      { numberOfTouches: 2 } as never,
+      dismissStateManager as never,
+    );
+    zoomPanGesture?.handlers.onTouchesDown?.(
+      { numberOfTouches: 2 } as never,
+      zoomPanStateManager as never,
+    );
+
+    expect(dismissStateManager.fail).toHaveBeenCalledTimes(1);
+    expect(zoomPanStateManager.fail).toHaveBeenCalledTimes(1);
   });
 });
