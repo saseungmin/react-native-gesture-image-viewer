@@ -966,13 +966,10 @@ export const useGestureViewer = <ItemT>({
             cancelAnimation(translateY);
             translateX.set(0);
             translateY.set(0);
-            initialTranslateX.set(0);
-            initialTranslateY.set(0);
-          } else {
-            initialTranslateX.set(translateX.get());
-            initialTranslateY.set(translateY.get());
           }
 
+          initialTranslateX.set(translateX.get());
+          initialTranslateY.set(translateY.get());
           startFocalX.set(event.focalX);
           startFocalY.set(event.focalY);
           lastFocalX.set(event.focalX);
