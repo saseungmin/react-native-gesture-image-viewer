@@ -1,5 +1,15 @@
 # react-native-gesture-image-viewer
 
+## 3.0.0-beta.1
+
+### Patch Changes
+
+- [#186](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/186) [`f223e29`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/f223e29793b05f12e7622d314ab4f07bed4cc34c) Thanks [@saseungmin](https://github.com/saseungmin)! - Fix gesture conflicts between pinch zoom, one-finger drags, and single taps.
+
+  When a second finger is added during swipe-to-dismiss, horizontal paging, or panning a zoomed image, pinch zoom now takes control. Any interrupted dismiss movement resets before zooming begins.
+
+  Single-tap callbacks are no longer triggered after pinching, swiping, or dragging. Native taps now allow at most 10 points of movement to avoid treating an attempted drag as a tap.
+
 ## 3.0.0-beta.0
 
 ### Major Changes
