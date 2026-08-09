@@ -10,6 +10,7 @@
     "clean-gesture-viewer-paging",
     "configurable-horizontal-swipe",
     "expose-active-render-item",
+    "pinch-gesture-handoff",
     "v3-gesture-render-window"
   ]
 }
