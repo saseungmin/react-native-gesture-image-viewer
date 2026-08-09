@@ -1,6 +1,12 @@
 import { useCallback, useMemo, useRef } from 'react';
 import { Gesture } from 'react-native-gesture-handler';
-import { cancelAnimation, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import {
+  cancelAnimation,
+  type SharedValue,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import {
@@ -30,6 +36,7 @@ type UseGestureViewerPagingOptions = {
   isTriggerOpening: boolean;
   isZoomed: boolean;
   pageStride: number;
+  suppressNativeTap: SharedValue<boolean>;
   width: number;
 };
 
@@ -52,6 +59,7 @@ export function useGestureViewerPaging({
   isTriggerOpening,
   isZoomed,
   pageStride,
+  suppressNativeTap,
   width,
 }: UseGestureViewerPagingOptions) {
   const visualPage = useSharedValue(initialPage);
@@ -166,14 +174,35 @@ export function useGestureViewerPaging({
         }),
       );
     };
+    const releasePagingForPinch = () => {
+      'worklet';
+      if (!pagingGestureActive.get()) {
+        return;
+      }
+
+      cancelAnimation(visualPage);
+      pagingAnimationActive.set(false);
+      pagingGestureActive.set(false);
+      pageTransitionLocked.set(false);
+      visualPage.set(withSpring(centerVirtualIndex, PAGE_SPRING_CONFIG));
+      scheduleOnRN(setPageTransitioning, false);
+    };
 
     return Gesture.Pan()
       .minDistance(10)
+      .maxPointers(1)
       .averageTouches(true)
       .activeCursor('grabbing')
       .activeOffsetX([-10, 10])
       .failOffsetY([-10, 10])
       .enabled(canSwipe)
+      .onTouchesDown((event, stateManager) => {
+        if (event.numberOfTouches > 1) {
+          suppressNativeTap.set(true);
+          releasePagingForPinch();
+          stateManager.fail();
+        }
+      })
       .onStart(() => {
         if (pageTransitionLocked.get()) {
           return;
@@ -184,6 +213,7 @@ export function useGestureViewerPaging({
         pagingAnimationActive.set(false);
         pagingGestureActive.set(true);
         pagingStartPage.set(visualPage.get());
+        suppressNativeTap.set(true);
         scheduleOnRN(setPageTransitioning, true);
       })
       .onUpdate((event) => {
@@ -291,6 +321,7 @@ export function useGestureViewerPaging({
     pagingGestureActive,
     pagingStartPage,
     setPageTransitioning,
+    suppressNativeTap,
     visualPage,
     width,
   ]);

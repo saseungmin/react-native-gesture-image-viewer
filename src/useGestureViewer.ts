@@ -43,6 +43,8 @@ import { getDismissDistance, shouldDismissByDirection } from './utils/dismiss';
 import { applyTapZoomAtPoint } from './utils/tapZoom';
 import { calculateFocalPointTranslation, shouldAcceptFocalPoint } from './utils/zoom';
 
+const NATIVE_TAP_MAX_DISTANCE = 10;
+
 const isValidTriggerRect = (rect: TriggerRect | null): rect is TriggerRect => {
   return !!rect && rect.width > 0 && rect.height > 0;
 };
@@ -144,6 +146,8 @@ export const useGestureViewer = <ItemT>({
   const startFocalX = useSharedValue(0);
   const startFocalY = useSharedValue(0);
   const hasActiveFocal = useSharedValue(false);
+  const nativeInteractionHadMultipleTouches = useSharedValue(false);
+  const suppressNativeTap = useSharedValue(false);
   const { clearPendingWebSingleTap, scheduleWebSingleTap } = useWebSingleTapTimer();
 
   const animationConfig = useMemo(
@@ -266,6 +270,7 @@ export const useGestureViewer = <ItemT>({
     isTriggerOpening,
     isZoomed,
     pageStride,
+    suppressNativeTap,
     width,
   });
 
@@ -736,26 +741,53 @@ export const useGestureViewer = <ItemT>({
   }, [animateDismissToRect, dismissWithoutTrigger, id, isPageTransitioningRef, onDismissStart]);
 
   const dismissGesture = useMemo(() => {
-    const canDismiss = !isTriggerOpening && !isZoomed && dismissOptions.enabled;
+    const canDismiss = !isTriggerOpening && !isPinching && !isZoomed && dismissOptions.enabled;
+    const resetDismissTranslation = () => {
+      'worklet';
+      cancelAnimation(translateY);
+      translateY.set(0);
+    };
 
     return Gesture.Pan()
       .minDistance(10)
+      .maxPointers(1)
       .averageTouches(true)
       .activeCursor('grabbing')
       .activeOffsetY([-10, 10])
       .failOffsetX([-10, 10])
       .withRef(dismissGestureRef)
       .enabled(canDismiss)
+      .onTouchesDown((event, stateManager) => {
+        if (event.numberOfTouches === 1) {
+          nativeInteractionHadMultipleTouches.set(false);
+          return;
+        }
+
+        if (event.numberOfTouches > 1) {
+          nativeInteractionHadMultipleTouches.set(true);
+          suppressNativeTap.set(true);
+          resetDismissTranslation();
+          stateManager.fail();
+        }
+      })
+      .onStart(() => {
+        suppressNativeTap.set(true);
+      })
       .onUpdate((event) => {
-        if (pageTransitionLocked.get()) {
+        if (nativeInteractionHadMultipleTouches.get() || pageTransitionLocked.get()) {
           return;
         }
 
         translateY.set(event.translationY / dismissOptions.resistance);
       })
       .onEnd((event) => {
+        if (nativeInteractionHadMultipleTouches.get()) {
+          resetDismissTranslation();
+          return;
+        }
+
         if (pageTransitionLocked.get()) {
-          translateY.set(withSpring(0, PAGE_SPRING_CONFIG));
+          resetDismissTranslation();
           return;
         }
 
@@ -772,8 +804,24 @@ export const useGestureViewer = <ItemT>({
         }
 
         translateY.set(withSpring(0, PAGE_SPRING_CONFIG));
+      })
+      .onFinalize((_event, success) => {
+        if ((!success || nativeInteractionHadMultipleTouches.get()) && scale.get() <= 1) {
+          resetDismissTranslation();
+        }
       });
-  }, [translateY, dismissOptions, handleDismiss, isTriggerOpening, isZoomed, pageTransitionLocked]);
+  }, [
+    dismissOptions,
+    handleDismiss,
+    isPinching,
+    isTriggerOpening,
+    isZoomed,
+    nativeInteractionHadMultipleTouches,
+    pageTransitionLocked,
+    scale,
+    suppressNativeTap,
+    translateY,
+  ]);
 
   const getCurrentTapTarget = useCallback((): { index: number; item: ItemT } | null => {
     const index = pendingIndexRef.current;
@@ -819,14 +867,26 @@ export const useGestureViewer = <ItemT>({
       Gesture.Tap()
         .enabled(enableNativeTapGestures)
         .numberOfTaps(1)
+        .maxDistance(NATIVE_TAP_MAX_DISTANCE)
+        .onTouchesDown((event, stateManager) => {
+          if (event.numberOfTouches === 1) {
+            nativeInteractionHadMultipleTouches.set(false);
+            suppressNativeTap.set(false);
+            return;
+          }
+
+          nativeInteractionHadMultipleTouches.set(true);
+          suppressNativeTap.set(true);
+          stateManager.fail();
+        })
         .onEnd((event, success) => {
-          if (!success || pageTransitionLocked.get()) {
+          if (!success || pageTransitionLocked.get() || suppressNativeTap.get()) {
             return;
           }
 
           scheduleOnRN(emitSingleTap, event.x, event.y);
         }),
-    [emitSingleTap, pageTransitionLocked],
+    [emitSingleTap, nativeInteractionHadMultipleTouches, pageTransitionLocked, suppressNativeTap],
   );
 
   const doubleTapGesture = useMemo(
@@ -834,8 +894,18 @@ export const useGestureViewer = <ItemT>({
       Gesture.Tap()
         .enabled(enableDoubleTapZoom && enableNativeTapGestures)
         .numberOfTaps(2)
+        .maxDistance(NATIVE_TAP_MAX_DISTANCE)
+        .onTouchesDown((event, stateManager) => {
+          if (event.numberOfTouches === 1) {
+            return;
+          }
+
+          nativeInteractionHadMultipleTouches.set(true);
+          suppressNativeTap.set(true);
+          stateManager.fail();
+        })
         .onEnd((event) => {
-          if (pageTransitionLocked.get()) {
+          if (pageTransitionLocked.get() || suppressNativeTap.get()) {
             return;
           }
 
@@ -854,8 +924,10 @@ export const useGestureViewer = <ItemT>({
       enableDoubleTapZoom,
       height,
       maxZoomScale,
+      nativeInteractionHadMultipleTouches,
       pageTransitionLocked,
       scale,
+      suppressNativeTap,
       translateX,
       translateY,
       width,
@@ -872,11 +944,9 @@ export const useGestureViewer = <ItemT>({
       Gesture.Pinch()
         .enabled(enablePinchZoom)
         .onTouchesDown((event) => {
-          if (pageTransitionLocked.get()) {
-            return;
-          }
-
           if (event.numberOfTouches === 2) {
+            nativeInteractionHadMultipleTouches.set(true);
+            suppressNativeTap.set(true);
             scheduleOnRN(setIsPinching, true);
           }
         })
@@ -885,7 +955,19 @@ export const useGestureViewer = <ItemT>({
             return;
           }
 
-          startScale.set(scale.get());
+          const currentScale = scale.get();
+
+          nativeInteractionHadMultipleTouches.set(true);
+          suppressNativeTap.set(true);
+          startScale.set(currentScale);
+
+          if (currentScale <= 1) {
+            cancelAnimation(translateX);
+            cancelAnimation(translateY);
+            translateX.set(0);
+            translateY.set(0);
+          }
+
           initialTranslateX.set(translateX.get());
           initialTranslateY.set(translateY.get());
           startFocalX.set(event.focalX);
@@ -1036,26 +1118,44 @@ export const useGestureViewer = <ItemT>({
       startFocalX,
       startFocalY,
       hasActiveFocal,
+      nativeInteractionHadMultipleTouches,
       pageTransitionLocked,
+      suppressNativeTap,
     ],
   );
 
   const zoomPanGesture = useMemo(
     () =>
       Gesture.Pan()
-        .enabled(enablePanWhenZoomed && isZoomed)
+        .enabled(enablePanWhenZoomed && !isPinching && isZoomed)
+        .maxPointers(1)
         .activeCursor('grabbing')
         .averageTouches(true)
+        .onTouchesDown((event, stateManager) => {
+          if (event.numberOfTouches === 1) {
+            nativeInteractionHadMultipleTouches.set(false);
+            return;
+          }
+
+          if (event.numberOfTouches > 1) {
+            nativeInteractionHadMultipleTouches.set(true);
+            suppressNativeTap.set(true);
+            stateManager.fail();
+          }
+        })
         .onBegin(() => {
-          if (pageTransitionLocked.get()) {
+          if (nativeInteractionHadMultipleTouches.get() || pageTransitionLocked.get()) {
             return;
           }
 
           initialTranslateX.set(translateX.get());
           initialTranslateY.set(translateY.get());
         })
+        .onStart(() => {
+          suppressNativeTap.set(true);
+        })
         .onUpdate((event) => {
-          if (pageTransitionLocked.get()) {
+          if (nativeInteractionHadMultipleTouches.get() || pageTransitionLocked.get()) {
             return;
           }
 
@@ -1080,18 +1180,21 @@ export const useGestureViewer = <ItemT>({
       translateX,
       translateY,
       enablePanWhenZoomed,
+      isPinching,
       isZoomed,
       scale,
       initialTranslateX,
       initialTranslateY,
       constrainTranslation,
+      nativeInteractionHadMultipleTouches,
       pageTransitionLocked,
+      suppressNativeTap,
     ],
   );
 
   const zoomGesture = useMemo(
-    () => Gesture.Race(zoomPinchGesture, Gesture.Exclusive(zoomPanGesture, tapGesture)),
-    [zoomPinchGesture, zoomPanGesture, tapGesture],
+    () => Gesture.Exclusive(zoomPanGesture, tapGesture),
+    [zoomPanGesture, tapGesture],
   );
 
   const onWebClick = useWebClickHandler({
@@ -1153,5 +1256,6 @@ export const useGestureViewer = <ItemT>({
     renderWindowSlots,
     visualPage,
     zoomGesture,
+    zoomPinchGesture,
   };
 };

@@ -1,4 +1,4 @@
-import { act, cleanup, render, waitFor } from '@testing-library/react-native';
+import { act, cleanup, render, renderHook, waitFor } from '@testing-library/react-native';
 import { Text, View } from 'react-native';
 import {
   GestureDetector,
@@ -355,5 +355,189 @@ describe('useGestureViewer horizontal swipe options', () => {
     expect(manager.getState()).toEqual({ currentIndex: 0, totalCount: 4 });
 
     unsubscribe();
+  });
+
+  it('reserves multi-pointer input for pinch across every competing pan gesture', async () => {
+    const viewerId = 'single-pointer-pan-guards';
+
+    registry.createManager(viewerId);
+    createdManagerIds.add(viewerId);
+
+    const { result } = await renderHook(() =>
+      useGestureViewer({
+        data: ['first', 'second'],
+        height: 240,
+        id: viewerId,
+        width: 320,
+      }),
+    );
+
+    const zoomPanGesture = result.current.zoomGesture
+      .toGestureArray()
+      .find((gesture) => gesture.handlerName === 'PanGestureHandler');
+
+    expect(result.current.dismissGesture.config.maxPointers).toBe(1);
+    expect(result.current.horizontalPagingGesture.config.maxPointers).toBe(1);
+    expect(zoomPanGesture?.config.maxPointers).toBe(1);
+
+    const dismissStateManager = { fail: jest.fn() };
+    const zoomPanStateManager = { fail: jest.fn() };
+
+    result.current.dismissGesture.handlers.onTouchesDown?.(
+      { numberOfTouches: 2 } as never,
+      dismissStateManager as never,
+    );
+    zoomPanGesture?.handlers.onTouchesDown?.(
+      { numberOfTouches: 2 } as never,
+      zoomPanStateManager as never,
+    );
+
+    expect(dismissStateManager.fail).toHaveBeenCalledTimes(1);
+    expect(zoomPanStateManager.fail).toHaveBeenCalledTimes(1);
+  });
+
+  it('suppresses a native single tap after a pinch and restores taps for the next touch', async () => {
+    const onSingleTap = jest.fn();
+    const { result } = await renderHook(() =>
+      useGestureViewer({
+        data: ['first'],
+        height: 240,
+        onSingleTap,
+        width: 320,
+      }),
+    );
+    const singleTapGesture = result.current.zoomGesture
+      .toGestureArray()
+      .find(
+        (gesture) =>
+          gesture.handlerName === 'TapGestureHandler' && gesture.config.numberOfTaps === 1,
+      );
+
+    expect(singleTapGesture).toBeDefined();
+
+    await act(async () => {
+      singleTapGesture?.handlers.onTouchesDown?.(
+        { numberOfTouches: 1 } as never,
+        { fail: jest.fn() } as never,
+      );
+      result.current.zoomPinchGesture.handlers.onTouchesDown?.(
+        { numberOfTouches: 2 } as never,
+        { fail: jest.fn() } as never,
+      );
+      singleTapGesture?.handlers.onEnd?.({ x: 100, y: 120 } as never, true);
+    });
+
+    expect(onSingleTap).not.toHaveBeenCalled();
+
+    await act(async () => {
+      singleTapGesture?.handlers.onTouchesDown?.(
+        { numberOfTouches: 1 } as never,
+        { fail: jest.fn() } as never,
+      );
+      singleTapGesture?.handlers.onEnd?.({ x: 120, y: 140 } as never, true);
+    });
+
+    expect(onSingleTap).toHaveBeenCalledTimes(1);
+    expect(onSingleTap).toHaveBeenCalledWith({ index: 0, item: 'first', x: 120, y: 140 });
+  });
+
+  it('does not emit a single tap when a horizontal swipe settles', async () => {
+    const onSingleTap = jest.fn();
+    const { result } = await renderHook(() =>
+      useGestureViewer({
+        data: ['first', 'second'],
+        height: 240,
+        onSingleTap,
+        width: 320,
+      }),
+    );
+    const singleTapGesture = result.current.zoomGesture
+      .toGestureArray()
+      .find(
+        (gesture) =>
+          gesture.handlerName === 'TapGestureHandler' && gesture.config.numberOfTaps === 1,
+      );
+
+    expect(singleTapGesture).toBeDefined();
+
+    await act(async () => {
+      singleTapGesture?.handlers.onTouchesDown?.(
+        { numberOfTouches: 1 } as never,
+        { fail: jest.fn() } as never,
+      );
+      result.current.horizontalPagingGesture.handlers.onStart?.({} as never);
+      result.current.horizontalPagingGesture.handlers.onUpdate?.({ translationX: -40 } as never);
+      result.current.horizontalPagingGesture.handlers.onEnd?.(
+        {
+          translationX: -40,
+          velocityX: 0,
+        } as never,
+        true,
+      );
+      singleTapGesture?.handlers.onEnd?.({ x: 100, y: 120 } as never, true);
+    });
+
+    expect(onSingleTap).not.toHaveBeenCalled();
+  });
+
+  it('limits tap travel when competing pan gestures fail to activate', async () => {
+    const { result } = await renderHook(() =>
+      useGestureViewer({
+        data: ['first', 'second'],
+        height: 240,
+        width: 320,
+      }),
+    );
+    const tapGestures = result.current.zoomGesture
+      .toGestureArray()
+      .filter((gesture) => gesture.handlerName === 'TapGestureHandler');
+
+    expect(tapGestures).toHaveLength(2);
+    expect(tapGestures.map((gesture) => gesture.config.maxDist)).toEqual([10, 10]);
+  });
+
+  it('resets an interrupted dismiss before pinch updates the image', async () => {
+    const onDismiss = jest.fn();
+    const { rerender, result } = await renderHook(() =>
+      useGestureViewer({
+        data: ['first'],
+        dismiss: { direction: 'both' },
+        height: 240,
+        onDismiss,
+        width: 320,
+      }),
+    );
+    const dismissStateManager = { fail: jest.fn() };
+
+    await act(async () => {
+      result.current.dismissGesture.handlers.onUpdate?.({ translationY: 160 } as never);
+      result.current.dismissGesture.handlers.onTouchesDown?.(
+        { numberOfTouches: 2 } as never,
+        dismissStateManager as never,
+      );
+      result.current.zoomPinchGesture.handlers.onStart?.({ focalX: 160, focalY: 120 } as never);
+      result.current.zoomPinchGesture.handlers.onUpdate?.({
+        focalX: 160,
+        focalY: 120,
+        scale: 1.5,
+      } as never);
+      result.current.dismissGesture.handlers.onEnd?.({ translationY: 160 } as never, false);
+      result.current.dismissGesture.handlers.onFinalize?.({} as never, false);
+    });
+
+    await rerender({});
+
+    const transform = (
+      result.current.animatedStyle as unknown as {
+        initial: {
+          updater: () => { transform: Array<Record<string, number | string>> };
+        };
+      }
+    ).initial.updater().transform;
+
+    expect(dismissStateManager.fail).toHaveBeenCalledTimes(1);
+    expect(onDismiss).not.toHaveBeenCalled();
+    expect(transform[3]).toEqual({ translateY: 0 });
+    expect(transform[5]).toEqual({ scale: 1.5 });
   });
 });

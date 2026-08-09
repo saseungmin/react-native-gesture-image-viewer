@@ -39,6 +39,10 @@ const createPagingOptions = ({
   isTriggerOpening: false,
   isZoomed: false,
   pageStride: 320,
+  suppressNativeTap: {
+    get: () => false,
+    set: jest.fn(),
+  } as never,
   width: 320,
 });
 
@@ -264,6 +268,34 @@ describe('useGestureViewerPaging horizontal gesture thresholds', () => {
     await advancePageTransition();
 
     expect(commitVirtualIndexOnly).toHaveBeenCalledWith(-1);
+  });
+
+  it('releases active paging immediately when a pinch adds a second pointer', async () => {
+    const { result } = await renderHook(() => useGestureViewerPaging(createPagingOptions()));
+    const gesture = result.current.horizontalPagingGesture;
+
+    await act(async () => {
+      gesture.handlers.onStart?.({} as never);
+      gesture.handlers.onUpdate?.({ translationX: -64 } as never);
+    });
+
+    expect(result.current.pageTransitionLocked.get()).toBe(true);
+    expect(result.current.visualPage.get()).toBe(0.2);
+
+    const stateManager = { fail: jest.fn() };
+
+    await act(async () => {
+      gesture.handlers.onTouchesDown?.({ numberOfTouches: 2 } as never, stateManager as never);
+    });
+
+    expect(stateManager.fail).toHaveBeenCalledTimes(1);
+    expect(result.current.pageTransitionLocked.get()).toBe(false);
+
+    await act(async () => {
+      gesture.handlers.onFinalize?.({} as never, false);
+    });
+
+    expect(result.current.pageTransitionLocked.get()).toBe(false);
   });
 
   it('disables the pan gesture when horizontal swipe is disabled', async () => {
