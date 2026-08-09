@@ -39,6 +39,10 @@ const createPagingOptions = ({
   isTriggerOpening: false,
   isZoomed: false,
   pageStride: 320,
+  suppressNativeTap: {
+    get: () => false,
+    set: jest.fn(),
+  } as never,
   width: 320,
 });
 

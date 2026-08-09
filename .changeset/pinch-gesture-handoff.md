@@ -2,4 +2,8 @@
 'react-native-gesture-image-viewer': patch
 ---
 
-Improve pinch recognition by allowing pinch to take ownership from one-finger dismiss, paging, and zoom-pan gestures without letting those gestures update transforms concurrently.
+Fix gesture conflicts between pinch zoom, one-finger drags, and single taps.
+
+When a second finger is added during swipe-to-dismiss, horizontal paging, or panning a zoomed image, pinch zoom now takes control. Any interrupted dismiss movement resets before zooming begins.
+
+Single-tap callbacks are no longer triggered after pinching, swiping, or dragging. Native taps now allow at most 10 points of movement to avoid treating an attempted drag as a tap.
