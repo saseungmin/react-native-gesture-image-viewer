@@ -184,7 +184,7 @@ export function useGestureViewerPaging({
       pagingAnimationActive.set(false);
       pagingGestureActive.set(false);
       pageTransitionLocked.set(false);
-      visualPage.set(withSpring(centerVirtualIndex, PAGE_SPRING_CONFIG));
+      visualPage.set(centerVirtualIndex);
       scheduleOnRN(setPageTransitioning, false);
     };
 

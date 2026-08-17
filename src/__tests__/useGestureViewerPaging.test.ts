@@ -8,6 +8,7 @@ import { PAGE_TRANSITION_CONFIG } from '../gestureViewerAnimation';
 import { useGestureViewerPaging } from '../useGestureViewerPaging';
 
 const createPagingOptions = ({
+  centerVirtualIndex = 0,
   clearPendingWebSingleTap = jest.fn(),
   commitVirtualIndexOnly = jest.fn(),
   currentIndex = 0,
@@ -16,6 +17,7 @@ const createPagingOptions = ({
   horizontalSwipeVelocityThreshold = 800,
   initialPage = 0,
 }: {
+  centerVirtualIndex?: number;
   clearPendingWebSingleTap?: jest.Mock;
   commitVirtualIndexOnly?: jest.Mock;
   currentIndex?: number;
@@ -24,7 +26,7 @@ const createPagingOptions = ({
   horizontalSwipeVelocityThreshold?: number;
   initialPage?: number;
 } = {}) => ({
-  centerVirtualIndex: 0,
+  centerVirtualIndex,
   clearPendingWebSingleTap,
   commitVirtualIndexOnly,
   currentIndex,
@@ -295,6 +297,36 @@ describe('useGestureViewerPaging horizontal gesture thresholds', () => {
       gesture.handlers.onFinalize?.({} as never, false);
     });
 
+    expect(result.current.pageTransitionLocked.get()).toBe(false);
+  });
+
+  it('snaps visual page to the committed page when pinch takes over active paging', async () => {
+    const { result } = await renderHook(() =>
+      useGestureViewerPaging(
+        createPagingOptions({
+          centerVirtualIndex: 1,
+          currentIndex: 1,
+          initialPage: 1,
+        }),
+      ),
+    );
+    const gesture = result.current.horizontalPagingGesture;
+
+    await act(async () => {
+      gesture.handlers.onStart?.({} as never);
+      gesture.handlers.onUpdate?.({ translationX: -80 } as never);
+    });
+
+    expect(result.current.visualPage.get()).toBe(1.25);
+
+    const stateManager = { fail: jest.fn() };
+
+    await act(async () => {
+      gesture.handlers.onTouchesDown?.({ numberOfTouches: 2 } as never, stateManager as never);
+    });
+
+    expect(stateManager.fail).toHaveBeenCalledTimes(1);
+    expect(result.current.visualPage.get()).toBe(1);
     expect(result.current.pageTransitionLocked.get()).toBe(false);
   });
 

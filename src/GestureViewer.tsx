@@ -171,6 +171,7 @@ const styles = StyleSheet.create({
   },
   slot: {
     left: 0,
+    overflow: 'hidden',
     position: 'absolute',
     top: 0,
   },
