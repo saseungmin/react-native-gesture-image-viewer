@@ -1,5 +1,5 @@
 import { act, cleanup, render, waitFor } from '@testing-library/react-native';
-import { Text, type View } from 'react-native';
+import { StyleSheet, Text, type View } from 'react-native';
 
 import { GestureViewer } from '../GestureViewer';
 import { PAGE_TRANSITION_CONFIG } from '../gestureViewerAnimation';
@@ -172,6 +172,20 @@ describe('GestureViewer render-window integration', () => {
     expect(rendered.getByText('third')).toBeTruthy();
     expect(rendered.getByText('fourth')).toBeTruthy();
     expect(rendered.queryByText('first')).toBeNull();
+  });
+
+  it('clips every render-window slot so zoomed neighbors cannot bleed into the active page', async () => {
+    const rendered = await render(<Harness initialIndex={1} viewerId="slot-clip" />);
+
+    await expectState(rendered, 'slot-clip', '1/4');
+
+    [0, 1, 2].forEach((index) => {
+      const item = rendered.getByTestId(`slot-clip-item-${index}`);
+      const slotView = item.parent?.parent?.parent;
+
+      expect(slotView).not.toBeNull();
+      expect(StyleSheet.flatten(slotView?.props.style)?.overflow).toBe('hidden');
+    });
   });
 
   it('provides active state for the committed render-window slot', async () => {
