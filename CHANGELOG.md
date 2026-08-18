@@ -1,5 +1,13 @@
 # react-native-gesture-image-viewer
 
+## 3.0.0-beta.2
+
+### Patch Changes
+
+- [#189](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/189) [`4632798`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/46327984bb2f6451db9662a3236327ae41bc07c6) Thanks [@saseungmin](https://github.com/saseungmin)! - Prevent adjacent images from bleeding into the active page when pinch zoom takes over after horizontal paging.
+
+  Page slots now clip their contents, and an interrupted horizontal swipe snaps back to the committed page before pinch zoom updates transforms.
+
 ## 3.0.0-beta.1
 
 ### Patch Changes
