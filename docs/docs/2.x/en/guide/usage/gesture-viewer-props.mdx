@@ -144,6 +144,21 @@ const getImageDimensions = (image: (typeof images)[number]) => ({
 <GestureViewer data={images} renderItem={renderImage} getItemDimensions={getImageDimensions} />;
 ```
 
+### `getItemKey`
+
+Returns a stable logical key for an item when the same content may be recreated as a new object in the same slot. The viewer uses this key to reuse runtime dimensions for that slot across rerenders. The key must identify the same rendered content and change when the rendered source or natural dimensions change. Do not return the array index alone. If the item changes position, the viewer falls back to the getter or to an undefined content size until the new slot reports dimensions again.
+
+```tsx
+const getImageKey = (image: (typeof images)[number]) => image.uri;
+
+<GestureViewer
+  data={images}
+  renderItem={renderImage}
+  getItemDimensions={getImageDimensions}
+  getItemKey={getImageKey}
+/>;
+```
+
 ### `initialIndex` (default: `0`)
 
 Sets the initial index value.
@@ -168,6 +183,13 @@ export type GestureViewerItemDimensionsResolver<ItemT> = (
   item: ItemT,
   index: number,
 ) => GestureViewerItemDimensions | undefined;
+
+export type GestureViewerItemKey = string | number;
+
+export type GestureViewerItemKeyResolver<ItemT> = (
+  item: ItemT,
+  index: number,
+) => GestureViewerItemKey;
 
 export type GestureViewerRenderItemInfo = {
   /**
@@ -227,6 +249,11 @@ export interface GestureViewerProps<ItemT, LC> {
    * @remarks Return `undefined` while dimensions are unavailable. Invalid dimensions fall back to the viewer cell size.
    */
   getItemDimensions?: GestureViewerItemDimensionsResolver<ItemT>;
+  /**
+   * Returns a stable logical key when the same item can be recreated as a new object in the same slot.
+   * @remarks Use this when object identity is not stable across rerenders. The key must identify the same rendered content and change when the rendered source or natural dimensions change. Do not return the array index alone. If the item changes position, the viewer falls back to the getter or to an undefined content size until the new slot reports dimensions again.
+   */
+  getItemKey?: GestureViewerItemKeyResolver<ItemT>;
   /**
    * A callback function that is called to render the container.
    * @remarks Useful for composing additional UI (e.g., close button, toolbars) around the viewer.

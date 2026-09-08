@@ -1,8 +1,8 @@
 import {
+  type ItemDimensionsRegistry,
   pruneItemDimensionsRegistry,
   registerItemDimensions,
   resolveItemDimensions,
-  type ItemDimensionsRegistry,
 } from '../itemDimensions';
 
 type Item = { id: string };
@@ -14,16 +14,12 @@ describe('item dimensions registry', () => {
     const getter = jest.fn(() => ({ height: 616, width: 393 }));
 
     expect(
-      registerItemDimensions({
+      resolveItemDimensions({
         data: [item],
-        dimensions: { height: 0, width: Number.NaN },
+        getItemDimensions: getter,
         index: 0,
-        item,
         registry,
       }),
-    ).toBe('ignored');
-    expect(
-      resolveItemDimensions({ data: [item], getItemDimensions: getter, index: 0, registry }),
     ).toEqual({ height: 616, width: 393 });
   });
 
@@ -46,34 +42,34 @@ describe('item dimensions registry', () => {
     ).toEqual({ height: 200, width: 100 });
   });
 
-  it('prefers current getter dimensions over stale cached dimensions for a replaced item', () => {
+  it('falls back to Object.is when the key resolver returns an invalid value', () => {
     const item = { id: 'item' };
-    const replacement = { id: 'replacement' };
     const registry: ItemDimensionsRegistry<Item> = new Map();
+    const getItemKey = () => null as unknown as string | number;
 
     expect(
       registerItemDimensions({
         data: [item],
         dimensions: { height: 200, width: 100 },
+        getItemKey,
         index: 0,
         item,
         registry,
       }),
     ).toBe('updated');
 
-    pruneItemDimensionsRegistry(registry, 1);
-
     expect(
       resolveItemDimensions({
-        data: [replacement],
-        getItemDimensions: () => ({ height: 616, width: 393 }),
+        data: [item],
+        getItemDimensions: () => undefined,
+        getItemKey,
         index: 0,
         registry,
       }),
-    ).toEqual({ height: 616, width: 393 });
+    ).toEqual({ height: 200, width: 100 });
   });
 
-  it('uses last-known cached dimensions for a recreated item when the getter is unavailable', () => {
+  it('returns undefined for a recreated item without a stable key resolver', () => {
     const item = { id: 'item' };
     const recreatedItem = { id: 'item' };
     const registry: ItemDimensionsRegistry<Item> = new Map();
@@ -88,9 +84,6 @@ describe('item dimensions registry', () => {
       }),
     ).toBe('updated');
 
-    pruneItemDimensionsRegistry(registry, 1);
-
-    expect(registry.size).toBe(1);
     expect(
       resolveItemDimensions({
         data: [recreatedItem],
@@ -98,46 +91,81 @@ describe('item dimensions registry', () => {
         index: 0,
         registry,
       }),
+    ).toBeUndefined();
+  });
+
+  it('reuses runtime dimensions across recreated objects when stable keys match at the same index', () => {
+    const item = { id: 'item' };
+    const recreatedItem = { id: 'item' };
+    const registry: ItemDimensionsRegistry<Item> = new Map();
+    const getItemKey = (value: Item) => value.id;
+
+    expect(
+      registerItemDimensions({
+        data: [item],
+        dimensions: { height: 200, width: 100 },
+        getItemKey,
+        index: 0,
+        item,
+        registry,
+      }),
+    ).toBe('updated');
+
+    expect(
+      resolveItemDimensions({
+        data: [recreatedItem],
+        getItemDimensions: () => undefined,
+        getItemKey,
+        index: 0,
+        registry,
+      }),
     ).toEqual({ height: 200, width: 100 });
   });
 
-  it('rejects a stale old-item callback and accepts the current replacement item', () => {
-    const item = { id: 'item' };
+  it('rejects stale callbacks and different keys at the same index', () => {
+    const first = { id: 'first' };
     const replacement = { id: 'replacement' };
     const registry: ItemDimensionsRegistry<Item> = new Map();
+    const getItemKey = (value: Item) => value.id;
 
     expect(
       registerItemDimensions({
         data: [replacement],
         dimensions: { height: 200, width: 100 },
+        getItemKey,
         index: 0,
-        item,
+        item: first,
         registry,
       }),
     ).toBe('ignored');
+
     expect(
       registerItemDimensions({
-        data: [replacement],
-        dimensions: { height: 240, width: 120 },
+        data: [first],
+        dimensions: { height: 200, width: 100 },
+        getItemKey,
         index: 0,
-        item: replacement,
+        item: first,
         registry,
       }),
     ).toBe('updated');
+
     expect(
       resolveItemDimensions({
         data: [replacement],
         getItemDimensions: () => ({ height: 616, width: 393 }),
+        getItemKey,
         index: 0,
         registry,
       }),
-    ).toEqual({ height: 240, width: 120 });
+    ).toEqual({ height: 616, width: 393 });
   });
 
   it('dedupes valid values and keeps inactive registrations isolated', () => {
     const active = { id: 'active' };
     const inactive = { id: 'inactive' };
     const registry: ItemDimensionsRegistry<Item> = new Map();
+
     expect(
       registerItemDimensions({
         data: [active, inactive],

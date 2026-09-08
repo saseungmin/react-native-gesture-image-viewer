@@ -28,6 +28,8 @@ function App() {
 }
 ```
 
+If your data already includes natural dimensions, pass them with `getItemDimensions`. If dimensions are only known after load, report them with `setItemDimensions` from `renderItem`; pair that runtime path with `getItemKey` when the same logical item can be recreated as a new object in the same slot. That avoids extra layout measurement and keeps zoom/pan bounds accurate for `contain` images.
+
 #### Keep the render window small unless you need more adjacent pages mounted.
 
 The default `windowSize` is `3`, which mounts the previous, current, and next items. Larger windows can make adjacent pages feel more ready, but they also increase render, memory, and image decode work. The library does not cap `windowSize`; choosing a large value is an explicit performance tradeoff.

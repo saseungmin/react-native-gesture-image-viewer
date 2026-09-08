@@ -26,6 +26,9 @@ jest.mock('../itemDimensions', () => {
 const stableData = ['first', 'second'];
 
 const renderItem: GestureViewerProps<string>['renderItem'] = (item) => <Text>{item}</Text>;
+const renderObjectItem: GestureViewerProps<{ id: string }>['renderItem'] = (item) => (
+  <Text>{item.id}</Text>
+);
 
 describe('item dimensions lifecycle', () => {
   beforeEach(() => {
@@ -52,9 +55,6 @@ describe('item dimensions lifecycle', () => {
       />,
     );
 
-    expect(mockPruneItemDimensionsRegistry).toHaveBeenCalledTimes(1);
-    expect(mockPruneItemDimensionsRegistry).toHaveBeenLastCalledWith(expect.any(Map), 2);
-
     await act(async () => {
       await rendered.rerender(
         <GestureViewer
@@ -69,6 +69,7 @@ describe('item dimensions lifecycle', () => {
     });
 
     expect(mockPruneItemDimensionsRegistry).toHaveBeenCalledTimes(1);
+    expect(mockPruneItemDimensionsRegistry).toHaveBeenLastCalledWith(expect.any(Map), 2);
 
     const sameLengthData = [...stableData];
 
@@ -106,6 +107,53 @@ describe('item dimensions lifecycle', () => {
       expect.objectContaining({
         data: sameLengthData,
         getItemDimensions: nextGetter,
+        index: 0,
+      }),
+    );
+  });
+
+  it('syncs with the current getItemKey resolver when data rerenders', async () => {
+    const firstData = [{ id: 'first' }];
+    const secondData = [{ id: 'second' }];
+    const firstGetter = jest.fn(() => ({ height: 100, width: 100 }));
+    const secondGetter = jest.fn(() => ({ height: 200, width: 100 }));
+    const firstKeyResolver = jest.fn((item: { id: string }) => item.id);
+    const secondKeyResolver = jest.fn((item: { id: string }) => item.id);
+
+    const rendered = await render(
+      <GestureViewer
+        data={firstData}
+        getItemDimensions={firstGetter}
+        getItemKey={firstKeyResolver}
+        height={240}
+        id="dimensions-current-key"
+        renderItem={renderObjectItem}
+        width={320}
+      />,
+    );
+
+    mockResolveItemDimensions.mockClear();
+
+    await act(async () => {
+      await rendered.rerender(
+        <GestureViewer
+          data={secondData}
+          getItemDimensions={secondGetter}
+          getItemKey={secondKeyResolver}
+          height={360}
+          id="dimensions-current-key"
+          renderItem={renderObjectItem}
+          width={480}
+        />,
+      );
+    });
+
+    expect(mockResolveItemDimensions).toHaveBeenCalledTimes(1);
+    expect(mockResolveItemDimensions).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: secondData,
+        getItemDimensions: secondGetter,
+        getItemKey: secondKeyResolver,
         index: 0,
       }),
     );

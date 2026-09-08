@@ -133,6 +133,7 @@ Use one of these paths:
 
 - Use `getItemDimensions` when the dimensions are already known from your data.
 - Use `setItemDimensions` from `renderItem` when the dimensions are only available after the image loads.
+- Pair `getItemKey` with the runtime `setItemDimensions` path when the same logical item can be recreated as a new object in the same slot.
 - Omit both to keep the legacy fallback, which uses the full viewer cell as the content size.
 
 ### React Native Image

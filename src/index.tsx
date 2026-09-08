@@ -8,6 +8,8 @@ export type {
   GestureViewerEventType,
   GestureViewerItemDimensions,
   GestureViewerItemDimensionsResolver,
+  GestureViewerItemKey,
+  GestureViewerItemKeyResolver,
   GestureViewerProps,
   GestureViewerRenderItemInfo,
   GestureViewerState,

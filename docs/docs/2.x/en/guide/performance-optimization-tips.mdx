@@ -31,7 +31,7 @@ function App() {
 
 #### For large images, we recommend using [`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/) or [`FastImage`](https://github.com/DylanVann/react-native-fast-image).
 
-When your image data already includes natural dimensions, pass them with `getItemDimensions`. It avoids extra layout measurement and keeps zoom/pan bounds accurate for `contain` images.
+When your image data already includes natural dimensions, pass them with `getItemDimensions`. If dimensions are only known after load, report them with `setItemDimensions` from `renderItem`; pair that runtime path with `getItemKey` when the same logical item can be recreated as a new object in the same slot. This avoids extra layout measurement and keeps zoom/pan bounds accurate for `contain` images.
 
 ```tsx
 import { useCallback, useState } from 'react';

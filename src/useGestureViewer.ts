@@ -99,6 +99,7 @@ export const useGestureViewer = <ItemT>({
   autoPlay = false,
   autoPlayInterval = 3000,
   getItemDimensions,
+  getItemKey,
 }: UseGestureViewerProps<ItemT>) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const width = customWidth || screenWidth;
@@ -142,6 +143,7 @@ export const useGestureViewer = <ItemT>({
   const onSingleTapRef = useRef(onSingleTap);
   const dataRef = useRef(data);
   const getItemDimensionsRef = useRef(getItemDimensions);
+  const getItemKeyRef = useRef(getItemKey);
   const dataLengthRef = useRef(dataLength);
   const enableLoopRef = useRef(enableLoop);
   const managerRef = useRef<GestureViewerManager | null>(null);
@@ -230,6 +232,7 @@ export const useGestureViewer = <ItemT>({
       const fitted = fitItemDimensions(
         resolveItemDimensions({
           data: dataRef.current,
+          getItemKey: getItemKeyRef.current,
           getItemDimensions: getItemDimensionsRef.current,
           index,
           registry: itemDimensionsRef.current,
@@ -285,6 +288,7 @@ export const useGestureViewer = <ItemT>({
         registerItemDimensions({
           data: dataRef.current,
           dimensions,
+          getItemKey: getItemKeyRef.current,
           index,
           item,
           registry: itemDimensionsRef.current,
@@ -569,9 +573,10 @@ export const useGestureViewer = <ItemT>({
   useLayoutEffect(() => {
     dataRef.current = data;
     getItemDimensionsRef.current = getItemDimensions;
+    getItemKeyRef.current = getItemKey;
     viewportRef.current = { height, width };
     syncActiveContentDimensions();
-  }, [data, dataLength, getItemDimensions, height, syncActiveContentDimensions, width]);
+  }, [data, dataLength, getItemDimensions, getItemKey, height, syncActiveContentDimensions, width]);
 
   useEffect(() => {
     pruneItemDimensionsRegistry(itemDimensionsRef.current, dataLength);

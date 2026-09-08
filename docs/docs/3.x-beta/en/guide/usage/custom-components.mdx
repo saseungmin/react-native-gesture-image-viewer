@@ -105,6 +105,8 @@ function App() {
 }
 ```
 
+If you need runtime measurements, call `setItemDimensions` from the rendered component after load. If the same logical item can be recreated as a new object in the same slot, pair it with `getItemKey` so the runtime dimensions stay attached to that slot.
+
 <span id="renderitem-active-state" />
 
 ### `renderItem` active state (`isActive`)

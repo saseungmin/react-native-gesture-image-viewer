@@ -1,22 +1,62 @@
-import type { GestureViewerItemDimensions, GestureViewerItemDimensionsResolver } from './types';
+import type {
+  GestureViewerItemDimensions,
+  GestureViewerItemDimensionsResolver,
+  GestureViewerItemKey,
+  GestureViewerItemKeyResolver,
+} from './types';
 
-type Entry<ItemT> = Readonly<{ item: ItemT; dimensions: GestureViewerItemDimensions }>;
-export type ItemDimensionsRegistry<ItemT> = Map<number, Entry<ItemT>>;
+type ItemDimensionsRegistryEntry<ItemT> = Readonly<{
+  item: ItemT;
+  itemKey?: GestureViewerItemKey;
+  dimensions: GestureViewerItemDimensions;
+}>;
+
+export type ItemDimensionsRegistry<ItemT> = Map<number, ItemDimensionsRegistryEntry<ItemT>>;
 
 export const isValidItemDimensions = (
-  dimensions: GestureViewerItemDimensions | undefined,
-): dimensions is GestureViewerItemDimensions =>
-  !!dimensions &&
-  Number.isFinite(dimensions.width) &&
-  Number.isFinite(dimensions.height) &&
-  dimensions.width > 0 &&
-  dimensions.height > 0;
+  dimensions: GestureViewerItemDimensions | null | undefined,
+): dimensions is GestureViewerItemDimensions => {
+  return (
+    dimensions !== null &&
+    dimensions !== undefined &&
+    Number.isFinite(dimensions.width) &&
+    Number.isFinite(dimensions.height) &&
+    dimensions.width > 0 &&
+    dimensions.height > 0
+  );
+};
+
+const resolveItemKey = <ItemT>(
+  getItemKey: GestureViewerItemKeyResolver<ItemT> | undefined,
+  item: ItemT,
+  index: number,
+): GestureViewerItemKey | undefined => {
+  const itemKey = getItemKey?.(item, index);
+
+  if (typeof itemKey === 'string') {
+    return itemKey;
+  }
+
+  return typeof itemKey === 'number' && Number.isFinite(itemKey) ? itemKey : undefined;
+};
+
+const doesEntryMatchItem = <ItemT>(
+  entry: ItemDimensionsRegistryEntry<ItemT>,
+  item: ItemT,
+  itemKey: GestureViewerItemKey | undefined,
+): boolean => {
+  if (itemKey !== undefined && entry.itemKey !== undefined) {
+    return entry.itemKey === itemKey;
+  }
+
+  return Object.is(entry.item, item);
+};
 
 export const pruneItemDimensionsRegistry = <ItemT>(
   registry: ItemDimensionsRegistry<ItemT>,
   dataLength: number,
-) => {
-  for (const [index] of registry) {
+): void => {
+  for (const index of registry.keys()) {
     if (index < 0 || index >= dataLength) {
       registry.delete(index);
     }
@@ -24,25 +64,32 @@ export const pruneItemDimensionsRegistry = <ItemT>(
 };
 
 export const resolveItemDimensions = <ItemT>({
-  data,
-  getItemDimensions,
-  index,
   registry,
+  data,
+  index,
+  getItemDimensions,
+  getItemKey,
 }: {
-  data: readonly ItemT[];
-  getItemDimensions?: GestureViewerItemDimensionsResolver<ItemT>;
-  index: number;
   registry: ItemDimensionsRegistry<ItemT>;
+  data: readonly ItemT[];
+  index: number;
+  getItemDimensions?: GestureViewerItemDimensionsResolver<ItemT>;
+  getItemKey?: GestureViewerItemKeyResolver<ItemT>;
 }): GestureViewerItemDimensions | undefined => {
   if (index < 0 || index >= data.length) {
     return undefined;
   }
 
   const item = data[index] as ItemT;
-  const entry = registry.get(index);
+  const registered = registry.get(index);
+  const itemKey = registered ? resolveItemKey(getItemKey, item, index) : undefined;
 
-  if (entry && Object.is(entry.item, item) && isValidItemDimensions(entry.dimensions)) {
-    return entry.dimensions;
+  if (
+    registered &&
+    doesEntryMatchItem(registered, item, itemKey) &&
+    isValidItemDimensions(registered.dimensions)
+  ) {
+    return registered.dimensions;
   }
 
   const resolved = getItemDimensions?.(item, index);
@@ -51,46 +98,61 @@ export const resolveItemDimensions = <ItemT>({
     return resolved;
   }
 
-  if (entry && isValidItemDimensions(entry.dimensions)) {
-    return entry.dimensions;
-  }
-
   return undefined;
 };
 
 export const registerItemDimensions = <ItemT>({
+  registry,
   data,
-  dimensions,
   index,
   item,
-  registry,
+  dimensions,
+  getItemKey,
 }: {
+  registry: ItemDimensionsRegistry<ItemT>;
   data: readonly ItemT[];
-  dimensions: GestureViewerItemDimensions;
   index: number;
   item: ItemT;
-  registry: ItemDimensionsRegistry<ItemT>;
+  dimensions: GestureViewerItemDimensions;
+  getItemKey?: GestureViewerItemKeyResolver<ItemT>;
 }): 'ignored' | 'unchanged' | 'updated' => {
-  if (
-    index < 0 ||
-    index >= data.length ||
-    !Object.is(data[index], item) ||
-    !isValidItemDimensions(dimensions)
-  ) {
+  if (index < 0 || index >= data.length || !isValidItemDimensions(dimensions)) {
     return 'ignored';
   }
 
-  const entry = registry.get(index);
+  const currentItem = data[index] as ItemT;
+  const currentItemKey = resolveItemKey(getItemKey, currentItem, index);
+  const reportedItemKey = Object.is(currentItem, item)
+    ? currentItemKey
+    : resolveItemKey(getItemKey, item, index);
+  const hasMatchingKey =
+    currentItemKey !== undefined &&
+    reportedItemKey !== undefined &&
+    currentItemKey === reportedItemKey;
+
+  if (!Object.is(currentItem, item) && !hasMatchingKey) {
+    return 'ignored';
+  }
+
+  const registered = registry.get(index);
 
   if (
-    entry &&
-    Object.is(entry.item, item) &&
-    entry.dimensions.width === dimensions.width &&
-    entry.dimensions.height === dimensions.height
+    registered &&
+    doesEntryMatchItem(registered, currentItem, currentItemKey) &&
+    registered.dimensions.width === dimensions.width &&
+    registered.dimensions.height === dimensions.height
   ) {
     return 'unchanged';
   }
 
-  registry.set(index, { item, dimensions: { height: dimensions.height, width: dimensions.width } });
+  registry.set(index, {
+    dimensions: {
+      height: dimensions.height,
+      width: dimensions.width,
+    },
+    item: currentItem,
+    itemKey: currentItemKey,
+  });
+
   return 'updated';
 };
