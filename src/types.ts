@@ -16,12 +16,33 @@ export type GestureViewerSingleTapEvent<ItemT> = {
   item: ItemT;
 };
 
+export type GestureViewerItemDimensions = Readonly<{
+  /**
+   * Natural/source content width. Must be finite and greater than zero.
+   */
+  width: number;
+  /**
+   * Natural/source content height. Must be finite and greater than zero.
+   */
+  height: number;
+}>;
+
+export type GestureViewerItemDimensionsResolver<ItemT> = (
+  item: ItemT,
+  index: number,
+) => GestureViewerItemDimensions | undefined;
+
 export type GestureViewerRenderItemInfo = {
   /**
    * Whether the rendered item is currently active.
    * @remarks The current item remains active during a page transition. When the transition finishes on another item, that item becomes active.
    */
   readonly isActive: boolean;
+  /**
+   * Registers natural/source dimensions for the rendered item after they become available.
+   * @remarks Call this from a committed lifecycle or load callback, not directly while rendering.
+   */
+  readonly setItemDimensions: (dimensions: GestureViewerItemDimensions) => void;
 };
 
 export type GestureViewerDismissDirection = 'down' | 'up' | 'both';
@@ -83,6 +104,11 @@ export interface GestureViewerProps<ItemT> {
    * - Prefer this callback over overlaying a pressable in `renderContainer` for fullscreen tap handling.
    */
   onSingleTap?: (event: GestureViewerSingleTapEvent<ItemT>) => void;
+  /**
+   * Returns natural/source dimensions for an item when they are already known.
+   * @remarks Return `undefined` while dimensions are unavailable. Invalid dimensions fall back to the viewer cell size.
+   */
+  getItemDimensions?: GestureViewerItemDimensionsResolver<ItemT>;
   /**
    * A callback function that is called to render the container.
    * @remarks Useful for composing additional UI (e.g., close button, toolbars) around the viewer.

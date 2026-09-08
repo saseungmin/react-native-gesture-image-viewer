@@ -4,6 +4,10 @@
 
 `renderItem`은 `data`의 각 아이템을 렌더링하며, `renderItem(item, index, { isActive })` 형태로 세 번째 인자에서 활성 상태를 제공합니다. 비디오 재생처럼 활성 아이템에서만 필요한 작업을 제어할 때 사용할 수 있습니다. 동작 방식과 예시는 [`renderItem` 활성 상태 (`isActive`)](/guide/usage/custom-components#renderitem-active-state)를 참고하세요.
 
+### Zoom bounds용 아이템 크기
+
+세 번째 인자는 `setItemDimensions({ width, height })`도 제공합니다. 이미지 load callback에서 호출하고 렌더 중에는 호출하지 마세요. 크기를 이미 알고 있다면 `getItemDimensions(item, index)`를 사용할 수 있습니다. 유효한 runtime 등록이 getter보다 우선하며, 둘 다 없으면 viewer 전체 cell 크기를 사용합니다. 알려진 원본 크기는 centered contain fitting 뒤 zoom bounds에 적용됩니다.
+
 ### `enableLoop` (기본값: `false`)
 
 루프 모드를 활성화합니다. `true`일 때 마지막 아이템에서 다음으로 가면 첫 번째로, 첫 번째에서 이전으로 가면 마지막으로 돌아갑니다.

@@ -6,7 +6,7 @@ import type {
   GestureViewerEventType,
   GestureViewerState,
 } from './types';
-import { createBoundsConstraint } from './utils';
+import { clampTranslationToBounds } from './utils';
 
 export type GestureViewerNavigationOptions = {
   animated?: boolean;
@@ -19,6 +19,15 @@ export type GestureViewerNavigationAdapter = {
 };
 
 export type GestureViewerStateReader = () => GestureViewerState;
+
+type ZoomSharedValuesOptions = {
+  scale: SharedValue<number>;
+  translateX: SharedValue<number>;
+  translateY: SharedValue<number>;
+  maxZoomScale: number;
+  contentWidth?: SharedValue<number>;
+  contentHeight?: SharedValue<number>;
+};
 
 type GestureViewerEventListenerPresenceCallback = (
   eventType: GestureViewerEventType,
@@ -41,6 +50,8 @@ class GestureViewerManager {
   private rotation: SharedValue<number> | null = null;
   private translateX: SharedValue<number> | null = null;
   private translateY: SharedValue<number> | null = null;
+  private contentWidth: SharedValue<number> | null = null;
+  private contentHeight: SharedValue<number> | null = null;
 
   private listeners = new Set<(state: GestureViewerState) => void>();
   private eventListeners = new Map<GestureViewerEventType, Set<(data: any) => void>>();
@@ -158,16 +169,20 @@ class GestureViewerManager {
     this.stateReader = reader ?? DEFAULT_STATE_READER;
   }
 
-  setZoomSharedValues(
-    scale: SharedValue<number>,
-    translateX: SharedValue<number>,
-    translateY: SharedValue<number>,
-    maxZoomScale: number,
-  ) {
+  setZoomSharedValues({
+    scale,
+    translateX,
+    translateY,
+    maxZoomScale,
+    contentWidth,
+    contentHeight,
+  }: ZoomSharedValuesOptions) {
     this.scale = scale;
     this.translateX = translateX;
     this.translateY = translateY;
     this.maxZoomScale = maxZoomScale;
+    this.contentWidth = contentWidth ?? null;
+    this.contentHeight = contentHeight ?? null;
   }
 
   notifyStateChange() {
@@ -226,10 +241,7 @@ class GestureViewerManager {
 
     this.scale.set(withTiming(nextScale));
 
-    const { translateX, translateY } = createBoundsConstraint({
-      width: this.width,
-      height: this.height,
-    })({
+    const { translateX, translateY } = this.clampZoomTranslationToBounds({
       translateX: this.translateX.get(),
       translateY: this.translateY.get(),
       scale: nextScale,
@@ -260,10 +272,7 @@ class GestureViewerManager {
       return;
     }
 
-    const { translateX, translateY } = createBoundsConstraint({
-      width: this.width,
-      height: this.height,
-    })({
+    const { translateX, translateY } = this.clampZoomTranslationToBounds({
       translateX: this.translateX.get(),
       translateY: this.translateY.get(),
       scale: nextScale,
@@ -317,14 +326,37 @@ class GestureViewerManager {
     this.listeners.clear();
     this.navigationAdapter = null;
     this.stateReader = DEFAULT_STATE_READER;
+    this.width = 0;
+    this.height = 0;
     this.maxZoomScale = 2;
     this.scale = null;
     this.translateX = null;
     this.translateY = null;
     this.rotation = null;
+    this.contentWidth = null;
+    this.contentHeight = null;
     this.eventListeners.clear();
     this.eventListenerPresenceSubscribers.clear();
   }
+
+  private clampZoomTranslationToBounds = ({
+    scale,
+    translateX,
+    translateY,
+  }: {
+    scale: number;
+    translateX: number;
+    translateY: number;
+  }) =>
+    clampTranslationToBounds({
+      contentHeight: this.contentHeight?.get(),
+      contentWidth: this.contentWidth?.get(),
+      height: this.height,
+      scale,
+      translateX,
+      translateY,
+      width: this.width,
+    });
 }
 
 export default GestureViewerManager;

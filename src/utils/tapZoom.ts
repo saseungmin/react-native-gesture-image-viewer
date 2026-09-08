@@ -1,11 +1,51 @@
 import type { SharedValue } from 'react-native-reanimated';
 import { Easing, withTiming } from 'react-native-reanimated';
 
+import { clampTranslationToBounds } from '.';
+
+export const getTapZoomTarget = ({
+  x,
+  y,
+  width,
+  height,
+  contentWidth,
+  contentHeight,
+  maxZoomScale,
+  scale,
+}: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  contentWidth?: number;
+  contentHeight?: number;
+  maxZoomScale: number;
+  scale: number;
+}) => {
+  'worklet';
+  const nextScale = scale > 1 ? 1 : maxZoomScale;
+  if (nextScale <= 1) return { scale: nextScale, translateX: 0, translateY: 0 };
+  return {
+    scale: nextScale,
+    ...clampTranslationToBounds({
+      contentHeight,
+      contentWidth,
+      height,
+      scale: nextScale,
+      translateX: -(x - width / 2) * (nextScale - 1),
+      translateY: -(y - height / 2) * (nextScale - 1),
+      width,
+    }),
+  };
+};
+
 export const applyTapZoomAtPoint = ({
   x,
   y,
   width,
   height,
+  contentWidth,
+  contentHeight,
   maxZoomScale,
   scale,
   translateX,
@@ -15,6 +55,8 @@ export const applyTapZoomAtPoint = ({
   y: number;
   width: number;
   height: number;
+  contentWidth?: number;
+  contentHeight?: number;
   maxZoomScale: number;
   scale: SharedValue<number>;
   translateX: SharedValue<number>;
@@ -22,24 +64,22 @@ export const applyTapZoomAtPoint = ({
 }) => {
   'worklet';
 
-  const nextScale = scale.get() > 1 ? 1 : maxZoomScale;
+  const target = getTapZoomTarget({
+    contentHeight,
+    contentWidth,
+    height,
+    maxZoomScale,
+    scale: scale.get(),
+    width,
+    x,
+    y,
+  });
   const timingConfig = {
     duration: 300,
     easing: Easing.bezier(0.25, 0.1, 0.25, 1),
   };
 
-  if (nextScale > 1) {
-    const centerX = x - width / 2;
-    const centerY = y - height / 2;
-
-    // NOTE 확대로 밀려난 거리만큼 반대로 이동해서 탭 지점을 제자리에 유지
-    translateX.set(withTiming(-centerX * (nextScale - 1), timingConfig));
-    translateY.set(withTiming(-centerY * (nextScale - 1), timingConfig));
-    scale.set(withTiming(nextScale, timingConfig));
-    return;
-  }
-
-  translateX.set(withTiming(0, timingConfig));
-  translateY.set(withTiming(0, timingConfig));
-  scale.set(withTiming(nextScale, timingConfig));
+  translateX.set(withTiming(target.translateX, timingConfig));
+  translateY.set(withTiming(target.translateY, timingConfig));
+  scale.set(withTiming(target.scale, timingConfig));
 };

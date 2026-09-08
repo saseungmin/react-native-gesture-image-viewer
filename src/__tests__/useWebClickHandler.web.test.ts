@@ -21,6 +21,7 @@ const sharedValue = {
   get: jest.fn(() => 1),
   set: jest.fn(),
 } as never;
+const contentDimensions = { contentHeight: sharedValue, contentWidth: sharedValue };
 
 describe('useWebClickHandler', () => {
   beforeEach(() => {
@@ -38,6 +39,7 @@ describe('useWebClickHandler', () => {
     });
 
     const handleClick = createWebClickHandler({
+      ...contentDimensions,
       clearPendingWebSingleTap,
       emitSingleTap,
       enableDoubleTapZoom: true,
@@ -61,7 +63,9 @@ describe('useWebClickHandler', () => {
 
     expect(clearPendingWebSingleTap).toHaveBeenCalledTimes(1);
     expect(pendingSingleTap).toBeNull();
-    expect(applyTapZoomAtPoint).toHaveBeenCalledTimes(1);
+    expect(applyTapZoomAtPoint).toHaveBeenCalledWith(
+      expect.objectContaining({ contentHeight: 1, contentWidth: 1 }),
+    );
     expect(emitSingleTap).not.toHaveBeenCalled();
   });
 
@@ -70,6 +74,7 @@ describe('useWebClickHandler', () => {
     const emitSingleTap = jest.fn();
 
     const handleClick = createWebClickHandler({
+      ...contentDimensions,
       clearPendingWebSingleTap: jest.fn(),
       emitSingleTap,
       enableDoubleTapZoom: true,
@@ -105,6 +110,7 @@ describe('useWebClickHandler', () => {
     const emitSingleTap = jest.fn();
 
     const handleClick = createWebClickHandler({
+      ...contentDimensions,
       clearPendingWebSingleTap: jest.fn(),
       emitSingleTap,
       enableDoubleTapZoom: true,
@@ -138,6 +144,7 @@ describe('useWebClickHandler', () => {
     const scheduleWebSingleTap = jest.fn();
 
     const handleClick = createWebClickHandler({
+      ...contentDimensions,
       clearPendingWebSingleTap: jest.fn(),
       emitSingleTap,
       enableDoubleTapZoom: false,
@@ -165,6 +172,7 @@ describe('useWebClickHandler', () => {
     const scheduleWebSingleTap = jest.fn();
 
     const handleClick = createWebClickHandler({
+      ...contentDimensions,
       clearPendingWebSingleTap,
       emitSingleTap,
       enableDoubleTapZoom: true,

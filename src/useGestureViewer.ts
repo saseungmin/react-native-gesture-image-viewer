@@ -22,6 +22,12 @@ import type GestureViewerManager from './GestureViewerManager';
 import { normalizeHorizontalSwipeThreshold } from './gestureViewerPaging';
 import { registry } from './GestureViewerRegistry';
 import { resolveGestureViewerRenderWindow } from './gestureViewerRenderWindow';
+import {
+  type ItemDimensionsRegistry,
+  pruneItemDimensionsRegistry,
+  registerItemDimensions,
+  resolveItemDimensions,
+} from './itemDimensions';
 import { enableNativeTapGestures } from './platformTapGestures';
 import {
   type NavigationOptions,
@@ -33,12 +39,12 @@ import {
   resolveNavigation,
   shouldRunNavigationDuringTransition,
 } from './renderWindow';
-import type { GestureViewerProps, TriggerRect } from './types';
+import type { GestureViewerItemDimensions, GestureViewerProps, TriggerRect } from './types';
 import { useGestureViewerManagerBridge } from './useGestureViewerManagerBridge';
 import { useGestureViewerPaging } from './useGestureViewerPaging';
 import { type EmitSingleTap, useWebClickHandler } from './useWebClickHandler';
 import { useWebSingleTapTimer } from './useWebSingleTapTimer';
-import { createBoundsConstraint } from './utils';
+import { clampTranslationToBounds } from './utils';
 import { getDismissDistance, shouldDismissByDirection } from './utils/dismiss';
 import { applyTapZoomAtPoint } from './utils/tapZoom';
 import { calculateFocalPointTranslation, shouldAcceptFocalPoint } from './utils/zoom';
@@ -75,6 +81,7 @@ export const useGestureViewer = <ItemT>({
   triggerAnimation,
   autoPlay = false,
   autoPlayInterval = 3000,
+  getItemDimensions,
 }: UseGestureViewerProps<ItemT>) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const width = customWidth || screenWidth;
@@ -117,12 +124,21 @@ export const useGestureViewer = <ItemT>({
   const onAnimationCompleteRef = useRef(triggerAnimation?.onAnimationComplete);
   const onSingleTapRef = useRef(onSingleTap);
   const dataRef = useRef(data);
+  const getItemDimensionsRef = useRef(getItemDimensions);
   const dataLengthRef = useRef(dataLength);
   const enableLoopRef = useRef(enableLoop);
   const managerRef = useRef<GestureViewerManager | null>(null);
   const isZoomedRef = useRef(isZoomed);
   const isRotatedRef = useRef(isRotated);
   const isPinchingRef = useRef(isPinching);
+  const itemDimensionsRef = useRef<ItemDimensionsRegistry<ItemT>>(new Map());
+  const viewportRef = useRef({ height, width });
+  const activeGeometryRef = useRef<{
+    contentHeight: number;
+    contentWidth: number;
+    height: number;
+    width: number;
+  } | null>(null);
 
   const initialTranslateY = useSharedValue(0);
   const initialTranslateX = useSharedValue(0);
@@ -132,6 +148,8 @@ export const useGestureViewer = <ItemT>({
   const translateX = useSharedValue(0);
   const scale = useSharedValue(1);
   const rotation = useSharedValue(0);
+  const contentWidth = useSharedValue(width);
+  const contentHeight = useSharedValue(height);
 
   const triggerScale = useSharedValue(1);
   const triggerTranslateX = useSharedValue(0);
@@ -189,9 +207,114 @@ export const useGestureViewer = <ItemT>({
     windowSize,
   });
 
-  const constrainTranslation = useMemo(
-    () => createBoundsConstraint({ height, width }),
-    [width, height],
+  const fitItemDimensions = useCallback(
+    (dimensions: GestureViewerItemDimensions | undefined): GestureViewerItemDimensions => {
+      const viewport = viewportRef.current;
+
+      if (!dimensions) {
+        return viewport;
+      }
+
+      const fit = Math.min(viewport.width / dimensions.width, viewport.height / dimensions.height);
+      return { height: dimensions.height * fit, width: dimensions.width * fit };
+    },
+    [],
+  );
+
+  const syncActiveContentDimensions = useCallback(
+    (index = pendingIndexRef.current) => {
+      const viewport = viewportRef.current;
+      const fitted = fitItemDimensions(
+        resolveItemDimensions({
+          data: dataRef.current,
+          getItemDimensions: getItemDimensionsRef.current,
+          index,
+          registry: itemDimensionsRef.current,
+        }),
+      );
+      const nextGeometry = {
+        contentHeight: fitted.height,
+        contentWidth: fitted.width,
+        height: viewport.height,
+        width: viewport.width,
+      };
+      const previousGeometry = activeGeometryRef.current;
+
+      if (
+        previousGeometry?.contentHeight === nextGeometry.contentHeight &&
+        previousGeometry.contentWidth === nextGeometry.contentWidth &&
+        previousGeometry.height === nextGeometry.height &&
+        previousGeometry.width === nextGeometry.width
+      ) {
+        return;
+      }
+
+      activeGeometryRef.current = nextGeometry;
+
+      if (contentWidth.get() !== fitted.width) {
+        contentWidth.set(fitted.width);
+      }
+      if (contentHeight.get() !== fitted.height) {
+        contentHeight.set(fitted.height);
+      }
+
+      if (scale.get() > 1) {
+        const constrained = clampTranslationToBounds({
+          contentHeight: fitted.height,
+          contentWidth: fitted.width,
+          height: viewport.height,
+          width: viewport.width,
+          scale: scale.get(),
+          translateX: translateX.get(),
+          translateY: translateY.get(),
+        });
+        translateX.set(withTiming(constrained.translateX));
+        translateY.set(withTiming(constrained.translateY));
+      }
+    },
+    [contentHeight, contentWidth, fitItemDimensions, scale, translateX, translateY],
+  );
+
+  const setItemDimensions = useCallback(
+    (index: number, item: ItemT, dimensions: GestureViewerItemDimensions) => {
+      if (
+        registerItemDimensions({
+          data: dataRef.current,
+          dimensions,
+          index,
+          item,
+          registry: itemDimensionsRef.current,
+        }) === 'updated' &&
+        index === pendingIndexRef.current
+      ) {
+        syncActiveContentDimensions(index);
+      }
+    },
+    [syncActiveContentDimensions],
+  );
+
+  const constrainTranslation = useCallback(
+    ({
+      scale: targetScale,
+      translateX: targetX,
+      translateY: targetY,
+    }: {
+      scale: number;
+      translateX: number;
+      translateY: number;
+    }) => {
+      'worklet';
+      return clampTranslationToBounds({
+        contentHeight: contentHeight.get(),
+        contentWidth: contentWidth.get(),
+        height,
+        scale: targetScale,
+        translateX: targetX,
+        translateY: targetY,
+        width,
+      });
+    },
+    [contentHeight, contentWidth, height, width],
   );
 
   const resetTransformState = useCallback(() => {
@@ -221,12 +344,16 @@ export const useGestureViewer = <ItemT>({
     rotation.set(0);
   }, [initialTranslateX, initialTranslateY, rotation, scale, startScale, translateX, translateY]);
 
-  const commitCurrentIndex = useCallback((nextIndex: number) => {
-    pendingIndexRef.current = nextIndex;
-    currentIndexRef.current = nextIndex;
-    setCurrentIndex(nextIndex);
-    managerRef.current?.notifyStateChange();
-  }, []);
+  const commitCurrentIndex = useCallback(
+    (nextIndex: number) => {
+      pendingIndexRef.current = nextIndex;
+      currentIndexRef.current = nextIndex;
+      syncActiveContentDimensions(nextIndex);
+      setCurrentIndex(nextIndex);
+      managerRef.current?.notifyStateChange();
+    },
+    [syncActiveContentDimensions],
+  );
 
   const commitVirtualIndexOnly = useCallback(
     (nextVirtualIndex: number) => {
@@ -360,6 +487,8 @@ export const useGestureViewer = <ItemT>({
   }, [navigateByDirection]);
 
   useGestureViewerManagerBridge({
+    contentHeight,
+    contentWidth,
     currentIndexRef,
     dataLengthRef,
     goToIndex: navigateToIndex,
@@ -433,9 +562,16 @@ export const useGestureViewer = <ItemT>({
     });
   }, [id]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     dataRef.current = data;
-  }, [data]);
+    getItemDimensionsRef.current = getItemDimensions;
+    viewportRef.current = { height, width };
+    syncActiveContentDimensions();
+  }, [data, dataLength, getItemDimensions, height, syncActiveContentDimensions, width]);
+
+  useEffect(() => {
+    pruneItemDimensionsRegistry(itemDimensionsRef.current, data);
+  }, [data, dataLength]);
 
   useEffect(() => {
     isZoomedRef.current = isZoomed;
@@ -910,6 +1046,8 @@ export const useGestureViewer = <ItemT>({
           }
 
           applyTapZoomAtPoint({
+            contentHeight: contentHeight.get(),
+            contentWidth: contentWidth.get(),
             x: event.x,
             y: event.y,
             width,
@@ -921,6 +1059,8 @@ export const useGestureViewer = <ItemT>({
           });
         }),
     [
+      contentHeight,
+      contentWidth,
       enableDoubleTapZoom,
       height,
       maxZoomScale,
@@ -1199,6 +1339,8 @@ export const useGestureViewer = <ItemT>({
 
   const onWebClick = useWebClickHandler({
     clearPendingWebSingleTap,
+    contentHeight,
+    contentWidth,
     emitSingleTap,
     enableDoubleTapZoom,
     getCurrentTapTarget,
@@ -1255,6 +1397,7 @@ export const useGestureViewer = <ItemT>({
     pageStride,
     renderWindowSlots,
     visualPage,
+    setItemDimensions,
     zoomGesture,
     zoomPinchGesture,
   };

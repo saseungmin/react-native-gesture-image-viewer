@@ -4,6 +4,10 @@
 
 `renderItem` renders each item in `data` and receives `isActive` through its third argument: `renderItem(item, index, { isActive })`. Use it for work that should run only on the active item, such as video playback. See [`renderItem` active state (`isActive`)](/guide/usage/custom-components#renderitem-active-state) for behavior and examples.
 
+### Item dimensions for zoom bounds
+
+The third argument also provides `setItemDimensions({ width, height })`; call it from an image load callback, never while rendering. When dimensions are already known, `getItemDimensions(item, index)` is the eager alternative. A valid runtime registration takes precedence over the getter; when neither is available, the viewer uses the full cell. Known natural dimensions are centered with contain fitting before zoom bounds are calculated.
+
 ### `enableLoop` (default: `false`)
 
 Enables loop mode. When `true`, navigating next from the last item goes to the first item, and navigating previous from the first item goes to the last item.
