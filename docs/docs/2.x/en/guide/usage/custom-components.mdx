@@ -96,22 +96,109 @@ function App() {
 You can inject various types of content components like [`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/), [`FastImage`](https://github.com/DylanVann/react-native-fast-image), etc., through the `renderItem` prop to use gestures.
 
 ```tsx
-import { GestureViewer } from 'react-native-gesture-image-viewer';
+import { useCallback } from 'react';
 import { Image } from 'expo-image';
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+const images = [
+  { uri: 'https://picsum.photos/400/200', width: 400, height: 200 },
+  { uri: 'https://picsum.photos/200/400', width: 200, height: 400 },
+];
+
+function getImageDimensions(image: (typeof images)[number]) {
+  return { width: image.width, height: image.height };
+}
 
 function App() {
-  const renderImage = useCallback((imageUrl: string) => {
+  const renderImage = useCallback((image: (typeof images)[number]) => {
     return (
       <Image
-        source={{ uri: imageUrl }}
+        source={{ uri: image.uri }}
         style={{ width: '100%', height: '100%' }}
         contentFit="contain"
       />
     );
   }, []);
-
-  return <GestureViewer data={images} renderItem={renderImage} />;
+  return (
+    <GestureViewer data={images} renderItem={renderImage} getItemDimensions={getImageDimensions} />
+  );
 }
+```
+
+## Content Dimensions
+
+For `contain`-fitted content, pass the natural/source dimensions when you can. This lets the viewer keep pan and double-tap zoom bounds aligned to the visible content edge instead of the full viewer cell.
+
+Use one of these paths:
+
+- Use `getItemDimensions` when the dimensions are already known from your data.
+- Use `setItemDimensions` from `renderItem` when the dimensions are only available after the image loads.
+- Omit both to keep the legacy fallback, which uses the full viewer cell as the content size.
+
+### React Native Image
+
+```tsx
+import { Image } from 'react-native';
+
+const renderImage = useCallback((uri: string, _index: number, { setItemDimensions }) => {
+  return (
+    <Image
+      source={{ uri }}
+      style={{ width: '100%', height: '100%' }}
+      resizeMode="contain"
+      onLoad={({ nativeEvent }) => {
+        setItemDimensions({
+          width: nativeEvent.source.width,
+          height: nativeEvent.source.height,
+        });
+      }}
+    />
+  );
+}, []);
+```
+
+### Expo Image
+
+```tsx
+import { Image } from 'expo-image';
+
+const renderImage = useCallback((uri: string, _index: number, { setItemDimensions }) => {
+  return (
+    <Image
+      source={{ uri }}
+      style={{ width: '100%', height: '100%' }}
+      contentFit="contain"
+      onLoad={(event) => {
+        setItemDimensions({
+          width: event.source.width,
+          height: event.source.height,
+        });
+      }}
+    />
+  );
+}, []);
+```
+
+### FastImage
+
+```tsx
+import FastImage from 'react-native-fast-image';
+
+const renderImage = useCallback((uri: string, _index: number, { setItemDimensions }) => {
+  return (
+    <FastImage
+      source={{ uri }}
+      style={{ width: '100%', height: '100%' }}
+      resizeMode={FastImage.resizeMode.contain}
+      onLoad={({ nativeEvent }) => {
+        setItemDimensions({
+          width: nativeEvent.width,
+          height: nativeEvent.height,
+        });
+      }}
+    />
+  );
+}, []);
 ```
 
 <span id="renderitem-active-state" />
