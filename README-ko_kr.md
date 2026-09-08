@@ -59,8 +59,16 @@ import {
   useGestureViewerState,
 } from 'react-native-gesture-image-viewer';
 
+const images = [
+  { uri: 'https://picsum.photos/400/200', width: 400, height: 200 },
+  { uri: 'https://picsum.photos/200/400', width: 200, height: 400 },
+];
+
+function getImageDimensions(image: (typeof images)[number]) {
+  return { width: image.width, height: image.height };
+}
+
 function App() {
-  const images = [...];
   const [visible, setVisible] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -73,8 +81,14 @@ function App() {
     setVisible(true);
   };
 
-  const renderImage = useCallback((imageUrl: string) => {
-    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
+  const renderImage = useCallback((image: (typeof images)[number]) => {
+    return (
+      <Image
+        source={{ uri: image.uri }}
+        style={{ width: '100%', height: '100%' }}
+        resizeMode="contain"
+      />
+    );
   }, []);
 
   useGestureViewerEvent('zoomChange', (data) => {
@@ -83,10 +97,10 @@ function App() {
 
   return (
     <View>
-      {images.map((uri, index) => (
-        <GestureTrigger key={uri} onPress={() => openModal(index)}>
+      {images.map((image, index) => (
+        <GestureTrigger key={image.uri} onPress={() => openModal(index)}>
           <Pressable>
-            <Image source={{ uri }} />
+            <Image source={{ uri: image.uri }} />
           </Pressable>
         </GestureTrigger>
       ))}
@@ -95,6 +109,7 @@ function App() {
           data={images}
           initialIndex={selectedIndex}
           renderItem={renderImage}
+          getItemDimensions={getImageDimensions}
           ListComponent={ScrollView}
           onDismiss={() => setVisible(false)}
         />

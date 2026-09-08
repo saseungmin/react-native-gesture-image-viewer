@@ -13,28 +13,49 @@ import {
 } from 'react-native-gesture-image-viewer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const photos = [
+type Photo = {
+  uri: string;
+  width: number;
+  height: number;
+  note: string;
+};
+
+const photos: Photo[] = [
   {
     uri: 'https://picsum.photos/400/200',
+    width: 400,
+    height: 200,
     note: 'Single tap anywhere to hide or show the viewer controls.',
   },
   {
     uri: 'https://picsum.photos/300/200',
+    width: 300,
+    height: 200,
     note: 'Pinch to zoom and swipe left or right to move between items.',
   },
   {
     uri: 'https://picsum.photos/200/200',
+    width: 200,
+    height: 200,
     note: 'Use the toolbar buttons for zoom, rotate, and reset actions.',
   },
   {
     uri: 'https://picsum.photos/200/300',
+    width: 200,
+    height: 300,
     note: 'Swipe down to dismiss the viewer at any time.',
   },
   {
     uri: 'https://picsum.photos/200/400',
+    width: 200,
+    height: 400,
     note: 'Loop mode lets you keep paging without stopping at the end.',
   },
-] as const;
+];
+
+function getPhotoDimensions(photo: Photo) {
+  return { width: photo.width, height: photo.height };
+}
 
 function Example() {
   const [visible, setVisible] = useState(false);
@@ -70,10 +91,10 @@ function Example() {
   });
 
   const renderImage = useCallback(
-    (imageUrl: string, _index: number, { isActive }: GestureViewerRenderItemInfo) => {
+    (photo: Photo, _index: number, { isActive }: GestureViewerRenderItemInfo) => {
       return (
         <Image
-          source={{ uri: imageUrl }}
+          source={{ uri: photo.uri }}
           style={{ width: '100%', height: '100%', opacity: isActive ? 1 : 0.5 }}
           pointerEvents="none"
           contentFit="contain"
@@ -109,13 +130,14 @@ function Example() {
       >
         <View style={{ flex: 1 }}>
           <GestureViewer
-            data={photos.map(({ uri }) => uri)}
+            data={photos}
             initialIndex={selectedIndex}
             onDismiss={() => setVisible(false)}
             onDismissStart={() => setShowExternalUI(false)}
             enableLoop={enableLoop}
             ListComponent={FlashList}
             renderItem={renderImage}
+            getItemDimensions={getPhotoDimensions}
             dismiss={{
               direction: 'down',
             }}

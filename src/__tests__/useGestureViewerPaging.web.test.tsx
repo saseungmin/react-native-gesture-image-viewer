@@ -1,12 +1,19 @@
 import { act, renderHook } from '@testing-library/react-native';
+import type { MouseEvent } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 
 import type {
   UseGestureViewerPagingArgs,
   UseGestureViewerPagingResult,
+  WebClickTarget,
 } from '../useGestureViewerPaging.types';
 import { useGestureViewerPaging } from '../useGestureViewerPaging.web';
+import { applyTapZoomAtPoint } from '../utils/tapZoom';
+
+jest.mock('../utils/tapZoom', () => ({
+  applyTapZoomAtPoint: jest.fn(),
+}));
 
 function createScrollEvent(offsetX: number): NativeSyntheticEvent<NativeScrollEvent> {
   return {
@@ -30,6 +37,8 @@ function createArgs(
     adjustedInitialIndex: 0,
     autoPlay: false,
     autoPlayInterval: 3000,
+    contentHeight: createSharedValue(480),
+    contentWidth: createSharedValue(320),
     currentIndex: 0,
     dataLength: 3,
     enableDoubleTapZoom: true,
@@ -55,6 +64,7 @@ function createArgs(
 describe('useGestureViewerPaging web active state', () => {
   beforeEach(() => {
     jest.useFakeTimers();
+    jest.mocked(applyTapZoomAtPoint).mockClear();
   });
 
   afterEach(() => {
@@ -162,5 +172,34 @@ describe('useGestureViewerPaging web active state', () => {
     expect(scrollTo).toHaveBeenCalledWith(2, false);
     expect(syncCurrentIndex).toHaveBeenCalledWith(1);
     expect(result.current.activeListIndex).toBe(2);
+  });
+
+  it('passes active content dimensions to double-click zoom', async () => {
+    const { result } = await renderHook(() =>
+      useGestureViewerPaging(
+        createArgs({
+          contentHeight: createSharedValue(616),
+          contentWidth: createSharedValue(393),
+        }),
+      ),
+    );
+
+    await act(async () => {
+      result.current.onWebClick?.({
+        clientX: 196.5,
+        clientY: 852,
+        currentTarget: {
+          getBoundingClientRect: () => ({ left: 0, top: 0 }),
+        },
+        detail: 2,
+      } as MouseEvent<WebClickTarget>);
+    });
+
+    expect(applyTapZoomAtPoint).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contentHeight: 616,
+        contentWidth: 393,
+      }),
+    );
   });
 });

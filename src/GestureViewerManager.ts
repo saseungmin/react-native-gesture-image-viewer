@@ -6,12 +6,22 @@ import type {
   GestureViewerEventType,
   GestureViewerState,
 } from './types';
-import { createBoundsConstraint, createScrollAction } from './utils';
+import { clampTranslationToBounds, createScrollAction } from './utils';
+
+type ZoomSharedValuesOptions = {
+  scale: SharedValue<number>;
+  translateX: SharedValue<number>;
+  translateY: SharedValue<number>;
+  maxZoomScale: number;
+  contentWidth?: SharedValue<number>;
+  contentHeight?: SharedValue<number>;
+};
 
 class GestureViewerManager {
   private currentIndex = 0;
   private dataLength = 0;
-  private width = 0;
+  private pagingStride = 0;
+  private viewportWidth = 0;
   private height = 0;
   private maxZoomScale = 2;
   private enableHorizontalSwipe = true;
@@ -22,6 +32,8 @@ class GestureViewerManager {
   private rotation: SharedValue<number> | null = null;
   private translateX: SharedValue<number> | null = null;
   private translateY: SharedValue<number> | null = null;
+  private contentWidth: SharedValue<number> | null = null;
+  private contentHeight: SharedValue<number> | null = null;
   private resetTransformCallback: (() => void) | null = null;
 
   private loopCallback: (() => void) | null = null;
@@ -105,8 +117,12 @@ class GestureViewerManager {
     this.enableLoop = enabled;
   }
 
-  setWidth(width: number) {
-    this.width = width;
+  setPagingStride(pagingStride: number) {
+    this.pagingStride = pagingStride;
+  }
+
+  setViewportWidth(width: number) {
+    this.viewportWidth = width;
   }
 
   setHeight(height: number) {
@@ -131,16 +147,20 @@ class GestureViewerManager {
     }
   }
 
-  setZoomSharedValues(
-    scale: SharedValue<number>,
-    translateX: SharedValue<number>,
-    translateY: SharedValue<number>,
-    maxZoomScale: number,
-  ) {
+  setZoomSharedValues({
+    scale,
+    translateX,
+    translateY,
+    maxZoomScale,
+    contentWidth,
+    contentHeight,
+  }: ZoomSharedValuesOptions) {
     this.scale = scale;
     this.translateX = translateX;
     this.translateY = translateY;
     this.maxZoomScale = maxZoomScale;
+    this.contentWidth = contentWidth ?? null;
+    this.contentHeight = contentHeight ?? null;
   }
 
   setResetTransformCallback(callback: (() => void) | null) {
@@ -203,10 +223,7 @@ class GestureViewerManager {
 
     this.scale.set(withTiming(nextScale));
 
-    const { translateX, translateY } = createBoundsConstraint({
-      width: this.width,
-      height: this.height,
-    })({
+    const { translateX, translateY } = this.constrainZoomTranslation({
       translateX: this.translateX.get(),
       translateY: this.translateY.get(),
       scale: nextScale,
@@ -237,10 +254,7 @@ class GestureViewerManager {
       return;
     }
 
-    const { translateX, translateY } = createBoundsConstraint({
-      width: this.width,
-      height: this.height,
-    })({
+    const { translateX, translateY } = this.constrainZoomTranslation({
       translateX: this.translateX.get(),
       translateY: this.translateY.get(),
       scale: nextScale,
@@ -273,7 +287,7 @@ class GestureViewerManager {
 
     this.cancelPendingLoopTransition();
 
-    const { scrollTo } = createScrollAction(this.listRef, this.width);
+    const { scrollTo } = createScrollAction(this.listRef, this.pagingStride || this.viewportWidth);
 
     if (this.enableLoop && this.dataLength > 1) {
       if (index < 0) {
@@ -358,9 +372,14 @@ class GestureViewerManager {
     this.currentIndex = 0;
     this.dataLength = 0;
     this.maxZoomScale = 2;
+    this.pagingStride = 0;
+    this.viewportWidth = 0;
+    this.height = 0;
     this.scale = null;
     this.translateX = null;
     this.translateY = null;
+    this.contentWidth = null;
+    this.contentHeight = null;
     this.rotation = null;
     this.resetTransformCallback = null;
     this.eventListeners.clear();
@@ -369,6 +388,26 @@ class GestureViewerManager {
   private updateCurrentIndex = (targetIndex: number) => {
     this.currentIndex = targetIndex;
     this.notifyListeners();
+  };
+
+  private constrainZoomTranslation = ({
+    scale,
+    translateX,
+    translateY,
+  }: {
+    scale: number;
+    translateX: number;
+    translateY: number;
+  }) => {
+    return clampTranslationToBounds({
+      contentHeight: this.contentHeight?.get(),
+      contentWidth: this.contentWidth?.get(),
+      height: this.height,
+      scale,
+      translateX,
+      translateY,
+      width: this.viewportWidth || this.pagingStride,
+    });
   };
 }
 

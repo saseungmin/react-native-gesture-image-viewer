@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, type ReactElement } from 'react';
 import {
   Platform,
   type ScrollViewProps,
@@ -10,7 +10,11 @@ import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-g
 import Animated from 'react-native-reanimated';
 
 import { registry } from './GestureViewerRegistry';
-import type { GestureViewerProps } from './types';
+import type {
+  GestureViewerItemDimensions,
+  GestureViewerProps,
+  GestureViewerRenderItemInfo,
+} from './types';
 import { useGestureViewer } from './useGestureViewer';
 import {
   createLoopData,
@@ -20,6 +24,34 @@ import {
   shouldUseNativeScrollGesture,
 } from './utils';
 import WebPagingFixStyle from './WebPagingFixStyle';
+
+type GestureViewerItemCellProps<ItemT> = {
+  item: ItemT;
+  index: number;
+  isActive: boolean;
+  renderItem: (item: ItemT, index: number, info: GestureViewerRenderItemInfo) => ReactElement;
+  setItemDimensions: (index: number, item: ItemT, dimensions: GestureViewerItemDimensions) => void;
+};
+
+function GestureViewerItemCell<ItemT>({
+  item,
+  index,
+  isActive,
+  renderItem,
+  setItemDimensions,
+}: GestureViewerItemCellProps<ItemT>) {
+  const registerItemDimensions = useCallback(
+    (dimensions: GestureViewerItemDimensions) => {
+      setItemDimensions(index, item, dimensions);
+    },
+    [index, item, setItemDimensions],
+  );
+
+  return renderItem(item, index, {
+    isActive,
+    setItemDimensions: registerItemDimensions,
+  });
+}
 
 export function GestureViewer<ItemT, LC>({
   id = 'default',
@@ -68,6 +100,7 @@ export function GestureViewer<ItemT, LC>({
     animatedStyle,
     backdropStyle,
     handleDismiss,
+    setItemDimensions,
   } = useGestureViewer({
     id,
     data,
@@ -106,9 +139,13 @@ export function GestureViewer<ItemT, LC>({
             styles.item,
           ]}
         >
-          {renderItemProp(item, index, {
-            isActive: index === activeListIndex && isFlashListCell,
-          })}
+          <GestureViewerItemCell
+            index={index}
+            isActive={index === activeListIndex && isFlashListCell}
+            item={item}
+            renderItem={renderItemProp}
+            setItemDimensions={setItemDimensions}
+          />
         </View>
       );
     },
@@ -121,6 +158,7 @@ export function GestureViewer<ItemT, LC>({
       isScrollView,
       isFlashList,
       height,
+      setItemDimensions,
     ],
   );
 

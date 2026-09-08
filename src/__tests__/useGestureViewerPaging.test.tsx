@@ -30,6 +30,8 @@ function createArgs(
     adjustedInitialIndex: 0,
     autoPlay: false,
     autoPlayInterval: 3000,
+    contentHeight: createSharedValue(480),
+    contentWidth: createSharedValue(320),
     currentIndex: 0,
     dataLength: 3,
     enableDoubleTapZoom: true,

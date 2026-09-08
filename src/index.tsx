@@ -6,6 +6,8 @@ export type {
   GestureViewerEventCallback,
   GestureViewerEventData,
   GestureViewerEventType,
+  GestureViewerItemDimensions,
+  GestureViewerItemDimensionsResolver,
   GestureViewerProps,
   GestureViewerRenderItemInfo,
   GestureViewerState,

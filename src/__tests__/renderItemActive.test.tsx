@@ -300,4 +300,144 @@ describe('GestureViewer renderItem active state', () => {
     expect(screen.getByText('1:second')).toBeTruthy();
     expect(getListProps().extraData).toBe(extraData);
   });
+
+  it('resolves initial dimensions with the logical data item and index', async () => {
+    const first = 'first';
+    const second = 'second';
+    const dimensionsByItem = new Map([[first, { height: 616, width: 393 }]]);
+    const getItemDimensions = jest.fn((item: string) => dimensionsByItem.get(item));
+
+    await render(
+      <GestureViewer
+        data={[first, second]}
+        getItemDimensions={getItemDimensions}
+        height={480}
+        id="initial-dimensions"
+        initialIndex={1}
+        ListComponent={TestFlashList}
+        renderItem={(item, index) => <Text>{`${index}:${item}`}</Text>}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    expect(getItemDimensions).toHaveBeenCalledWith(second, 1);
+  });
+
+  it('resolves the canonical logical item when loop mode starts on a sentinel-backed page', async () => {
+    const first = 'first';
+    const second = 'second';
+    const getItemDimensions = jest.fn(() => undefined);
+
+    await render(
+      <GestureViewer
+        data={[first, second]}
+        enableLoop
+        getItemDimensions={getItemDimensions}
+        height={480}
+        id="loop-initial-dimensions"
+        initialIndex={1}
+        ListComponent={TestFlashList}
+        renderItem={(item, index) => <Text>{`${index}:${item}`}</Text>}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    expect(getItemDimensions).toHaveBeenCalledWith(second, 1);
+  });
+
+  it('does not resolve dimensions again while scroll events stay on the same logical item', async () => {
+    const first = 'first';
+    const second = 'second';
+    const dimensionsByItem = new Map([
+      [first, { height: 616, width: 393 }],
+      [second, { height: 480, width: 320 }],
+    ]);
+    const getItemDimensions = jest.fn((item: string) => dimensionsByItem.get(item));
+
+    await render(
+      <GestureViewer
+        data={[first, second]}
+        getItemDimensions={getItemDimensions}
+        height={480}
+        id="pending-dimensions-sync"
+        ListComponent={TestFlashList}
+        renderItem={(item, index) => <Text>{`${index}:${item}`}</Text>}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    expect(getItemDimensions).toHaveBeenCalledTimes(1);
+    expect(getItemDimensions).toHaveBeenLastCalledWith(first, 0);
+
+    await act(async () => {
+      getListProps().onScroll?.(createScrollEvent(0));
+      getListProps().onScroll?.(createScrollEvent(0));
+    });
+
+    expect(getItemDimensions).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      getListProps().onScroll?.(createScrollEvent(PAGE_WIDTH));
+    });
+
+    expect(getItemDimensions).toHaveBeenCalledTimes(2);
+    expect(getItemDimensions).toHaveBeenLastCalledWith(second, 1);
+
+    await act(async () => {
+      getListProps().onScroll?.(createScrollEvent(PAGE_WIDTH));
+    });
+
+    expect(getItemDimensions).toHaveBeenCalledTimes(2);
+  });
+
+  it('supplies a stable item-bound dimensions setter to render callbacks', async () => {
+    const data = ['first', 'second'];
+    let firstSetter: ((dimensions: { width: number; height: number }) => void) | undefined;
+    let latestFirstSetter: ((dimensions: { width: number; height: number }) => void) | undefined;
+
+    const renderItem = (
+      item: string,
+      index: number,
+      {
+        setItemDimensions,
+      }: { setItemDimensions: (dimensions: { width: number; height: number }) => void },
+    ) => {
+      if (index === 0) {
+        latestFirstSetter = setItemDimensions;
+        firstSetter ??= setItemDimensions;
+      }
+
+      return <Text>{`${index}:${item}`}</Text>;
+    };
+
+    const { rerender } = await render(
+      <GestureViewer
+        data={data}
+        height={480}
+        id="dimensions-setter"
+        ListComponent={TestFlashList}
+        renderItem={renderItem}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    expect(firstSetter).toBeDefined();
+
+    await rerender(
+      <GestureViewer
+        data={data}
+        height={480}
+        id="dimensions-setter"
+        ListComponent={TestFlashList}
+        renderItem={(item, index, info) => renderItem(item, index, info)}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    expect(latestFirstSetter).toBe(firstSetter);
+
+    await act(async () => {
+      firstSetter?.({ height: 616, width: 393 });
+    });
+  });
 });

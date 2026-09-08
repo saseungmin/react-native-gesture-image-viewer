@@ -30,6 +30,8 @@ export function useGestureViewerPaging({
   adjustedInitialIndex,
   autoPlay,
   autoPlayInterval,
+  contentHeight,
+  contentWidth,
   currentIndex,
   dataLength,
   enableDoubleTapZoom,
@@ -405,6 +407,8 @@ export function useGestureViewerPaging({
         scheduleWebAutoplayResume();
 
         applyTapZoomAtPoint({
+          contentHeight: contentHeight.get(),
+          contentWidth: contentWidth.get(),
           x: resolvedX,
           y: resolvedY,
           width,
@@ -430,6 +434,8 @@ export function useGestureViewerPaging({
     },
     [
       clearWebSingleTapTimer,
+      contentHeight,
+      contentWidth,
       enableDoubleTapZoom,
       height,
       maxZoomScale,
