@@ -6,7 +6,7 @@
 
 ### Item dimensions for zoom bounds
 
-The third argument also provides `setItemDimensions({ width, height })`; call it from an image load callback, never while rendering. When dimensions are already known, `getItemDimensions(item, index)` is the eager alternative. A valid runtime registration takes precedence over the getter; when neither is available, the viewer uses the full cell. Known natural dimensions are centered with contain fitting before zoom bounds are calculated.
+The third argument also provides `setItemDimensions({ width, height })`; call it from an image load or event callback, or from a passive `useEffect` after commit. Do not call it during render or from a descendant layout effect. When dimensions are already known, `getItemDimensions(item, index)` is the eager alternative. A valid runtime registration takes precedence over the getter; when neither is available, the viewer uses the full cell. Known natural dimensions are centered with contain fitting before zoom bounds are calculated.
 
 ### `enableLoop` (default: `false`)
 
@@ -152,12 +152,29 @@ Controls the maximum zoom scale multiplier.
 [Go to source](https://github.com/saseungmin/react-native-gesture-image-viewer/blob/next/src/types.ts)
 
 ````tsx title="GestureViewerProps"
+export type GestureViewerItemDimensions = Readonly<{
+  /** Natural/source content width. Must be finite and greater than zero. */
+  width: number;
+  /** Natural/source content height. Must be finite and greater than zero. */
+  height: number;
+}>;
+
+export type GestureViewerItemDimensionsResolver<ItemT> = (
+  item: ItemT,
+  index: number,
+) => GestureViewerItemDimensions | undefined;
+
 export type GestureViewerRenderItemInfo = {
   /**
    * Whether the rendered item is currently active.
    * @remarks The current item remains active during a page transition. When the transition finishes on another item, that item becomes active.
    */
   readonly isActive: boolean;
+  /**
+   * Registers natural/source dimensions for the rendered item after they become available.
+   * @remarks Call this from an image load or event callback, or from a passive `useEffect` after commit. Do not call it during render or from a descendant layout effect.
+   */
+  readonly setItemDimensions: (dimensions: GestureViewerItemDimensions) => void;
 };
 
 export interface GestureViewerProps<ItemT> {
@@ -200,6 +217,11 @@ export interface GestureViewerProps<ItemT> {
    * - Prefer this callback over overlaying a pressable in `renderContainer` for fullscreen tap handling.
    */
   onSingleTap?: (event: GestureViewerSingleTapEvent<ItemT>) => void;
+  /**
+   * Returns natural/source dimensions for an item when they are already known.
+   * @remarks Return `undefined` while dimensions are unavailable. Invalid dimensions fall back to the viewer cell size.
+   */
+  getItemDimensions?: GestureViewerItemDimensionsResolver<ItemT>;
   /**
    * A callback function that is called to render the container.
    * @remarks Useful for composing additional UI (e.g., close button, toolbars) around the viewer.

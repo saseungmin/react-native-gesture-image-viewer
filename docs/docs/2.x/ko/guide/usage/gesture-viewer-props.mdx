@@ -177,7 +177,7 @@ export type GestureViewerRenderItemInfo = {
   readonly isActive: boolean;
   /**
    * 렌더링된 아이템의 원본/source 치수를 사용할 수 있게 된 후 등록합니다.
-   * @remarks 렌더링 중이 아니라 커밋된 lifecycle 또는 load 콜백에서 호출하세요.
+   * @remarks 이미지 load 또는 event 콜백에서 호출하거나, commit 이후 passive `useEffect`에서 호출하세요. 렌더 중이나 descendant layout effect에서는 호출하지 마세요.
    */
   readonly setItemDimensions: (dimensions: GestureViewerItemDimensions) => void;
 };

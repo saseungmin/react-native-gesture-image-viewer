@@ -14,10 +14,10 @@ export const isValidItemDimensions = (
 
 export const pruneItemDimensionsRegistry = <ItemT>(
   registry: ItemDimensionsRegistry<ItemT>,
-  data: readonly ItemT[],
+  dataLength: number,
 ) => {
-  for (const [index, entry] of registry) {
-    if (index < 0 || index >= data.length || !Object.is(data[index], entry.item)) {
+  for (const [index] of registry) {
+    if (index < 0 || index >= dataLength) {
       registry.delete(index);
     }
   }
@@ -46,7 +46,16 @@ export const resolveItemDimensions = <ItemT>({
   }
 
   const resolved = getItemDimensions?.(item, index);
-  return isValidItemDimensions(resolved) ? resolved : undefined;
+
+  if (isValidItemDimensions(resolved)) {
+    return resolved;
+  }
+
+  if (entry && isValidItemDimensions(entry.dimensions)) {
+    return entry.dimensions;
+  }
+
+  return undefined;
 };
 
 export const registerItemDimensions = <ItemT>({

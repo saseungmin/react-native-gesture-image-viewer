@@ -12,9 +12,9 @@ jest.mock('../itemDimensions', () => {
 
   return {
     ...actual,
-    pruneItemDimensionsRegistry: (registry: unknown, data: unknown) => {
-      mockPruneItemDimensionsRegistry(registry, data);
-      return actual.pruneItemDimensionsRegistry(registry, data);
+    pruneItemDimensionsRegistry: (registry: unknown, dataLength: unknown) => {
+      mockPruneItemDimensionsRegistry(registry, dataLength);
+      return actual.pruneItemDimensionsRegistry(registry, dataLength);
     },
     resolveItemDimensions: (options: unknown) => {
       mockResolveItemDimensions(options);
@@ -37,7 +37,7 @@ describe('item dimensions lifecycle', () => {
     cleanup();
   });
 
-  it('prunes registered dimensions only when the committed data identity changes', async () => {
+  it('prunes registered dimensions only when the committed data length changes', async () => {
     const initialGetter = jest.fn(() => ({ height: 200, width: 100 }));
     const nextGetter = jest.fn(() => ({ height: 200, width: 100 }));
 
@@ -53,6 +53,7 @@ describe('item dimensions lifecycle', () => {
     );
 
     expect(mockPruneItemDimensionsRegistry).toHaveBeenCalledTimes(1);
+    expect(mockPruneItemDimensionsRegistry).toHaveBeenLastCalledWith(expect.any(Map), 2);
 
     await act(async () => {
       await rendered.rerender(
@@ -69,10 +70,27 @@ describe('item dimensions lifecycle', () => {
 
     expect(mockPruneItemDimensionsRegistry).toHaveBeenCalledTimes(1);
 
+    const sameLengthData = [...stableData];
+
     await act(async () => {
       await rendered.rerender(
         <GestureViewer
-          data={[...stableData]}
+          data={sameLengthData}
+          getItemDimensions={nextGetter}
+          height={240}
+          id="dimensions-lifecycle"
+          renderItem={renderItem}
+          width={360}
+        />,
+      );
+    });
+
+    expect(mockPruneItemDimensionsRegistry).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await rendered.rerender(
+        <GestureViewer
+          data={sameLengthData.slice(0, 1)}
           getItemDimensions={nextGetter}
           height={240}
           id="dimensions-lifecycle"
@@ -83,9 +101,10 @@ describe('item dimensions lifecycle', () => {
     });
 
     expect(mockPruneItemDimensionsRegistry).toHaveBeenCalledTimes(2);
-    expect(mockResolveItemDimensions).toHaveBeenLastCalledWith(
+    expect(mockPruneItemDimensionsRegistry).toHaveBeenLastCalledWith(expect.any(Map), 1);
+    expect(mockResolveItemDimensions).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: stableData,
+        data: sameLengthData,
         getItemDimensions: nextGetter,
         index: 0,
       }),

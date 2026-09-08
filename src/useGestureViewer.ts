@@ -60,6 +60,23 @@ type UseGestureViewerProps<ItemT> = Omit<
   'renderItem' | 'renderContainer' | 'containerStyle' | 'backdropStyle'
 >;
 
+type ContentViewport = Readonly<{
+  height: number;
+  width: number;
+}>;
+
+function fitItemDimensions(
+  dimensions: GestureViewerItemDimensions | undefined,
+  viewport: ContentViewport,
+): GestureViewerItemDimensions {
+  if (!dimensions) {
+    return viewport;
+  }
+
+  const fit = Math.min(viewport.width / dimensions.width, viewport.height / dimensions.height);
+  return { height: dimensions.height * fit, width: dimensions.width * fit };
+}
+
 export const useGestureViewer = <ItemT>({
   data,
   initialIndex = 0,
@@ -207,20 +224,6 @@ export const useGestureViewer = <ItemT>({
     windowSize,
   });
 
-  const fitItemDimensions = useCallback(
-    (dimensions: GestureViewerItemDimensions | undefined): GestureViewerItemDimensions => {
-      const viewport = viewportRef.current;
-
-      if (!dimensions) {
-        return viewport;
-      }
-
-      const fit = Math.min(viewport.width / dimensions.width, viewport.height / dimensions.height);
-      return { height: dimensions.height * fit, width: dimensions.width * fit };
-    },
-    [],
-  );
-
   const syncActiveContentDimensions = useCallback(
     (index = pendingIndexRef.current) => {
       const viewport = viewportRef.current;
@@ -231,6 +234,7 @@ export const useGestureViewer = <ItemT>({
           index,
           registry: itemDimensionsRef.current,
         }),
+        viewport,
       );
       const nextGeometry = {
         contentHeight: fitted.height,
@@ -272,7 +276,7 @@ export const useGestureViewer = <ItemT>({
         translateY.set(withTiming(constrained.translateY));
       }
     },
-    [contentHeight, contentWidth, fitItemDimensions, scale, translateX, translateY],
+    [contentHeight, contentWidth, scale, translateX, translateY],
   );
 
   const setItemDimensions = useCallback(
@@ -570,8 +574,8 @@ export const useGestureViewer = <ItemT>({
   }, [data, dataLength, getItemDimensions, height, syncActiveContentDimensions, width]);
 
   useEffect(() => {
-    pruneItemDimensionsRegistry(itemDimensionsRef.current, data);
-  }, [data, dataLength]);
+    pruneItemDimensionsRegistry(itemDimensionsRef.current, dataLength);
+  }, [dataLength]);
 
   useEffect(() => {
     isZoomedRef.current = isZoomed;

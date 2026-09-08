@@ -3,16 +3,17 @@
 ## GestureViewer
 
 ```tsx
+import { useState } from 'react';
 import { Image, Modal } from 'react-native';
 import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+function renderImage(imageUrl: string) {
+  return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
+}
 
 function App() {
   const images = [...];
   const [visible, setVisible] = useState(false);
-
-  const renderImage = useCallback((imageUrl: string) => {
-    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
-  }, []);
 
   return (
     <Modal visible={visible} onRequestClose={() => setVisible(false)}>

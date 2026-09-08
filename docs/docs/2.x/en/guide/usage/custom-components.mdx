@@ -139,8 +139,13 @@ Use one of these paths:
 
 ```tsx
 import { Image } from 'react-native';
+import type { GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';
 
-const renderImage = useCallback((uri: string, _index: number, { setItemDimensions }) => {
+function renderImage(
+  uri: string,
+  _index: number,
+  { setItemDimensions }: GestureViewerRenderItemInfo,
+) {
   return (
     <Image
       source={{ uri }}
@@ -154,15 +159,20 @@ const renderImage = useCallback((uri: string, _index: number, { setItemDimension
       }}
     />
   );
-}, []);
+}
 ```
 
 ### Expo Image
 
 ```tsx
 import { Image } from 'expo-image';
+import type { GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';
 
-const renderImage = useCallback((uri: string, _index: number, { setItemDimensions }) => {
+function renderImage(
+  uri: string,
+  _index: number,
+  { setItemDimensions }: GestureViewerRenderItemInfo,
+) {
   return (
     <Image
       source={{ uri }}
@@ -176,15 +186,20 @@ const renderImage = useCallback((uri: string, _index: number, { setItemDimension
       }}
     />
   );
-}, []);
+}
 ```
 
 ### FastImage
 
 ```tsx
 import FastImage from 'react-native-fast-image';
+import type { GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';
 
-const renderImage = useCallback((uri: string, _index: number, { setItemDimensions }) => {
+function renderImage(
+  uri: string,
+  _index: number,
+  { setItemDimensions }: GestureViewerRenderItemInfo,
+) {
   return (
     <FastImage
       source={{ uri }}
@@ -198,7 +213,7 @@ const renderImage = useCallback((uri: string, _index: number, { setItemDimension
       }}
     />
   );
-}, []);
+}
 ```
 
 <span id="renderitem-active-state" />
@@ -210,20 +225,16 @@ For content such as video that should play or perform work only while it is visi
 ```tsx
 import type { GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';
 
-const renderMedia = useCallback(
-  // [!code highlight:1]
-  (item: MediaItem, _index: number, { isActive }: GestureViewerRenderItemInfo) => {
-    return (
-      <Video
-        source={{ uri: item.uri }}
-        style={{ width: '100%', height: '100%' }}
-        paused={!isActive}
-        resizeMode="contain"
-      />
-    );
-  },
-  [],
-);
+function renderMedia(item: MediaItem, _index: number, { isActive }: GestureViewerRenderItemInfo) {
+  return (
+    <Video
+      source={{ uri: item.uri }}
+      style={{ width: '100%', height: '100%' }}
+      paused={!isActive}
+      resizeMode="contain"
+    />
+  );
+}
 
 return <GestureViewer data={mediaItems} renderItem={renderMedia} />;
 ```

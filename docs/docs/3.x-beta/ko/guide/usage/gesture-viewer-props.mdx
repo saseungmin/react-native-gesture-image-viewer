@@ -6,7 +6,7 @@
 
 ### Zoom bounds용 아이템 크기
 
-세 번째 인자는 `setItemDimensions({ width, height })`도 제공합니다. 이미지 load callback에서 호출하고 렌더 중에는 호출하지 마세요. 크기를 이미 알고 있다면 `getItemDimensions(item, index)`를 사용할 수 있습니다. 유효한 runtime 등록이 getter보다 우선하며, 둘 다 없으면 viewer 전체 cell 크기를 사용합니다. 알려진 원본 크기는 centered contain fitting 뒤 zoom bounds에 적용됩니다.
+세 번째 인자는 `setItemDimensions({ width, height })`도 제공합니다. 이미지 load 또는 event callback에서 호출하거나, commit 이후 passive `useEffect`에서 호출하세요. 렌더 중이나 descendant layout effect에서는 호출하지 마세요. 크기를 이미 알고 있다면 `getItemDimensions(item, index)`를 사용할 수 있습니다. 유효한 runtime 등록이 getter보다 우선하며, 둘 다 없으면 viewer 전체 cell 크기를 사용합니다. 알려진 원본 크기는 centered contain fitting 뒤 zoom bounds에 적용됩니다.
 
 ### `enableLoop` (기본값: `false`)
 
@@ -152,12 +152,29 @@ function App() {
 [Go to source](https://github.com/saseungmin/react-native-gesture-image-viewer/blob/next/src/types.ts)
 
 ````tsx title="GestureViewerProps"
+export type GestureViewerItemDimensions = Readonly<{
+  /** 원본/source 콘텐츠 너비입니다. 유한한 양수여야 합니다. */
+  width: number;
+  /** 원본/source 콘텐츠 높이입니다. 유한한 양수여야 합니다. */
+  height: number;
+}>;
+
+export type GestureViewerItemDimensionsResolver<ItemT> = (
+  item: ItemT,
+  index: number,
+) => GestureViewerItemDimensions | undefined;
+
 export type GestureViewerRenderItemInfo = {
   /**
    * 렌더링된 아이템이 현재 활성 상태인지 여부입니다.
    * @remarks 페이지 전환 중에는 기존 아이템이 활성 상태를 유지합니다. 전환이 완료되어 다른 아이템으로 이동하면 해당 아이템이 활성화됩니다.
    */
   readonly isActive: boolean;
+  /**
+   * 렌더링된 아이템의 원본/source 치수를 사용할 수 있게 된 후 등록합니다.
+   * @remarks 이미지 load 또는 event 콜백에서 호출하거나, commit 이후 passive `useEffect`에서 호출하세요. 렌더 중이나 descendant layout effect에서는 호출하지 마세요.
+   */
+  readonly setItemDimensions: (dimensions: GestureViewerItemDimensions) => void;
 };
 
 export interface GestureViewerProps<ItemT> {
@@ -200,6 +217,11 @@ export interface GestureViewerProps<ItemT> {
    * - 전체 화면 탭 처리가 필요하다면 `renderContainer`에서 pressable을 덮어씌우는 대신 이 콜백 사용을 권장합니다.
    */
   onSingleTap?: (event: GestureViewerSingleTapEvent<ItemT>) => void;
+  /**
+   * 아이템의 원본/source 치수를 이미 알고 있을 때 반환합니다.
+   * @remarks 치수를 아직 모르면 `undefined`를 반환하세요. 잘못된 치수는 뷰어 셀 크기 fallback으로 처리됩니다.
+   */
+  getItemDimensions?: GestureViewerItemDimensionsResolver<ItemT>;
   /**
    * 컨테이너를 렌더링할 때 호출되는 콜백 함수입니다.
    * @remarks 뷰어 주변에 추가 UI(예: 닫기 버튼, 툴바)를 구성할 때 유용합니다.
