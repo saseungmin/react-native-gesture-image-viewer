@@ -56,7 +56,7 @@ describe('item dimensions lifecycle', () => {
     mockPruneItemDimensionsRegistry.mockClear();
   });
 
-  it('does not prune on getter or viewport rerenders but prunes on new data identity', async () => {
+  it('does not prune on same-length rerenders but prunes on length changes', async () => {
     const first = { id: 'first', width: 393, height: 616 };
     const second = { id: 'second', width: 320, height: 480 };
     const data = [first, second];
@@ -74,6 +74,7 @@ describe('item dimensions lifecycle', () => {
     );
 
     expect(mockPruneItemDimensionsRegistry).toHaveBeenCalledTimes(1);
+    expect(mockPruneItemDimensionsRegistry).toHaveBeenLastCalledWith(expect.any(Map), 2);
 
     await rerender(
       <GestureViewer
@@ -101,6 +102,21 @@ describe('item dimensions lifecycle', () => {
       />,
     );
 
+    expect(mockPruneItemDimensionsRegistry).toHaveBeenCalledTimes(1);
+
+    await rerender(
+      <GestureViewer
+        data={[first]}
+        getItemDimensions={(item) => ({ width: item.width, height: item.height })}
+        height={481}
+        id="dimensions-lifecycle"
+        ListComponent={TestList}
+        renderItem={renderItem}
+        width={321}
+      />,
+    );
+
     expect(mockPruneItemDimensionsRegistry).toHaveBeenCalledTimes(2);
+    expect(mockPruneItemDimensionsRegistry).toHaveBeenLastCalledWith(expect.any(Map), 1);
   });
 });

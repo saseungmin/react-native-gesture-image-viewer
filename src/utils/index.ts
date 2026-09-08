@@ -105,10 +105,8 @@ export const clampTranslationToBounds = ({
   };
 };
 
-export const createLoopData = <T>(dataRef: React.RefObject<T[]>, enableLoop: boolean): T[] => {
-  const data = dataRef.current;
-
-  if (!enableLoop || !data?.length || data.length <= 1) {
+export const createLoopData = <T>(data: T[], enableLoop: boolean): T[] => {
+  if (!enableLoop || data.length <= 1) {
     return data;
   }
 

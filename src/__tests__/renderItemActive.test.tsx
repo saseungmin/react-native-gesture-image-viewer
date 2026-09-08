@@ -345,6 +345,46 @@ describe('GestureViewer renderItem active state', () => {
     expect(getItemDimensions).toHaveBeenCalledWith(second, 1);
   });
 
+  it('resyncs dimensions when initialIndex changes to a different aspect ratio', async () => {
+    const first = 'first';
+    const second = 'second';
+    const dimensionsByItem = new Map([
+      [first, { height: 616, width: 393 }],
+      [second, { height: 320, width: 640 }],
+    ]);
+    const getItemDimensions = jest.fn((item: string) => dimensionsByItem.get(item));
+
+    const { rerender } = await render(
+      <GestureViewer
+        data={[first, second]}
+        getItemDimensions={getItemDimensions}
+        height={480}
+        id="initial-index-dimensions"
+        initialIndex={0}
+        ListComponent={TestFlashList}
+        renderItem={(item, index) => <Text>{`${index}:${item}`}</Text>}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    getItemDimensions.mockClear();
+
+    await rerender(
+      <GestureViewer
+        data={[first, second]}
+        getItemDimensions={getItemDimensions}
+        height={480}
+        id="initial-index-dimensions"
+        initialIndex={1}
+        ListComponent={TestFlashList}
+        renderItem={(item, index) => <Text>{`${index}:${item}`}</Text>}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    expect(getItemDimensions).toHaveBeenCalledWith(second, 1);
+  });
+
   it('does not resolve dimensions again while scroll events stay on the same logical item', async () => {
     const first = 'first';
     const second = 'second';
@@ -388,6 +428,68 @@ describe('GestureViewer renderItem active state', () => {
     });
 
     expect(getItemDimensions).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the viewed index when config rerenders with unchanged initialIndex', async () => {
+    const id = 'unchanged-initial-index-rerender';
+    const first = 'first';
+    const second = 'second';
+    const dimensionsByItem = new Map([
+      [first, { height: 616, width: 393 }],
+      [second, { height: 480, width: 320 }],
+    ]);
+    const getItemDimensions = jest.fn((item: string) => dimensionsByItem.get(item));
+
+    const { rerender } = await render(
+      <GestureViewer
+        data={[first, second]}
+        getItemDimensions={getItemDimensions}
+        height={480}
+        id={id}
+        initialIndex={0}
+        ListComponent={TestFlashList}
+        maxZoomScale={2}
+        renderItem={(item, index) => <Text>{`${index}:${item}`}</Text>}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(registry.getManager(id)).not.toBeNull();
+    });
+
+    await act(async () => {
+      getListProps().onScroll?.(createScrollEvent(PAGE_WIDTH));
+      getListProps().onMomentumScrollEnd?.(createScrollEvent(PAGE_WIDTH));
+    });
+
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(1);
+    expect(getItemDimensions).toHaveBeenLastCalledWith(second, 1);
+
+    getItemDimensions.mockClear();
+
+    await rerender(
+      <GestureViewer
+        data={[first, second]}
+        getItemDimensions={getItemDimensions}
+        height={480}
+        id={id}
+        initialIndex={0}
+        ListComponent={TestFlashList}
+        maxZoomScale={3}
+        renderItem={(item, index) => <Text>{`${index}:${item}`}</Text>}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(1);
+
+    await act(async () => {
+      getListProps().onScroll?.(createScrollEvent(PAGE_WIDTH));
+    });
+
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(1);
+    expect(getItemDimensions).not.toHaveBeenCalledWith(first, 0);
   });
 
   it('supplies a stable item-bound dimensions setter to render callbacks', async () => {
@@ -439,5 +541,36 @@ describe('GestureViewer renderItem active state', () => {
     await act(async () => {
       firstSetter?.({ height: 616, width: 393 });
     });
+  });
+
+  it('updates rendered loop data when data identity changes', async () => {
+    const { rerender } = await render(
+      <GestureViewer
+        data={['first', 'second']}
+        enableLoop
+        height={480}
+        id="loop-data-rerender"
+        ListComponent={TestFlashList}
+        renderItem={(item, index) => <Text>{`${index}:${item}`}</Text>}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    expect(screen.getByText('1:first')).toBeTruthy();
+
+    await rerender(
+      <GestureViewer
+        data={['third', 'fourth']}
+        enableLoop
+        height={480}
+        id="loop-data-rerender"
+        ListComponent={TestFlashList}
+        renderItem={(item, index) => <Text>{`${index}:${item}`}</Text>}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    expect(screen.getByText('1:third')).toBeTruthy();
+    expect(screen.queryByText('1:first')).toBeNull();
   });
 });

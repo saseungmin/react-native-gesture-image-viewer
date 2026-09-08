@@ -8,9 +8,10 @@ type ItemDimensionsRegistryEntry<ItemT> = Readonly<{
 export type ItemDimensionsRegistry<ItemT> = Map<number, ItemDimensionsRegistryEntry<ItemT>>;
 
 export const isValidItemDimensions = (
-  dimensions: GestureViewerItemDimensions | undefined,
+  dimensions: GestureViewerItemDimensions | null | undefined,
 ): dimensions is GestureViewerItemDimensions => {
   return (
+    dimensions !== null &&
     dimensions !== undefined &&
     Number.isFinite(dimensions.width) &&
     Number.isFinite(dimensions.height) &&
@@ -21,10 +22,10 @@ export const isValidItemDimensions = (
 
 export const pruneItemDimensionsRegistry = <ItemT>(
   registry: ItemDimensionsRegistry<ItemT>,
-  data: readonly ItemT[],
+  dataLength: number,
 ): void => {
-  for (const [index, entry] of registry) {
-    if (index < 0 || index >= data.length || !Object.is(data[index], entry.item)) {
+  for (const index of registry.keys()) {
+    if (index < 0 || index >= dataLength) {
       registry.delete(index);
     }
   }
@@ -58,7 +59,15 @@ export const resolveItemDimensions = <ItemT>({
 
   const resolved = getItemDimensions?.(item, index);
 
-  return isValidItemDimensions(resolved) ? resolved : undefined;
+  if (isValidItemDimensions(resolved)) {
+    return resolved;
+  }
+
+  if (registered && isValidItemDimensions(registered.dimensions)) {
+    return registered.dimensions;
+  }
+
+  return undefined;
 };
 
 export const registerItemDimensions = <ItemT>({

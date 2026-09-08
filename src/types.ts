@@ -106,7 +106,7 @@ export type GestureViewerRenderItemInfo = {
   readonly isActive: boolean;
   /**
    * Registers natural/source dimensions for the rendered item after they become available.
-   * @remarks Call this from a committed lifecycle or load callback, not directly while rendering.
+   * @remarks Call this from an image load/event callback or a passive effect after commit. Do not call it directly while rendering or from descendant layout effects.
    */
   readonly setItemDimensions: (dimensions: GestureViewerItemDimensions) => void;
 };

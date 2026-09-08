@@ -39,6 +39,22 @@ type UseGestureViewerProps<ItemT, LC> = Omit<
   | 'enableSnapMode'
 >;
 
+function fitItemDimensions(
+  dimensions: GestureViewerItemDimensions | undefined,
+  viewport: GestureViewerItemDimensions,
+): GestureViewerItemDimensions {
+  if (!dimensions) {
+    return viewport;
+  }
+
+  const fitScale = Math.min(viewport.width / dimensions.width, viewport.height / dimensions.height);
+
+  return {
+    width: dimensions.width * fitScale,
+    height: dimensions.height * fitScale,
+  };
+}
+
 export const useGestureViewer = <ItemT, LC>({
   data,
   initialIndex = 0,
@@ -83,6 +99,8 @@ export const useGestureViewer = <ItemT, LC>({
   const dataRef = useRef(data);
   const getItemDimensionsRef = useRef(getItemDimensions);
   const managerRef = useRef(manager);
+  const configuredManagerRef = useRef<GestureViewerManager | null>(null);
+  const previousInitialIndexRef = useRef(initialIndex);
   const itemDimensionsRef = useRef<ItemDimensionsRegistry<ItemT>>(new Map());
 
   const isValidTriggerRect = useCallback((rect: TriggerRect | null): rect is TriggerRect => {
@@ -122,54 +140,20 @@ export const useGestureViewer = <ItemT, LC>({
     height: number;
     width: number;
   } | null>(null);
-
-  const fitItemDimensions = useCallback(
-    (dimensions: GestureViewerItemDimensions | undefined): GestureViewerItemDimensions => {
-      const viewport = viewportRef.current;
-
-      if (!dimensions) {
-        return viewport;
-      }
-
-      const fitScale = Math.min(
-        viewport.width / dimensions.width,
-        viewport.height / dimensions.height,
-      );
-
-      return {
-        width: dimensions.width * fitScale,
-        height: dimensions.height * fitScale,
-      };
-    },
-    [],
-  );
-
-  const getLogicalIndex = useCallback((listIndex: number) => {
-    const { dataLength: currentDataLength, enableLoop: currentEnableLoop } = loopConfigRef.current;
-
-    if (currentDataLength <= 0) {
-      return listIndex;
-    }
-
-    return getLoopAdjustedIndex(listIndex, currentDataLength, currentEnableLoop).realIndex;
-  }, []);
-
-  const getActiveItemDimensions = useCallback(
-    (logicalIndex: number): GestureViewerItemDimensions | undefined => {
-      return resolveItemDimensions({
-        data: dataRef.current,
-        getItemDimensions: getItemDimensionsRef.current,
-        index: logicalIndex,
-        registry: itemDimensionsRef.current,
-      });
-    },
-    [],
-  );
+  const activeGeometryIndexRef = useRef<number | null>(null);
 
   const syncActiveContentDimensions = useCallback(
     (logicalIndex = pendingIndexRef.current) => {
       const viewport = viewportRef.current;
-      const fitted = fitItemDimensions(getActiveItemDimensions(logicalIndex));
+      const fitted = fitItemDimensions(
+        resolveItemDimensions({
+          data: dataRef.current,
+          getItemDimensions: getItemDimensionsRef.current,
+          index: logicalIndex,
+          registry: itemDimensionsRef.current,
+        }),
+        viewport,
+      );
       const nextGeometry = {
         contentHeight: fitted.height,
         contentWidth: fitted.width,
@@ -177,6 +161,8 @@ export const useGestureViewer = <ItemT, LC>({
         width: viewport.width,
       };
       const previousGeometry = activeGeometryRef.current;
+
+      activeGeometryIndexRef.current = logicalIndex;
 
       if (
         previousGeometry?.contentHeight === nextGeometry.contentHeight &&
@@ -212,20 +198,17 @@ export const useGestureViewer = <ItemT, LC>({
         translateY.set(withTiming(constrainedTranslateY));
       }
     },
-    [
-      contentHeight,
-      contentWidth,
-      fitItemDimensions,
-      getActiveItemDimensions,
-      scale,
-      translateX,
-      translateY,
-    ],
+    [contentHeight, contentWidth, scale, translateX, translateY],
   );
 
   const setItemDimensions = useCallback(
     (listIndex: number, item: ItemT, dimensions: GestureViewerItemDimensions) => {
-      const logicalIndex = getLogicalIndex(listIndex);
+      const { dataLength: currentDataLength, enableLoop: currentEnableLoop } =
+        loopConfigRef.current;
+      const logicalIndex =
+        currentDataLength <= 0
+          ? listIndex
+          : getLoopAdjustedIndex(listIndex, currentDataLength, currentEnableLoop).realIndex;
       const didUpdateDimensions = registerItemDimensions({
         data: dataRef.current,
         dimensions,
@@ -238,7 +221,7 @@ export const useGestureViewer = <ItemT, LC>({
         syncActiveContentDimensions(logicalIndex);
       }
     },
-    [getLogicalIndex, syncActiveContentDimensions],
+    [syncActiveContentDimensions],
   );
 
   const animationConfig = useMemo(
@@ -267,13 +250,7 @@ export const useGestureViewer = <ItemT, LC>({
     ],
   );
 
-  const adjustedInitialIndex = useMemo(() => {
-    if (enableLoop && dataLength > 1) {
-      return initialIndex + 1;
-    }
-
-    return initialIndex;
-  }, [enableLoop, dataLength, initialIndex]);
+  const adjustedInitialIndex = enableLoop && dataLength > 1 ? initialIndex + 1 : initialIndex;
 
   const constrainTranslation = useCallback(
     ({
@@ -413,15 +390,19 @@ export const useGestureViewer = <ItemT, LC>({
   }, [id]);
 
   useEffect(() => {
-    pendingIndexRef.current = initialIndex;
-
     if (!manager) {
+      configuredManagerRef.current = null;
       return;
     }
 
+    const isNewManager = configuredManagerRef.current !== manager;
+    const didInitialIndexPropChange = previousInitialIndexRef.current !== initialIndex;
+    const shouldApplyInitialIndex = isNewManager || didInitialIndexPropChange;
+    const shouldSyncInitialIndex =
+      didInitialIndexPropChange || activeGeometryIndexRef.current !== initialIndex;
+
     manager.setDataLength(dataLength);
     manager.setEnableHorizontalSwipe(enableHorizontalSwipe);
-    manager.setCurrentIndex(initialIndex);
     manager.setPagingStride(width + itemSpacing);
     manager.setViewportWidth(width);
     manager.setHeight(height);
@@ -436,6 +417,18 @@ export const useGestureViewer = <ItemT, LC>({
     manager.setResetTransformCallback(resetTransformState);
     manager.setRotation(rotation);
     manager.setEnableLoop(enableLoop);
+
+    if (shouldApplyInitialIndex) {
+      pendingIndexRef.current = initialIndex;
+      manager.setCurrentIndex(initialIndex);
+
+      if (shouldSyncInitialIndex) {
+        syncActiveContentDimensions(initialIndex);
+      }
+    }
+
+    configuredManagerRef.current = manager;
+    previousInitialIndexRef.current = initialIndex;
     manager.notifyStateChange();
   }, [
     dataLength,
@@ -451,6 +444,7 @@ export const useGestureViewer = <ItemT, LC>({
     contentWidth,
     contentHeight,
     resetTransformState,
+    syncActiveContentDimensions,
     translateX,
     translateY,
     rotation,
@@ -514,8 +508,8 @@ export const useGestureViewer = <ItemT, LC>({
   }, [data, dataLength, enableLoop, getItemDimensions, height, syncActiveContentDimensions, width]);
 
   useEffect(() => {
-    pruneItemDimensionsRegistry(itemDimensionsRef.current, data);
-  }, [data, dataLength]);
+    pruneItemDimensionsRegistry(itemDimensionsRef.current, dataLength);
+  }, [dataLength]);
 
   useEffect(() => {
     managerRef.current = manager;

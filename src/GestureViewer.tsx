@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, type ReactElement } from 'react';
 import {
   Platform,
   type ScrollViewProps,
@@ -72,14 +72,12 @@ export function GestureViewer<ItemT, LC>({
 }: GestureViewerProps<ItemT, LC>) {
   const Component = ListComponent as React.ComponentType<any>;
 
-  const dataRef = useRef(data);
-
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
   const width = customWidth || screenWidth;
   const height = customHeight || screenHeight;
 
-  const loopData = useMemo(() => createLoopData(dataRef, enableLoop), [enableLoop]);
+  const loopData = useMemo(() => createLoopData(data, enableLoop), [data, enableLoop]);
 
   const isScrollView = isScrollViewLike(Component);
   const isFlashList = isFlashListLike(Component);
@@ -174,10 +172,6 @@ export function GestureViewer<ItemT, LC>({
   const gesture = useMemo(() => {
     return Gesture.Race(dismissGesture, zoomGesture);
   }, [zoomGesture, dismissGesture]);
-
-  useEffect(() => {
-    dataRef.current = data;
-  }, [data]);
 
   useEffect(() => {
     registry.createManager(id);

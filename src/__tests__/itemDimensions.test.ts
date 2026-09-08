@@ -41,7 +41,7 @@ describe('item dimensions registry', () => {
     expect(getItemDimensions).toHaveBeenLastCalledWith(second, 1);
   });
 
-  it('prefers valid runtime registration, ignores invalid input, and dedupes equal values', () => {
+  it('prefers same-item runtime registration, ignores invalid input, and dedupes equal values', () => {
     const item = { id: 'active' };
     const data = [item];
     const registry: ItemDimensionsRegistry<Item> = new Map();
@@ -137,41 +137,124 @@ describe('item dimensions registry', () => {
     ).toEqual(dimensions(100, 300));
   });
 
-  it('prunes replaced or removed entries while rejecting late stale callbacks', () => {
+  it('prefers current getter dimensions over a stale slot cache', () => {
     const replaced = { id: 'replaced' };
-    const retained = { id: 'retained' };
     const next = { id: 'next' };
     const registry: ItemDimensionsRegistry<Item> = new Map();
+    const getItemDimensions = jest.fn(() => dimensions(300, 400));
 
     registerItemDimensions({
-      data: [replaced, retained],
+      data: [replaced],
       dimensions: dimensions(100, 200),
       index: 0,
       item: replaced,
       registry,
     });
-    registerItemDimensions({
-      data: [replaced, retained],
-      dimensions: dimensions(200, 100),
-      index: 1,
-      item: retained,
-      registry,
-    });
 
-    pruneItemDimensionsRegistry(registry, [next, retained]);
+    pruneItemDimensionsRegistry(registry, 1);
 
     expect(registry.size).toBe(1);
-    expect(registry.get(1)?.item).toBe(retained);
+    expect(resolveItemDimensions({ data: [next], getItemDimensions, index: 0, registry })).toEqual(
+      dimensions(300, 400),
+    );
+    expect(getItemDimensions).toHaveBeenCalledWith(next, 0);
     expect(
       registerItemDimensions({
-        data: [next, retained],
+        data: [next],
         dimensions: dimensions(100, 200),
         index: 0,
         item: replaced,
         registry,
       }),
     ).toBe(false);
-    expect(registry.size).toBe(1);
+    expect(registry.get(0)?.dimensions).toEqual(dimensions(100, 200));
+    expect(
+      registerItemDimensions({
+        data: [next],
+        dimensions: dimensions(300, 400),
+        index: 0,
+        item: next,
+        registry,
+      }),
+    ).toBe(true);
+    expect(resolveItemDimensions({ data: [next], getItemDimensions, index: 0, registry })).toEqual(
+      dimensions(300, 400),
+    );
+  });
+
+  it('uses the last-known slot cache for a recreated item when the getter is missing', () => {
+    const item = { id: 'item' };
+    const recreatedItem = { id: 'item' };
+    const registry: ItemDimensionsRegistry<Item> = new Map();
+    const getItemDimensions = jest.fn(() => undefined);
+
+    registerItemDimensions({
+      data: [item],
+      dimensions: dimensions(100, 200),
+      index: 0,
+      item,
+      registry,
+    });
+
+    pruneItemDimensionsRegistry(registry, 1);
+
+    expect(registry.has(0)).toBe(true);
+    expect(
+      resolveItemDimensions({ data: [recreatedItem], getItemDimensions, index: 0, registry }),
+    ).toEqual(dimensions(100, 200));
+    expect(getItemDimensions).toHaveBeenCalledWith(recreatedItem, 0);
+  });
+
+  it('prunes only out-of-range cached indexes', () => {
+    const first = { id: 'first' };
+    const second = { id: 'second' };
+    const third = { id: 'third' };
+    const registry: ItemDimensionsRegistry<Item> = new Map();
+
+    registerItemDimensions({
+      data: [first, second, third],
+      dimensions: dimensions(100, 200),
+      index: 0,
+      item: first,
+      registry,
+    });
+    registerItemDimensions({
+      data: [first, second, third],
+      dimensions: dimensions(200, 100),
+      index: 2,
+      item: third,
+      registry,
+    });
+
+    pruneItemDimensionsRegistry(registry, 2);
+
+    expect(registry.has(0)).toBe(true);
+    expect(registry.has(2)).toBe(false);
+  });
+
+  it('treats null resolver values and null runtime reports as missing dimensions', () => {
+    const item = { id: 'active' };
+    const data = [item];
+    const registry: ItemDimensionsRegistry<Item> = new Map();
+
+    expect(
+      resolveItemDimensions({
+        data,
+        getItemDimensions: () => null as never,
+        index: 0,
+        registry,
+      }),
+    ).toBeUndefined();
+    expect(
+      registerItemDimensions({
+        data,
+        dimensions: null as never,
+        index: 0,
+        item,
+        registry,
+      }),
+    ).toBe(false);
+    expect(registry.size).toBe(0);
   });
 
   it('maps loop sentinels to their canonical logical items', () => {
