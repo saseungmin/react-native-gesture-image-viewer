@@ -126,6 +126,10 @@ function App() {
 }
 ```
 
+When dimensions are learned from an image load callback and object items may be recreated, provide
+`getItemKey={(item) => item.uri}` (or another stable unique key). This preserves dimensions when the
+same logical item is recreated at the same index without reusing them after replacement or reorder.
+
 ## Contributing
 
 For details on how to contribute to the project and set up the development environment, please refer to the [Contributing Guide](CONTRIBUTING.md).

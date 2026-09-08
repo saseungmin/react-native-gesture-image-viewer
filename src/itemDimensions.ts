@@ -1,7 +1,13 @@
-import type { GestureViewerItemDimensions, GestureViewerItemDimensionsResolver } from './types';
+import type {
+  GestureViewerItemDimensions,
+  GestureViewerItemDimensionsResolver,
+  GestureViewerItemKey,
+  GestureViewerItemKeyResolver,
+} from './types';
 
 type ItemDimensionsRegistryEntry<ItemT> = Readonly<{
   item: ItemT;
+  itemKey?: GestureViewerItemKey;
   dimensions: GestureViewerItemDimensions;
 }>;
 
@@ -20,6 +26,32 @@ export const isValidItemDimensions = (
   );
 };
 
+const resolveItemKey = <ItemT>(
+  getItemKey: GestureViewerItemKeyResolver<ItemT> | undefined,
+  item: ItemT,
+  index: number,
+): GestureViewerItemKey | undefined => {
+  const itemKey = getItemKey?.(item, index);
+
+  if (typeof itemKey === 'string') {
+    return itemKey;
+  }
+
+  return typeof itemKey === 'number' && Number.isFinite(itemKey) ? itemKey : undefined;
+};
+
+const doesEntryMatchItem = <ItemT>(
+  entry: ItemDimensionsRegistryEntry<ItemT>,
+  item: ItemT,
+  itemKey: GestureViewerItemKey | undefined,
+): boolean => {
+  if (itemKey !== undefined && entry.itemKey !== undefined) {
+    return entry.itemKey === itemKey;
+  }
+
+  return Object.is(entry.item, item);
+};
+
 export const pruneItemDimensionsRegistry = <ItemT>(
   registry: ItemDimensionsRegistry<ItemT>,
   dataLength: number,
@@ -36,11 +68,13 @@ export const resolveItemDimensions = <ItemT>({
   data,
   index,
   getItemDimensions,
+  getItemKey,
 }: {
   registry: ItemDimensionsRegistry<ItemT>;
   data: readonly ItemT[];
   index: number;
   getItemDimensions?: GestureViewerItemDimensionsResolver<ItemT>;
+  getItemKey?: GestureViewerItemKeyResolver<ItemT>;
 }): GestureViewerItemDimensions | undefined => {
   if (index < 0 || index >= data.length) {
     return undefined;
@@ -48,10 +82,11 @@ export const resolveItemDimensions = <ItemT>({
 
   const item = data[index] as ItemT;
   const registered = registry.get(index);
+  const itemKey = registered ? resolveItemKey(getItemKey, item, index) : undefined;
 
   if (
     registered &&
-    Object.is(registered.item, item) &&
+    doesEntryMatchItem(registered, item, itemKey) &&
     isValidItemDimensions(registered.dimensions)
   ) {
     return registered.dimensions;
@@ -63,10 +98,6 @@ export const resolveItemDimensions = <ItemT>({
     return resolved;
   }
 
-  if (registered && isValidItemDimensions(registered.dimensions)) {
-    return registered.dimensions;
-  }
-
   return undefined;
 };
 
@@ -76,19 +107,30 @@ export const registerItemDimensions = <ItemT>({
   index,
   item,
   dimensions,
+  getItemKey,
 }: {
   registry: ItemDimensionsRegistry<ItemT>;
   data: readonly ItemT[];
   index: number;
   item: ItemT;
   dimensions: GestureViewerItemDimensions;
+  getItemKey?: GestureViewerItemKeyResolver<ItemT>;
 }): boolean => {
-  if (
-    index < 0 ||
-    index >= data.length ||
-    !Object.is(data[index], item) ||
-    !isValidItemDimensions(dimensions)
-  ) {
+  if (index < 0 || index >= data.length || !isValidItemDimensions(dimensions)) {
+    return false;
+  }
+
+  const currentItem = data[index] as ItemT;
+  const currentItemKey = resolveItemKey(getItemKey, currentItem, index);
+  const reportedItemKey = Object.is(currentItem, item)
+    ? currentItemKey
+    : resolveItemKey(getItemKey, item, index);
+  const hasMatchingKey =
+    currentItemKey !== undefined &&
+    reportedItemKey !== undefined &&
+    currentItemKey === reportedItemKey;
+
+  if (!Object.is(currentItem, item) && !hasMatchingKey) {
     return false;
   }
 
@@ -96,7 +138,7 @@ export const registerItemDimensions = <ItemT>({
 
   if (
     registered &&
-    Object.is(registered.item, item) &&
+    doesEntryMatchItem(registered, currentItem, currentItemKey) &&
     registered.dimensions.width === dimensions.width &&
     registered.dimensions.height === dimensions.height
   ) {
@@ -104,7 +146,8 @@ export const registerItemDimensions = <ItemT>({
   }
 
   registry.set(index, {
-    item,
+    item: currentItem,
+    itemKey: currentItemKey,
     dimensions: {
       height: dimensions.height,
       width: dimensions.width,

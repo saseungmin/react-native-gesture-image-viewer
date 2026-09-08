@@ -182,7 +182,7 @@ describe('item dimensions registry', () => {
     );
   });
 
-  it('uses the last-known slot cache for a recreated item when the getter is missing', () => {
+  it('does not reuse slot dimensions for a recreated item without a stable key', () => {
     const item = { id: 'item' };
     const recreatedItem = { id: 'item' };
     const registry: ItemDimensionsRegistry<Item> = new Map();
@@ -201,8 +201,65 @@ describe('item dimensions registry', () => {
     expect(registry.has(0)).toBe(true);
     expect(
       resolveItemDimensions({ data: [recreatedItem], getItemDimensions, index: 0, registry }),
-    ).toEqual(dimensions(100, 200));
+    ).toBeUndefined();
     expect(getItemDimensions).toHaveBeenCalledWith(recreatedItem, 0);
+  });
+
+  it('reuses runtime dimensions only when recreated items have the same stable key', () => {
+    const item = { id: 'item' };
+    const recreatedItem = { id: 'item' };
+    const replacement = { id: 'replacement' };
+    const registry: ItemDimensionsRegistry<Item> = new Map();
+    const getItemKey = (currentItem: Item) => currentItem.id;
+
+    expect(
+      registerItemDimensions({
+        data: [item],
+        dimensions: dimensions(100, 200),
+        getItemKey,
+        index: 0,
+        item,
+        registry,
+      }),
+    ).toBe(true);
+    expect(
+      resolveItemDimensions({
+        data: [recreatedItem],
+        getItemKey,
+        index: 0,
+        registry,
+      }),
+    ).toEqual(dimensions(100, 200));
+    expect(
+      registerItemDimensions({
+        data: [recreatedItem],
+        dimensions: dimensions(120, 240),
+        getItemKey,
+        index: 0,
+        item,
+        registry,
+      }),
+    ).toBe(true);
+    expect(registry.get(0)?.item).toBe(recreatedItem);
+    expect(registry.get(0)?.dimensions).toEqual(dimensions(120, 240));
+    expect(
+      resolveItemDimensions({
+        data: [replacement],
+        getItemKey,
+        index: 0,
+        registry,
+      }),
+    ).toBeUndefined();
+    expect(
+      registerItemDimensions({
+        data: [replacement],
+        dimensions: dimensions(300, 400),
+        getItemKey,
+        index: 0,
+        item,
+        registry,
+      }),
+    ).toBe(false);
   });
 
   it('prunes only out-of-range cached indexes', () => {

@@ -126,6 +126,11 @@ function App() {
 }
 ```
 
+이미지 load callback에서 치수를 얻고 객체 item이 다시 생성될 수 있다면
+`getItemKey={(item) => item.uri}`처럼 안정적이고 고유한 key를 제공하세요. 같은 index에서
+동일한 논리적 item이 재생성될 때는 치수를 유지하고, 교체되거나 재정렬된 item에는 이전
+치수가 적용되지 않습니다.
+
 ## 기여하기
 
 프로젝트 기여 방법과 개발 환경 설정에 대한 자세한 내용은 [기여 가이드](CONTRIBUTING.md)를 참고해 주세요.

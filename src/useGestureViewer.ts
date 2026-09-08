@@ -76,6 +76,7 @@ export const useGestureViewer = <ItemT, LC>({
   autoPlay = false,
   autoPlayInterval = 3000,
   getItemDimensions,
+  getItemKey,
 }: UseGestureViewerProps<ItemT, LC>) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const width = customWidth || screenWidth;
@@ -98,6 +99,7 @@ export const useGestureViewer = <ItemT, LC>({
   const onSingleTapRef = useRef(onSingleTap);
   const dataRef = useRef(data);
   const getItemDimensionsRef = useRef(getItemDimensions);
+  const getItemKeyRef = useRef(getItemKey);
   const managerRef = useRef(manager);
   const configuredManagerRef = useRef<GestureViewerManager | null>(null);
   const previousInitialIndexRef = useRef(initialIndex);
@@ -149,6 +151,7 @@ export const useGestureViewer = <ItemT, LC>({
         resolveItemDimensions({
           data: dataRef.current,
           getItemDimensions: getItemDimensionsRef.current,
+          getItemKey: getItemKeyRef.current,
           index: logicalIndex,
           registry: itemDimensionsRef.current,
         }),
@@ -212,6 +215,7 @@ export const useGestureViewer = <ItemT, LC>({
       const didUpdateDimensions = registerItemDimensions({
         data: dataRef.current,
         dimensions,
+        getItemKey: getItemKeyRef.current,
         index: logicalIndex,
         item,
         registry: itemDimensionsRef.current,
@@ -397,9 +401,15 @@ export const useGestureViewer = <ItemT, LC>({
 
     const isNewManager = configuredManagerRef.current !== manager;
     const didInitialIndexPropChange = previousInitialIndexRef.current !== initialIndex;
-    const shouldApplyInitialIndex = isNewManager || didInitialIndexPropChange;
+    const didDataLengthChange = previousDataLengthRef.current !== dataLength;
+    const hasValidInitialIndex = initialIndex >= 0 && initialIndex < dataLength;
+    const shouldResetForDataLength = didDataLengthChange && hasValidInitialIndex;
+    const shouldApplyInitialIndex =
+      isNewManager || didInitialIndexPropChange || shouldResetForDataLength;
     const shouldSyncInitialIndex =
-      didInitialIndexPropChange || activeGeometryIndexRef.current !== initialIndex;
+      didInitialIndexPropChange ||
+      shouldResetForDataLength ||
+      activeGeometryIndexRef.current !== initialIndex;
 
     manager.setDataLength(dataLength);
     manager.setEnableHorizontalSwipe(enableHorizontalSwipe);
@@ -502,10 +512,20 @@ export const useGestureViewer = <ItemT, LC>({
     // Retained virtualized-cell callbacks read only the most recently committed props.
     dataRef.current = data;
     getItemDimensionsRef.current = getItemDimensions;
+    getItemKeyRef.current = getItemKey;
     viewportRef.current = { height, width };
     loopConfigRef.current = { dataLength, enableLoop };
     syncActiveContentDimensions();
-  }, [data, dataLength, enableLoop, getItemDimensions, height, syncActiveContentDimensions, width]);
+  }, [
+    data,
+    dataLength,
+    enableLoop,
+    getItemDimensions,
+    getItemKey,
+    height,
+    syncActiveContentDimensions,
+    width,
+  ]);
 
   useEffect(() => {
     pruneItemDimensionsRegistry(itemDimensionsRef.current, dataLength);

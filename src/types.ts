@@ -98,6 +98,13 @@ export type GestureViewerItemDimensionsResolver<ItemT> = (
   index: number,
 ) => GestureViewerItemDimensions | undefined;
 
+export type GestureViewerItemKey = string | number;
+
+export type GestureViewerItemKeyResolver<ItemT> = (
+  item: ItemT,
+  index: number,
+) => GestureViewerItemKey;
+
 export type GestureViewerRenderItemInfo = {
   /**
    * Whether the rendered item is currently active.
@@ -175,6 +182,11 @@ export interface GestureViewerProps<ItemT, LC> {
    * @remarks Return `undefined` while dimensions are unavailable. Invalid dimensions fall back to the viewer cell size.
    */
   getItemDimensions?: GestureViewerItemDimensionsResolver<ItemT>;
+  /**
+   * Returns a stable key used to retain loaded dimensions when equivalent item objects are recreated at the same index.
+   * @remarks Keys must be unique within `data` and change when the rendered content's natural dimensions can change. Do not use the index by itself. This is only needed when object items are recreated and dimensions are reported through `setItemDimensions`.
+   */
+  getItemKey?: GestureViewerItemKeyResolver<ItemT>;
   /**
    * A callback function that is called to render the container.
    * @remarks Useful for composing additional UI (e.g., close button, toolbars) around the viewer.

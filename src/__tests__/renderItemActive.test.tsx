@@ -492,6 +492,84 @@ describe('GestureViewer renderItem active state', () => {
     expect(getItemDimensions).not.toHaveBeenCalledWith(first, 0);
   });
 
+  it('resets manager state when a data-length change resets the visible page', async () => {
+    const id = 'data-length-reset';
+    const { rerender } = await renderActiveViewer({ id });
+
+    await waitFor(() => {
+      expect(registry.getManager(id)).not.toBeNull();
+    });
+
+    await act(async () => {
+      getListProps().onScroll?.(createScrollEvent(PAGE_WIDTH * 2));
+      getListProps().onMomentumScrollEnd?.(createScrollEvent(PAGE_WIDTH * 2));
+    });
+
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(2);
+    scrollToIndex.mockClear();
+
+    await rerender(
+      <GestureViewer
+        data={['first']}
+        height={480}
+        id={id}
+        initialIndex={0}
+        ListComponent={TestFlashList}
+        renderItem={(_item, index, { isActive }) => (
+          <ActiveItem index={index} isActive={isActive} />
+        )}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 0 });
+    });
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(0);
+  });
+
+  it('keeps loop reset positions physical while manager state stays logical', async () => {
+    const id = 'loop-data-length-reset';
+    const { rerender } = await renderActiveViewer({
+      data: ['first', 'second'],
+      enableLoop: true,
+      id,
+    });
+
+    await waitFor(() => {
+      expect(registry.getManager(id)).not.toBeNull();
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 1 });
+    });
+
+    await act(async () => {
+      getListProps().onScroll?.(createScrollEvent(PAGE_WIDTH * 2));
+      getListProps().onMomentumScrollEnd?.(createScrollEvent(PAGE_WIDTH * 2));
+    });
+
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(1);
+    scrollToIndex.mockClear();
+
+    await rerender(
+      <GestureViewer
+        data={['first', 'second', 'third']}
+        enableLoop
+        height={480}
+        id={id}
+        initialIndex={0}
+        ListComponent={TestFlashList}
+        renderItem={(_item, index, { isActive }) => (
+          <ActiveItem index={index} isActive={isActive} />
+        )}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 1 });
+    });
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(0);
+  });
+
   it('supplies a stable item-bound dimensions setter to render callbacks', async () => {
     const data = ['first', 'second'];
     let firstSetter: ((dimensions: { width: number; height: number }) => void) | undefined;

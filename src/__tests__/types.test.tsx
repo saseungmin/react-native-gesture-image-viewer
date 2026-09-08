@@ -3,6 +3,7 @@ import { FlatList, Text } from 'react-native';
 import type {
   GestureViewerItemDimensions,
   GestureViewerItemDimensionsResolver,
+  GestureViewerItemKeyResolver,
   GestureViewerProps,
 } from '../types';
 
@@ -54,6 +55,18 @@ describe('public item dimensions types', () => {
     };
 
     expect(props.getItemDimensions?.({ id: 'unknown' }, 0)).toBeUndefined();
+  });
+
+  it('allow stable keys for recreated object items with runtime dimensions', () => {
+    const getItemKey: GestureViewerItemKeyResolver<Photo> = (item) => item.id;
+    const props: GestureViewerProps<Photo, typeof FlatList> = {
+      data: [{ id: 'photo' }],
+      getItemKey,
+      ListComponent: FlatList,
+      renderItem: (item) => <Text>{item.id}</Text>,
+    };
+
+    expect(props.getItemKey?.({ id: 'photo' }, 0)).toBe('photo');
   });
 
   it('keep render callbacks valid when consumers only read the active flag', () => {
