@@ -647,6 +647,64 @@ describe('GestureViewer renderItem active state', () => {
     expect(registry.getManager(id)?.getState().currentIndex).toBe(0);
   });
 
+  it('resets to the empty-state index and reapplies initialIndex when data returns', async () => {
+    const id = 'empty-data-reset';
+    const data = ['first', 'second', 'third'];
+    const { rerender } = await renderActiveViewer({ data, id, initialIndex: 1 });
+
+    await waitFor(() => {
+      expect(registry.getManager(id)?.getState().currentIndex).toBe(1);
+    });
+
+    await act(async () => {
+      getListProps().onScroll?.(createScrollEvent(PAGE_WIDTH * 2));
+      getListProps().onMomentumScrollEnd?.(createScrollEvent(PAGE_WIDTH * 2));
+    });
+
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(2);
+    scrollToIndex.mockClear();
+
+    await rerender(
+      <GestureViewer
+        data={[]}
+        height={480}
+        id={id}
+        initialIndex={1}
+        ListComponent={TestFlashList}
+        renderItem={(_item, index, { isActive }) => (
+          <ActiveItem index={index} isActive={isActive} />
+        )}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    expect(registry.getManager(id)?.getState()).toEqual(
+      expect.objectContaining({ currentIndex: 0, totalCount: 0 }),
+    );
+    expect(scrollToIndex).not.toHaveBeenCalled();
+
+    await rerender(
+      <GestureViewer
+        data={data}
+        height={480}
+        id={id}
+        initialIndex={1}
+        ListComponent={TestFlashList}
+        renderItem={(_item, index, { isActive }) => (
+          <ActiveItem index={index} isActive={isActive} />
+        )}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 1 });
+    });
+    expect(registry.getManager(id)?.getState()).toEqual(
+      expect.objectContaining({ currentIndex: 1, totalCount: 3 }),
+    );
+  });
+
   it('supplies a stable item-bound dimensions setter to render callbacks', async () => {
     const data = ['first', 'second'];
     let firstSetter: ((dimensions: { width: number; height: number }) => void) | undefined;

@@ -406,7 +406,9 @@ export const useGestureViewer = <ItemT, LC>({
     const didDataLengthChange = previousDataLengthRef.current !== dataLength;
     const didLoopLayoutChange = previousUsesLoopSentinelsRef.current !== usesLoopSentinels;
     const hasValidInitialIndex = initialIndex >= 0 && initialIndex < dataLength;
-    const shouldResetForDataLength = didDataLengthChange && hasValidInitialIndex;
+    const targetInitialIndex = dataLength === 0 ? 0 : initialIndex;
+    const shouldResetForDataLength =
+      didDataLengthChange && (dataLength === 0 || hasValidInitialIndex);
     const shouldResetForLoopLayout = didLoopLayoutChange && hasValidInitialIndex;
     const shouldApplyInitialIndex =
       isNewManager ||
@@ -417,7 +419,7 @@ export const useGestureViewer = <ItemT, LC>({
       didInitialIndexPropChange ||
       shouldResetForDataLength ||
       shouldResetForLoopLayout ||
-      activeGeometryIndexRef.current !== initialIndex;
+      activeGeometryIndexRef.current !== targetInitialIndex;
 
     manager.setDataLength(dataLength);
     manager.setEnableHorizontalSwipe(enableHorizontalSwipe);
@@ -437,11 +439,11 @@ export const useGestureViewer = <ItemT, LC>({
     manager.setEnableLoop(enableLoop);
 
     if (shouldApplyInitialIndex) {
-      pendingIndexRef.current = initialIndex;
-      manager.setCurrentIndex(initialIndex);
+      pendingIndexRef.current = targetInitialIndex;
+      manager.setCurrentIndex(targetInitialIndex);
 
       if (shouldSyncInitialIndex) {
-        syncActiveContentDimensions(initialIndex);
+        syncActiveContentDimensions(targetInitialIndex);
       }
     }
 
