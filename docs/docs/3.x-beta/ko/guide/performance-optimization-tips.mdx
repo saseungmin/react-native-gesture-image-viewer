@@ -36,13 +36,13 @@ function App() {
 ```tsx
 import { useMemo } from 'react';
 
-// 지양: 렌더링할 때마다 새 배열을 만듭니다.
+// ❌ 지양: 렌더링할 때마다 새 배열을 만듭니다.
 <GestureViewer data={[...images]} renderItem={renderImage} />
 
-// 권장: 내용이 바뀌지 않았다면 기존 prop 또는 state 값을 그대로 사용합니다.
+// ✅ 권장: 내용이 바뀌지 않았다면 기존 prop 또는 state 값을 그대로 사용합니다.
 <GestureViewer data={images} renderItem={renderImage} />
 
-// 변환이 필요하다면 원본 값을 기준으로 파생 배열을 메모이제이션합니다.
+// ✅ 변환이 필요하다면 원본 값을 기준으로 파생 배열을 메모이제이션합니다.
 function LimitedGallery({ images }: { images: string[] }) {
   const visibleImages = useMemo(
     () => images.slice(0, 20),
@@ -56,11 +56,11 @@ function LimitedGallery({ images }: { images: string[] }) {
 `data`를 제자리에서 변경하지 말고, 내용이 바뀔 때 배열을 교체하세요.
 
 ```tsx
-// 지양
+// ❌ 지양
 images.push(nextImage);
 setImages(images);
 
-// 권장
+// ✅ 권장
 setImages((currentImages) => [...currentImages, nextImage]);
 ```
 

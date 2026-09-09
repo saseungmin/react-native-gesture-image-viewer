@@ -36,13 +36,13 @@ Passing a new array is supported and is the correct way to publish list changes.
 ```tsx
 import { useMemo } from 'react';
 
-// Avoid: this creates a new array on every render.
+// ❌ Avoid: this creates a new array on every render.
 <GestureViewer data={[...images]} renderItem={renderImage} />
 
-// Prefer: reuse the existing prop or state value when its contents are unchanged.
+// ✅ Prefer: reuse the existing prop or state value when its contents are unchanged.
 <GestureViewer data={images} renderItem={renderImage} />
 
-// If a transformation is required, memoize the derived array from its source.
+// ✅ If a transformation is required, memoize the derived array from its source.
 function LimitedGallery({ images }: { images: string[] }) {
   const visibleImages = useMemo(
     () => images.slice(0, 20),
@@ -56,11 +56,11 @@ function LimitedGallery({ images }: { images: string[] }) {
 Do not mutate `data` in place. Replace the array when its contents change:
 
 ```tsx
-// Avoid
+// ❌ Avoid
 images.push(nextImage);
 setImages(images);
 
-// Prefer
+// ✅ Prefer
 setImages((currentImages) => [...currentImages, nextImage]);
 ```
 
