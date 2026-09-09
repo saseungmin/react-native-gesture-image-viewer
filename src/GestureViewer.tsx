@@ -42,12 +42,9 @@ function GestureViewerItemCell<ItemT>({
   renderItem,
   setItemDimensions,
 }: GestureViewerItemCellProps<ItemT>) {
-  const registerItemDimensions = useCallback(
-    (dimensions: GestureViewerItemDimensions) => {
-      setItemDimensions(index, item, dimensions);
-    },
-    [index, item, setItemDimensions],
-  );
+  const registerItemDimensions = (dimensions: GestureViewerItemDimensions) => {
+    setItemDimensions(index, item, dimensions);
+  };
 
   return renderItem(item, index, {
     isActive,

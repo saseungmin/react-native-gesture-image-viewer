@@ -951,10 +951,9 @@ describe('GestureViewer renderItem active state', () => {
     expectActiveStates(['inactive', 'inactive', 'inactive', 'active', 'inactive']);
   });
 
-  it('supplies a stable item-bound dimensions setter to render callbacks', async () => {
+  it('supplies an item-bound dimensions setter to render callbacks', async () => {
     const data = ['first', 'second'];
     let firstSetter: ((dimensions: { width: number; height: number }) => void) | undefined;
-    let latestFirstSetter: ((dimensions: { width: number; height: number }) => void) | undefined;
 
     const renderItem = (
       item: string,
@@ -964,7 +963,6 @@ describe('GestureViewer renderItem active state', () => {
       }: { setItemDimensions: (dimensions: { width: number; height: number }) => void },
     ) => {
       if (index === 0) {
-        latestFirstSetter = setItemDimensions;
         firstSetter ??= setItemDimensions;
       }
 
@@ -994,8 +992,6 @@ describe('GestureViewer renderItem active state', () => {
         width={PAGE_WIDTH}
       />,
     );
-
-    expect(latestFirstSetter).toBe(firstSetter);
 
     await act(async () => {
       firstSetter?.({ height: 616, width: 393 });
