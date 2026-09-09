@@ -23,7 +23,13 @@ import {
 import { scheduleInitialScroll } from './scheduleInitialScroll';
 import type { GestureViewerItemDimensions, GestureViewerProps, TriggerRect } from './types';
 import { useGestureViewerPaging } from './useGestureViewerPaging';
-import { clampTranslationToBounds, createScrollAction, getLoopAdjustedIndex } from './utils';
+import {
+  clampIndex,
+  clampTranslationToBounds,
+  createScrollAction,
+  getLoopAdjustedIndex,
+  getLoopPhysicalIndex,
+} from './utils';
 import { getDismissDistance, shouldDismissByDirection } from './utils/dismiss';
 import { applyTapZoomAtPoint } from './utils/tapZoom';
 import { calculateFocalPointTranslation, shouldAcceptFocalPoint } from './utils/zoom';
@@ -38,6 +44,27 @@ type UseGestureViewerProps<ItemT, LC> = Omit<
   | 'backdropStyle'
   | 'enableSnapMode'
 >;
+
+type ViewerPositionSnapshot = Readonly<{
+  dataLength: number;
+  initialIndex: number;
+  pageStride: number;
+  usesLoopSentinels: boolean;
+}>;
+
+function getViewerPositionChanges(
+  previous: ViewerPositionSnapshot | null,
+  current: ViewerPositionSnapshot,
+) {
+  return {
+    isInitial: previous === null,
+    didDataLengthChange: previous !== null && previous.dataLength !== current.dataLength,
+    didInitialIndexChange: previous !== null && previous.initialIndex !== current.initialIndex,
+    didLoopLayoutChange:
+      previous !== null && previous.usesLoopSentinels !== current.usesLoopSentinels,
+    didPageStrideChange: previous !== null && previous.pageStride !== current.pageStride,
+  };
+}
 
 function fitItemDimensions(
   dimensions: GestureViewerItemDimensions | undefined,
@@ -102,7 +129,6 @@ export const useGestureViewer = <ItemT, LC>({
   const getItemKeyRef = useRef(getItemKey);
   const managerRef = useRef(manager);
   const configuredManagerRef = useRef<GestureViewerManager | null>(null);
-  const previousInitialIndexRef = useRef(initialIndex);
   const itemDimensionsRef = useRef<ItemDimensionsRegistry<ItemT>>(new Map());
 
   const isValidTriggerRect = useCallback((rect: TriggerRect | null): rect is TriggerRect => {
@@ -134,8 +160,12 @@ export const useGestureViewer = <ItemT, LC>({
 
   const dataLength = data?.length || 0;
   const usesLoopSentinels = enableLoop && dataLength > 1;
-  const previousDataLengthRef = useRef(dataLength);
-  const previousUsesLoopSentinelsRef = useRef(usesLoopSentinels);
+  const pageStride = width + itemSpacing;
+  const adjustedInitialIndex = getLoopPhysicalIndex(initialIndex, dataLength, enableLoop);
+  // Manager setup can rerender before a deferred list scroll runs, so each consumer tracks
+  // the last committed position inputs independently.
+  const managerPositionSnapshotRef = useRef<ViewerPositionSnapshot | null>(null);
+  const listPositionSnapshotRef = useRef<ViewerPositionSnapshot | null>(null);
   const viewportRef = useRef({ height, width });
   const loopConfigRef = useRef({ dataLength, enableLoop });
   const activeGeometryRef = useRef<{
@@ -256,8 +286,6 @@ export const useGestureViewer = <ItemT, LC>({
     ],
   );
 
-  const adjustedInitialIndex = usesLoopSentinels ? initialIndex + 1 : initialIndex;
-
   const constrainTranslation = useCallback(
     ({
       scale: targetScale,
@@ -285,11 +313,11 @@ export const useGestureViewer = <ItemT, LC>({
 
   const scrollTo = useCallback(
     (index: number, animated: boolean) => {
-      const scrollAction = createScrollAction(listRef.current, width + itemSpacing);
+      const scrollAction = createScrollAction(listRef.current, pageStride);
 
       return scrollAction.scrollTo(index, animated);
     },
-    [width, itemSpacing],
+    [pageStride],
   );
 
   const resetTransformState = useCallback(() => {
@@ -396,34 +424,34 @@ export const useGestureViewer = <ItemT, LC>({
   }, [id]);
 
   useEffect(() => {
+    const currentPositionSnapshot = {
+      dataLength,
+      initialIndex,
+      pageStride,
+      usesLoopSentinels,
+    };
+    const { didDataLengthChange, didInitialIndexChange, didLoopLayoutChange } =
+      getViewerPositionChanges(managerPositionSnapshotRef.current, currentPositionSnapshot);
+
+    managerPositionSnapshotRef.current = currentPositionSnapshot;
+
     if (!manager) {
       configuredManagerRef.current = null;
       return;
     }
 
     const isNewManager = configuredManagerRef.current !== manager;
-    const didInitialIndexPropChange = previousInitialIndexRef.current !== initialIndex;
-    const didDataLengthChange = previousDataLengthRef.current !== dataLength;
-    const didLoopLayoutChange = previousUsesLoopSentinelsRef.current !== usesLoopSentinels;
-    const hasValidInitialIndex = initialIndex >= 0 && initialIndex < dataLength;
-    const targetInitialIndex = dataLength === 0 ? 0 : initialIndex;
-    const shouldResetForDataLength =
-      didDataLengthChange && (dataLength === 0 || hasValidInitialIndex);
-    const shouldResetForLoopLayout = didLoopLayoutChange && hasValidInitialIndex;
     const shouldApplyInitialIndex =
-      isNewManager ||
-      didInitialIndexPropChange ||
-      shouldResetForDataLength ||
-      shouldResetForLoopLayout;
+      isNewManager || didInitialIndexChange || didDataLengthChange || didLoopLayoutChange;
     const shouldSyncInitialIndex =
-      didInitialIndexPropChange ||
-      shouldResetForDataLength ||
-      shouldResetForLoopLayout ||
-      activeGeometryIndexRef.current !== targetInitialIndex;
+      didInitialIndexChange ||
+      didDataLengthChange ||
+      didLoopLayoutChange ||
+      activeGeometryIndexRef.current !== initialIndex;
 
     manager.setDataLength(dataLength);
     manager.setEnableHorizontalSwipe(enableHorizontalSwipe);
-    manager.setPagingStride(width + itemSpacing);
+    manager.setPagingStride(pageStride);
     manager.setViewportWidth(width);
     manager.setHeight(height);
     manager.setZoomSharedValues({
@@ -439,24 +467,23 @@ export const useGestureViewer = <ItemT, LC>({
     manager.setEnableLoop(enableLoop);
 
     if (shouldApplyInitialIndex) {
-      pendingIndexRef.current = targetInitialIndex;
-      manager.setCurrentIndex(targetInitialIndex);
+      pendingIndexRef.current = initialIndex;
+      manager.setCurrentIndex(initialIndex);
 
       if (shouldSyncInitialIndex) {
-        syncActiveContentDimensions(targetInitialIndex);
+        syncActiveContentDimensions(initialIndex);
       }
     }
 
     configuredManagerRef.current = manager;
-    previousInitialIndexRef.current = initialIndex;
     manager.notifyStateChange();
   }, [
     dataLength,
     enableHorizontalSwipe,
     initialIndex,
     manager,
+    pageStride,
     width,
-    itemSpacing,
     maxZoomScale,
     enableLoop,
     scale,
@@ -480,12 +507,33 @@ export const useGestureViewer = <ItemT, LC>({
   }, [manager]);
 
   useEffect(() => {
-    const hasDataLengthChanged = previousDataLengthRef.current !== dataLength;
-    const hasLoopLayoutChanged = previousUsesLoopSentinelsRef.current !== usesLoopSentinels;
-    const hasValidInitialIndex = initialIndex >= 0 && initialIndex < dataLength;
+    const currentPositionSnapshot = {
+      dataLength,
+      initialIndex,
+      pageStride,
+      usesLoopSentinels,
+    };
+    const {
+      didDataLengthChange,
+      didInitialIndexChange,
+      didLoopLayoutChange,
+      didPageStrideChange,
+      isInitial: isInitialPositionRender,
+    } = getViewerPositionChanges(listPositionSnapshotRef.current, currentPositionSnapshot);
 
-    previousDataLengthRef.current = dataLength;
-    previousUsesLoopSentinelsRef.current = usesLoopSentinels;
+    listPositionSnapshotRef.current = currentPositionSnapshot;
+
+    const shouldResetToInitialIndex =
+      isInitialPositionRender ||
+      didInitialIndexChange ||
+      didDataLengthChange ||
+      didLoopLayoutChange;
+    const shouldRealignCurrentIndex = didPageStrideChange && !shouldResetToInitialIndex;
+
+    if (!shouldResetToInitialIndex && !shouldRealignCurrentIndex) {
+      return;
+    }
+
     translateY.set(0);
     translateX.set(0);
     scale.set(1);
@@ -493,21 +541,40 @@ export const useGestureViewer = <ItemT, LC>({
     startScale.set(1);
     rotation.set(0);
 
-    if (
-      !hasValidInitialIndex ||
-      (!hasDataLengthChanged && !hasLoopLayoutChanged && adjustedInitialIndex <= 0) ||
-      !listRef.current
-    ) {
+    if (dataLength === 0 || !listRef.current) {
+      return;
+    }
+
+    if (isInitialPositionRender && adjustedInitialIndex === 0) {
+      return;
+    }
+
+    const logicalIndex = shouldResetToInitialIndex
+      ? initialIndex
+      : clampIndex(
+          managerRef.current?.getState().currentIndex ?? pendingIndexRef.current,
+          dataLength,
+        );
+    const physicalIndex = getLoopPhysicalIndex(logicalIndex, dataLength, enableLoop);
+
+    if (shouldRealignCurrentIndex) {
+      pendingIndexRef.current = logicalIndex;
+      syncActiveContentDimensions(logicalIndex);
+    }
+
+    if (shouldRealignCurrentIndex && physicalIndex === 0) {
       return;
     }
 
     return scheduleInitialScroll(() => {
-      scrollTo(adjustedInitialIndex, false);
+      scrollTo(physicalIndex, false);
     });
   }, [
     adjustedInitialIndex,
     dataLength,
+    enableLoop,
     initialIndex,
+    pageStride,
     translateY,
     backdropOpacity,
     translateX,
@@ -515,6 +582,7 @@ export const useGestureViewer = <ItemT, LC>({
     startScale,
     rotation,
     scrollTo,
+    syncActiveContentDimensions,
     usesLoopSentinels,
   ]);
 

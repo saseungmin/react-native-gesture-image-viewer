@@ -76,6 +76,12 @@ Without `getItemKey`, loaded dimensions are reused only while the exact item ins
 that index. Replaced or reordered items use the viewer-cell fallback until their current dimensions
 become available, preventing stale bounds from a previous item.
 
+Viewer position reconciliation now derives logical manager state and physical list offsets from the
+same normalized target. Changing `initialIndex`, data length, loop layout, viewport width, or item
+spacing can no longer leave the visible page and controller state on different items. Non-finite or
+negative initial indexes resolve to `0`, values above the data range resolve to the last item, and
+empty data reports index `0` without scrolling.
+
 On each axis, scaled content stays centered while it is smaller than the viewport and stops when
 its rendered edge reaches the viewport edge once it becomes larger. The same bounds apply to
 pinch, pan, double-tap, web, and controller zoom paths.

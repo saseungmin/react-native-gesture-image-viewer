@@ -114,6 +114,104 @@ describe('useGestureViewerPaging web active state', () => {
     expect(result.current.activeListIndex).toBe(2);
   });
 
+  it('keeps the last settled cell when width changes after mounting away from zero', async () => {
+    const syncCurrentIndex = jest.fn();
+    const { rerender, result } = await renderHook<UseGestureViewerPagingResult, { width: number }>(
+      ({ width }) =>
+        useGestureViewerPaging(createArgs({ adjustedInitialIndex: 1, syncCurrentIndex, width })),
+      {
+        initialProps: { width: 320 },
+      },
+    );
+
+    await act(async () => {
+      result.current.onScroll?.(createScrollEvent(640));
+      jest.advanceTimersByTime(180);
+    });
+
+    expect(result.current.activeListIndex).toBe(2);
+
+    await rerender({ width: 400 });
+
+    expect(result.current.activeListIndex).toBe(2);
+
+    await act(async () => {
+      result.current.onScroll?.(createScrollEvent(800));
+      jest.advanceTimersByTime(180);
+    });
+
+    expect(syncCurrentIndex).toHaveBeenLastCalledWith(2);
+    expect(result.current.activeListIndex).toBe(2);
+  });
+
+  it('cancels an in-flight settle and restores the committed cell after width changes', async () => {
+    const syncCurrentIndex = jest.fn();
+    const { rerender, result } = await renderHook<UseGestureViewerPagingResult, { width: number }>(
+      ({ width }) =>
+        useGestureViewerPaging(createArgs({ adjustedInitialIndex: 1, syncCurrentIndex, width })),
+      {
+        initialProps: { width: 320 },
+      },
+    );
+
+    await act(async () => {
+      result.current.onScroll?.(createScrollEvent(640));
+    });
+
+    await rerender({ width: 400 });
+
+    expect(result.current.activeListIndex).toBe(1);
+
+    await act(async () => {
+      jest.advanceTimersByTime(180);
+    });
+
+    expect(syncCurrentIndex).not.toHaveBeenCalled();
+
+    await act(async () => {
+      result.current.onScroll?.(createScrollEvent(400));
+      jest.advanceTimersByTime(180);
+    });
+
+    expect(syncCurrentIndex).toHaveBeenLastCalledWith(1);
+    expect(result.current.activeListIndex).toBe(1);
+  });
+
+  it('keeps the last settled cell when item spacing changes after mounting away from zero', async () => {
+    const syncCurrentIndex = jest.fn();
+    const { rerender, result } = await renderHook<
+      UseGestureViewerPagingResult,
+      { itemSpacing: number }
+    >(
+      ({ itemSpacing }) =>
+        useGestureViewerPaging(
+          createArgs({ adjustedInitialIndex: 1, itemSpacing, syncCurrentIndex }),
+        ),
+      {
+        initialProps: { itemSpacing: 0 },
+      },
+    );
+
+    await act(async () => {
+      result.current.onScroll?.(createScrollEvent(640));
+      jest.advanceTimersByTime(180);
+    });
+
+    expect(result.current.activeListIndex).toBe(2);
+
+    await rerender({ itemSpacing: 24 });
+
+    expect(result.current.activeListIndex).toBe(2);
+
+    await act(async () => {
+      result.current.onScroll?.(createScrollEvent(688));
+      jest.advanceTimersByTime(180);
+    });
+
+    expect(syncCurrentIndex).toHaveBeenLastCalledWith(2);
+    expect(result.current.activeListIndex).toBe(2);
+  });
+
   it('resets the active cell when the adjusted initial index changes', async () => {
     const { rerender, result } = await renderHook<
       UseGestureViewerPagingResult,

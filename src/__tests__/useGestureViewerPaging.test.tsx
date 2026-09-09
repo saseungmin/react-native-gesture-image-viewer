@@ -55,7 +55,7 @@ function createArgs(
 }
 
 describe('useGestureViewerPaging native active state', () => {
-  it('resets the active cell when the page layout changes', async () => {
+  it('keeps the settled cell when width changes after mounting away from zero', async () => {
     const { rerender, result } = await renderHook<UseGestureViewerPagingResult, { width: number }>(
       ({ width }) => useGestureViewerPaging(createArgs({ adjustedInitialIndex: 1, width })),
       {
@@ -71,7 +71,30 @@ describe('useGestureViewerPaging native active state', () => {
 
     await rerender({ width: 400 });
 
-    expect(result.current.activeListIndex).toBe(1);
+    expect(result.current.activeListIndex).toBe(2);
+  });
+
+  it('keeps the settled cell when item spacing changes after mounting away from zero', async () => {
+    const { rerender, result } = await renderHook<
+      UseGestureViewerPagingResult,
+      { itemSpacing: number }
+    >(
+      ({ itemSpacing }) =>
+        useGestureViewerPaging(createArgs({ adjustedInitialIndex: 1, itemSpacing })),
+      {
+        initialProps: { itemSpacing: 0 },
+      },
+    );
+
+    await act(async () => {
+      result.current.onMomentumScrollEnd?.(createScrollEvent(640));
+    });
+
+    expect(result.current.activeListIndex).toBe(2);
+
+    await rerender({ itemSpacing: 24 });
+
+    expect(result.current.activeListIndex).toBe(2);
   });
 
   it('keeps the settled cell when a layout change does not reschedule initial scrolling', async () => {

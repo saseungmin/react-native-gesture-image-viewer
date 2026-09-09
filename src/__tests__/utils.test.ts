@@ -3,7 +3,12 @@ import {
   ScrollView as GestureScrollView,
 } from 'react-native-gesture-handler';
 
-import { clampTranslationToBounds, shouldUseNativeScrollGesture } from '../utils';
+import {
+  clampIndex,
+  clampTranslationToBounds,
+  getLoopPhysicalIndex,
+  shouldUseNativeScrollGesture,
+} from '../utils';
 import { getTapZoomTarget } from '../utils/tapZoom';
 import { calculateFocalPointTranslation, shouldAcceptFocalPoint } from '../utils/zoom';
 
@@ -14,6 +19,26 @@ function PlainScrollView() {
 function PlainFlatList() {
   return null;
 }
+
+describe('clampIndex', () => {
+  it('normalizes initial indexes against the current data length', () => {
+    expect(clampIndex(2, 3)).toBe(2);
+    expect(clampIndex(9, 3)).toBe(2);
+    expect(clampIndex(-2, 3)).toBe(0);
+    expect(clampIndex(1.8, 3)).toBe(1);
+    expect(clampIndex(Number.NaN, 3)).toBe(0);
+    expect(clampIndex(Number.POSITIVE_INFINITY, 3)).toBe(0);
+    expect(clampIndex(2, 0)).toBe(0);
+  });
+});
+
+describe('getLoopPhysicalIndex', () => {
+  it('maps logical indexes only when loop sentinels exist', () => {
+    expect(getLoopPhysicalIndex(0, 3, false)).toBe(0);
+    expect(getLoopPhysicalIndex(2, 3, true)).toBe(3);
+    expect(getLoopPhysicalIndex(0, 1, true)).toBe(0);
+  });
+});
 
 describe('shouldUseNativeScrollGesture', () => {
   it('enables the native scroll workaround for non-RNGH scrollables on iOS', () => {

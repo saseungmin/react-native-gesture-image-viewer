@@ -705,6 +705,252 @@ describe('GestureViewer renderItem active state', () => {
     );
   });
 
+  it('scrolls the mounted list when initialIndex changes to zero', async () => {
+    const id = 'zero-initial-index-reset';
+    const data = ['first', 'second', 'third'];
+    const { rerender } = await renderActiveViewer({ data, id, initialIndex: 1 });
+
+    await waitFor(() => {
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 1 });
+    });
+    scrollToIndex.mockClear();
+
+    await rerender(
+      <GestureViewer
+        data={data}
+        height={480}
+        id={id}
+        initialIndex={0}
+        ListComponent={TestFlashList}
+        renderItem={(_item, index, { isActive }) => (
+          <ActiveItem index={index} isActive={isActive} />
+        )}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 0 });
+    });
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(0);
+    expectActiveStates(['active', 'inactive', 'inactive']);
+  });
+
+  it('clamps invalid initialIndex updates before synchronizing state and scroll', async () => {
+    const id = 'invalid-initial-index';
+    const data = ['first', 'second', 'third'];
+    const { rerender } = await renderActiveViewer({ data, id, initialIndex: 1 });
+
+    await waitFor(() => {
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 1 });
+    });
+    scrollToIndex.mockClear();
+
+    await rerender(
+      <GestureViewer
+        data={data}
+        height={480}
+        id={id}
+        initialIndex={99}
+        ListComponent={TestFlashList}
+        renderItem={(_item, index, { isActive }) => (
+          <ActiveItem index={index} isActive={isActive} />
+        )}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 2 });
+    });
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(2);
+
+    scrollToIndex.mockClear();
+
+    await rerender(
+      <GestureViewer
+        data={data}
+        height={480}
+        id={id}
+        initialIndex={Number.NaN}
+        ListComponent={TestFlashList}
+        renderItem={(_item, index, { isActive }) => (
+          <ActiveItem index={index} isActive={isActive} />
+        )}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 0 });
+    });
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(0);
+  });
+
+  it('renormalizes initialIndex when data shrinks below it', async () => {
+    const id = 'shrinking-initial-index';
+    const data = ['first', 'second', 'third'];
+    const { rerender } = await renderActiveViewer({ data, id, initialIndex: 2 });
+
+    await waitFor(() => {
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 2 });
+    });
+    scrollToIndex.mockClear();
+
+    await rerender(
+      <GestureViewer
+        data={['first']}
+        height={480}
+        id={id}
+        initialIndex={2}
+        ListComponent={TestFlashList}
+        renderItem={(_item, index, { isActive }) => (
+          <ActiveItem index={index} isActive={isActive} />
+        )}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 0 });
+    });
+    expect(registry.getManager(id)?.getState()).toEqual(
+      expect.objectContaining({ currentIndex: 0, totalCount: 1 }),
+    );
+  });
+
+  it('keeps the viewed item aligned when page width changes', async () => {
+    const id = 'page-width-realignment';
+    const data = ['first', 'second', 'third'];
+    const { rerender } = await renderActiveViewer({ data, id, initialIndex: 1 });
+
+    await waitFor(() => {
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 1 });
+    });
+
+    await act(async () => {
+      getListProps().onScroll?.(createScrollEvent(PAGE_WIDTH * 2));
+      getListProps().onMomentumScrollEnd?.(createScrollEvent(PAGE_WIDTH * 2));
+    });
+
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(2);
+    scrollToIndex.mockClear();
+
+    await rerender(
+      <GestureViewer
+        data={data}
+        height={480}
+        id={id}
+        initialIndex={1}
+        ListComponent={TestFlashList}
+        renderItem={(_item, index, { isActive }) => (
+          <ActiveItem index={index} isActive={isActive} />
+        )}
+        width={400}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 2 });
+    });
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(2);
+    expectActiveStates(['inactive', 'inactive', 'active']);
+  });
+
+  it('restores committed item geometry when width changes during a scroll', async () => {
+    const id = 'in-flight-width-realignment';
+    const data = ['first', 'second', 'third'];
+    const dimensionsByItem = new Map([
+      ['first', { height: 300, width: 300 }],
+      ['second', { height: 480, width: 320 }],
+      ['third', { height: 320, width: 640 }],
+    ]);
+    const getItemDimensions = jest.fn((item: string) => dimensionsByItem.get(item));
+    const { rerender } = await render(
+      <GestureViewer
+        data={data}
+        getItemDimensions={getItemDimensions}
+        height={480}
+        id={id}
+        initialIndex={1}
+        ListComponent={TestFlashList}
+        renderItem={(item, index) => <Text>{`${index}:${item}`}</Text>}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(registry.getManager(id)?.getState().currentIndex).toBe(1);
+    });
+
+    await act(async () => {
+      getListProps().onScroll?.(createScrollEvent(PAGE_WIDTH * 2));
+    });
+
+    expect(getItemDimensions).toHaveBeenLastCalledWith('third', 2);
+    getItemDimensions.mockClear();
+    scrollToIndex.mockClear();
+
+    await rerender(
+      <GestureViewer
+        data={data}
+        getItemDimensions={getItemDimensions}
+        height={480}
+        id={id}
+        initialIndex={1}
+        ListComponent={TestFlashList}
+        renderItem={(item, index) => <Text>{`${index}:${item}`}</Text>}
+        width={400}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 1 });
+    });
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(1);
+    expect(getItemDimensions).toHaveBeenLastCalledWith('second', 1);
+  });
+
+  it('keeps loop physical and logical indexes aligned when itemSpacing changes', async () => {
+    const id = 'loop-spacing-realignment';
+    const data = ['first', 'second', 'third'];
+    const { rerender } = await renderActiveViewer({ data, enableLoop: true, id });
+
+    await waitFor(() => {
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 1 });
+    });
+
+    await act(async () => {
+      getListProps().onScroll?.(createScrollEvent(PAGE_WIDTH * 3));
+      getListProps().onMomentumScrollEnd?.(createScrollEvent(PAGE_WIDTH * 3));
+    });
+
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(2);
+    scrollToIndex.mockClear();
+
+    await rerender(
+      <GestureViewer
+        data={data}
+        enableLoop
+        height={480}
+        id={id}
+        initialIndex={0}
+        itemSpacing={20}
+        ListComponent={TestFlashList}
+        renderItem={(_item, index, { isActive }) => (
+          <ActiveItem index={index} isActive={isActive} />
+        )}
+        width={PAGE_WIDTH}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 3 });
+    });
+    expect(registry.getManager(id)?.getState().currentIndex).toBe(2);
+    expectActiveStates(['inactive', 'inactive', 'inactive', 'active', 'inactive']);
+  });
+
   it('supplies a stable item-bound dimensions setter to render callbacks', async () => {
     const data = ['first', 'second'];
     let firstSetter: ((dimensions: { width: number; height: number }) => void) | undefined;

@@ -17,7 +17,9 @@ import type {
 } from './types';
 import { useGestureViewer } from './useGestureViewer';
 import {
+  clampIndex,
   createLoopData,
+  getLoopPhysicalIndex,
   isFlashListLike,
   isFlatListLike,
   isScrollViewLike,
@@ -76,6 +78,8 @@ export function GestureViewer<ItemT, LC>({
 
   const width = customWidth || screenWidth;
   const height = customHeight || screenHeight;
+  const normalizedInitialIndex = clampIndex(initialIndex, data.length);
+  const initialListIndex = getLoopPhysicalIndex(normalizedInitialIndex, data.length, enableLoop);
 
   const loopData = useMemo(() => createLoopData(data, enableLoop), [data, enableLoop]);
 
@@ -104,7 +108,7 @@ export function GestureViewer<ItemT, LC>({
     data,
     width,
     height,
-    initialIndex,
+    initialIndex: normalizedInitialIndex,
     itemSpacing,
     enableLoop,
     ...props,
@@ -257,9 +261,7 @@ export function GestureViewer<ItemT, LC>({
                     {...commonProps}
                     data={loopData}
                     renderItem={renderItem}
-                    initialScrollIndex={
-                      enableLoop && data.length > 1 ? initialIndex + 1 : initialIndex
-                    }
+                    initialScrollIndex={initialListIndex}
                     keyExtractor={keyExtractor}
                     {...(isFlashList
                       ? // NOTE - Deprecated estimatedItemSize for FlashList V2 (https://shopify.github.io/flash-list/docs/v2-changes#deprecated)

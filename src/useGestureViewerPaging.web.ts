@@ -53,20 +53,25 @@ export function useGestureViewerPaging({
   width,
 }: UseGestureViewerPagingArgs): UseGestureViewerPagingResult {
   const [activeListIndex, setActiveListIndex] = useState(adjustedInitialIndex);
-  const activeResetItemSpacing = adjustedInitialIndex > 0 ? itemSpacing : 0;
-  const activeResetWidth = adjustedInitialIndex > 0 ? width : 0;
+  const pageStride = width + itemSpacing;
   const webSingleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const webScrollRuntimeRef = useRef<WebScrollRuntime>({
     actor: 'idle',
     isAutoplayPausedByUser: false,
     lastSettledPhysicalIndex: adjustedInitialIndex,
-    latestOffsetX: adjustedInitialIndex * (width + itemSpacing),
+    latestOffsetX: adjustedInitialIndex * pageStride,
     latestRawPhysicalIndex: adjustedInitialIndex,
     lastProgrammaticScrollVersion: 0,
     settleTimer: null,
     resumeAutoplayTimer: null,
   });
+  const previousPagingLayoutRef = useRef<{
+    adjustedInitialIndex: number;
+    dataLength: number;
+    manager: typeof manager;
+    pageStride: number;
+  } | null>(null);
 
   const clearWebSingleTapTimer = useCallback(() => {
     if (webSingleTapTimerRef.current) {
@@ -229,37 +234,46 @@ export function useGestureViewerPaging({
 
   useEffect(() => {
     const runtime = webScrollRuntimeRef.current;
+    const previousLayout = previousPagingLayoutRef.current;
+    const shouldResetToInitialIndex =
+      previousLayout === null ||
+      previousLayout.adjustedInitialIndex !== adjustedInitialIndex ||
+      previousLayout.dataLength !== dataLength ||
+      previousLayout.manager !== manager;
+    const didPageStrideChange = previousLayout !== null && previousLayout.pageStride !== pageStride;
+
+    previousPagingLayoutRef.current = {
+      adjustedInitialIndex,
+      dataLength,
+      manager,
+      pageStride,
+    };
+
+    if (!shouldResetToInitialIndex && !didPageStrideChange) {
+      return;
+    }
 
     runtime.actor = 'idle';
     runtime.isAutoplayPausedByUser = false;
-    runtime.lastSettledPhysicalIndex = adjustedInitialIndex;
-    runtime.latestOffsetX = adjustedInitialIndex * (activeResetWidth + activeResetItemSpacing);
-    runtime.latestRawPhysicalIndex = adjustedInitialIndex;
+
+    if (shouldResetToInitialIndex) {
+      runtime.lastSettledPhysicalIndex = adjustedInitialIndex;
+      setActiveListIndex(adjustedInitialIndex);
+    }
+
+    runtime.latestOffsetX = runtime.lastSettledPhysicalIndex * pageStride;
+    runtime.latestRawPhysicalIndex = runtime.lastSettledPhysicalIndex;
     runtime.lastProgrammaticScrollVersion = manager?.getProgrammaticScrollVersion() ?? 0;
-    setActiveListIndex(adjustedInitialIndex);
     clearWebSettleTimer();
     clearWebAutoplayResumeTimer();
   }, [
-    activeResetItemSpacing,
-    activeResetWidth,
     adjustedInitialIndex,
     clearWebAutoplayResumeTimer,
     clearWebSettleTimer,
     dataLength,
     manager,
+    pageStride,
   ]);
-
-  useEffect(() => {
-    const runtime = webScrollRuntimeRef.current;
-
-    runtime.actor = 'idle';
-    runtime.isAutoplayPausedByUser = false;
-    runtime.latestOffsetX = runtime.lastSettledPhysicalIndex * (width + itemSpacing);
-    runtime.latestRawPhysicalIndex = runtime.lastSettledPhysicalIndex;
-    runtime.lastProgrammaticScrollVersion = manager?.getProgrammaticScrollVersion() ?? 0;
-    clearWebSettleTimer();
-    clearWebAutoplayResumeTimer();
-  }, [clearWebAutoplayResumeTimer, clearWebSettleTimer, itemSpacing, manager, width]);
 
   useEffect(() => {
     return () => {

@@ -150,6 +150,7 @@ export interface GestureViewerProps<ItemT, LC> {
   data: ItemT[];
   /**
    * The index of the item to display in the `GestureViewer` when the component is mounted.
+   * @remarks The value is normalized to the current data: non-finite or negative values use `0`, values above the available range use the last index, and empty data uses `0`. Updating this prop repositions a mounted viewer.
    * @defaultValue 0
    */
   initialIndex?: number;

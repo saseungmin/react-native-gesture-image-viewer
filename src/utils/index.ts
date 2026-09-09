@@ -47,6 +47,20 @@ export const shouldUseNativeScrollGesture = (
   return platformOS === 'ios' && component !== GestureScrollView && component !== GestureFlatList;
 };
 
+export const clampIndex = (index: number | undefined, dataLength: number): number => {
+  if (dataLength <= 0) {
+    return 0;
+  }
+
+  const candidateIndex = index ?? 0;
+
+  if (!Number.isFinite(candidateIndex)) {
+    return 0;
+  }
+
+  return Math.min(Math.max(Math.trunc(candidateIndex), 0), dataLength - 1);
+};
+
 const isValidDimension = (value: number): boolean => {
   'worklet';
 
@@ -119,6 +133,12 @@ export const createLoopData = <T>(data: T[], enableLoop: boolean): T[] => {
 
   return [lastItem, ...data, firstItem];
 };
+
+export const getLoopPhysicalIndex = (
+  logicalIndex: number,
+  dataLength: number,
+  enableLoop: boolean,
+): number => (enableLoop && dataLength > 1 ? logicalIndex + 1 : logicalIndex);
 
 export const getLoopAdjustedIndex = (
   scrollIndex: number,
