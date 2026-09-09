@@ -8,12 +8,13 @@ import { Modal } from 'react-native';
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 import { Image } from 'expo-image'; // [!code highlight]
 
+const images = [...];
+
 function renderImage(imageUrl: string) {
   return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} contentFit="contain" />; // [!code highlight]
 }
 
 function App() {
-  const images = [...];
   const [visible, setVisible] = useState(false);
 
   return (
@@ -28,6 +29,41 @@ function App() {
 }
 ```
 
+#### 변경되지 않은 `data`를 다시 만들지 마세요.
+
+목록 내용이 바뀔 때 새 배열을 전달하는 것은 올바른 사용법이며 정상적으로 지원됩니다. 다만 부모 컴포넌트가 자주 rerender될 때 동일한 배열을 매번 다시 만들면 viewer와 치수 조정 작업이 반복될 수 있습니다. 변환이 필요하지 않다면 기존 배열을 그대로 전달하고, 실제 파생 데이터만 메모이제이션하세요.
+
+```tsx
+import { useMemo } from 'react';
+
+// 지양: 렌더링할 때마다 새 배열을 만듭니다.
+<GestureViewer data={[...images]} renderItem={renderImage} />
+
+// 권장: 내용이 바뀌지 않았다면 기존 prop 또는 state 값을 그대로 사용합니다.
+<GestureViewer data={images} renderItem={renderImage} />
+
+// 변환이 필요하다면 원본 값을 기준으로 파생 배열을 메모이제이션합니다.
+function LimitedGallery({ images }: { images: string[] }) {
+  const visibleImages = useMemo(
+    () => images.slice(0, 20),
+    [images],
+  );
+
+  return <GestureViewer data={visibleImages} renderItem={renderImage} />;
+}
+```
+
+`data`를 제자리에서 변경하지 말고, 내용이 바뀔 때 배열을 교체하세요.
+
+```tsx
+// 지양
+images.push(nextImage);
+setImages(images);
+
+// 권장
+setImages((currentImages) => [...currentImages, nextImage]);
+```
+
 이미지 데이터에 원본 치수가 이미 있다면 `getItemDimensions`로 전달하세요. 치수를 로드 이후에만 알 수 있다면 `renderItem`에서 `setItemDimensions`로 보고하고, 같은 논리 아이템이 같은 slot에서 다른 객체로 다시 만들어질 수 있다면 그 runtime 경로와 함께 `getItemKey`를 사용해 치수가 그 slot에 유지되도록 하세요. 추가 레이아웃 측정 없이 `contain` 이미지의 줌/팬 범위를 정확하게 맞출 수 있습니다.
 
 #### 인접 페이지를 더 많이 마운트해야 하는 경우가 아니라면 render window를 작게 유지하세요.
@@ -39,12 +75,13 @@ import { useState } from 'react';
 import { Image, Modal } from 'react-native';
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 
+const images = [...];
+
 function renderImage(imageUrl: string) {
   return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
 }
 
 function App() {
-  const images = [...];
   const [visible, setVisible] = useState(false);
 
   return (
