@@ -161,7 +161,9 @@ const getImageKey = (image: (typeof images)[number]) => image.uri;
 
 ### `initialIndex` (default: `0`)
 
-Sets the initial index value.
+Sets the item index the viewer should display. The value is normalized against the current `data` length: non-finite and negative values become `0`, values above the available range become the last index, and empty data resolves to `0`.
+
+When `initialIndex` changes after the viewer is already mounted, the viewer repositions to the normalized index.
 
 ### `maxZoomScale` (default: `2`)
 
@@ -216,7 +218,10 @@ export interface GestureViewerProps<ItemT, LC> {
    */
   data: ItemT[];
   /**
-   * The index of the item to display in the `GestureViewer` when the component is mounted.
+   * The index of the item to display in the `GestureViewer`.
+   * @remarks
+   * - Normalized against the current data length: non-finite and negative values become 0, values above range become the last index, and empty data resolves to 0.
+   * - Prop changes reposition an already-mounted viewer to the normalized index.
    * @defaultValue 0
    */
   initialIndex?: number;

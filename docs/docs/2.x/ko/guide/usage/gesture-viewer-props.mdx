@@ -161,7 +161,9 @@ const getImageKey = (image: (typeof images)[number]) => image.uri;
 
 ### `initialIndex` (기본값: `0`)
 
-초기 인덱스 값을 설정할 수 있습니다.
+뷰어가 표시할 아이템 인덱스를 설정할 수 있습니다. 이 값은 현재 `data` 길이에 맞게 정규화됩니다. 유한하지 않은 값과 음수는 `0`이 되고, 범위를 초과한 값은 마지막 인덱스가 되며, 빈 데이터는 `0`으로 처리됩니다.
+
+뷰어가 이미 마운트된 뒤 `initialIndex`가 바뀌면 정규화된 인덱스로 다시 이동합니다.
 
 ### `maxZoomScale` (기본값: `2`)
 
@@ -216,7 +218,10 @@ export interface GestureViewerProps<ItemT, LC> {
    */
   data: ItemT[];
   /**
-   * 컴포넌트가 마운트될 때 `GestureViewer`에 처음 표시할 아이템의 인덱스입니다.
+   * `GestureViewer`에 표시할 아이템의 인덱스입니다.
+   * @remarks
+   * - 현재 data 길이에 맞게 정규화됩니다. 유한하지 않은 값과 음수는 0, 범위를 초과한 값은 마지막 인덱스, 빈 데이터는 0이 됩니다.
+   * - prop이 바뀌면 이미 마운트된 viewer도 정규화된 인덱스로 다시 이동합니다.
    * @defaultValue 0
    */
   initialIndex?: number;
