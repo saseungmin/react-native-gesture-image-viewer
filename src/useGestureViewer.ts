@@ -133,7 +133,9 @@ export const useGestureViewer = <ItemT, LC>({
   const hasActiveFocal = useSharedValue(false);
 
   const dataLength = data?.length || 0;
+  const usesLoopSentinels = enableLoop && dataLength > 1;
   const previousDataLengthRef = useRef(dataLength);
+  const previousUsesLoopSentinelsRef = useRef(usesLoopSentinels);
   const viewportRef = useRef({ height, width });
   const loopConfigRef = useRef({ dataLength, enableLoop });
   const activeGeometryRef = useRef<{
@@ -254,7 +256,7 @@ export const useGestureViewer = <ItemT, LC>({
     ],
   );
 
-  const adjustedInitialIndex = enableLoop && dataLength > 1 ? initialIndex + 1 : initialIndex;
+  const adjustedInitialIndex = usesLoopSentinels ? initialIndex + 1 : initialIndex;
 
   const constrainTranslation = useCallback(
     ({
@@ -402,13 +404,19 @@ export const useGestureViewer = <ItemT, LC>({
     const isNewManager = configuredManagerRef.current !== manager;
     const didInitialIndexPropChange = previousInitialIndexRef.current !== initialIndex;
     const didDataLengthChange = previousDataLengthRef.current !== dataLength;
+    const didLoopLayoutChange = previousUsesLoopSentinelsRef.current !== usesLoopSentinels;
     const hasValidInitialIndex = initialIndex >= 0 && initialIndex < dataLength;
     const shouldResetForDataLength = didDataLengthChange && hasValidInitialIndex;
+    const shouldResetForLoopLayout = didLoopLayoutChange && hasValidInitialIndex;
     const shouldApplyInitialIndex =
-      isNewManager || didInitialIndexPropChange || shouldResetForDataLength;
+      isNewManager ||
+      didInitialIndexPropChange ||
+      shouldResetForDataLength ||
+      shouldResetForLoopLayout;
     const shouldSyncInitialIndex =
       didInitialIndexPropChange ||
       shouldResetForDataLength ||
+      shouldResetForLoopLayout ||
       activeGeometryIndexRef.current !== initialIndex;
 
     manager.setDataLength(dataLength);
@@ -458,6 +466,7 @@ export const useGestureViewer = <ItemT, LC>({
     translateX,
     translateY,
     rotation,
+    usesLoopSentinels,
   ]);
 
   useEffect(() => {
@@ -470,9 +479,11 @@ export const useGestureViewer = <ItemT, LC>({
 
   useEffect(() => {
     const hasDataLengthChanged = previousDataLengthRef.current !== dataLength;
+    const hasLoopLayoutChanged = previousUsesLoopSentinelsRef.current !== usesLoopSentinels;
     const hasValidInitialIndex = initialIndex >= 0 && initialIndex < dataLength;
 
     previousDataLengthRef.current = dataLength;
+    previousUsesLoopSentinelsRef.current = usesLoopSentinels;
     translateY.set(0);
     translateX.set(0);
     scale.set(1);
@@ -482,7 +493,7 @@ export const useGestureViewer = <ItemT, LC>({
 
     if (
       !hasValidInitialIndex ||
-      (!hasDataLengthChanged && adjustedInitialIndex <= 0) ||
+      (!hasDataLengthChanged && !hasLoopLayoutChanged && adjustedInitialIndex <= 0) ||
       !listRef.current
     ) {
       return;
@@ -502,6 +513,7 @@ export const useGestureViewer = <ItemT, LC>({
     startScale,
     rotation,
     scrollTo,
+    usesLoopSentinels,
   ]);
 
   useEffect(() => {
