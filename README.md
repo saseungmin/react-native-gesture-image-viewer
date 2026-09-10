@@ -60,14 +60,10 @@ import {
 } from 'react-native-gesture-image-viewer';
 
 const images = [
-  { uri: 'https://picsum.photos/400/200', width: 400, height: 200 },
-  { uri: 'https://picsum.photos/200/400', width: 200, height: 400 },
-  { uri: 'https://picsum.photos/300/300', width: 300, height: 300 },
+  'https://picsum.photos/400/200',
+  'https://picsum.photos/200/400',
+  'https://picsum.photos/300/300',
 ];
-
-function getImageDimensions(image: (typeof images)[number]) {
-  return { width: image.width, height: image.height };
-}
 
 function App() {
   const [visible, setVisible] = useState(false);
@@ -82,10 +78,10 @@ function App() {
     setVisible(true);
   };
 
-  const renderImage = useCallback((image: (typeof images)[number]) => {
+  const renderImage = useCallback((imageUrl: string) => {
     return (
       <Image
-        source={{ uri: image.uri }}
+        source={{ uri: imageUrl }}
         style={{ width: '100%', height: '100%' }}
         resizeMode="contain"
       />
@@ -98,10 +94,10 @@ function App() {
 
   return (
     <View>
-      {images.map((image, index) => (
-        <GestureTrigger key={image.uri} onPress={() => openModal(index)}>
+      {images.map((imageUrl, index) => (
+        <GestureTrigger key={imageUrl} onPress={() => openModal(index)}>
           <Pressable>
-            <Image source={{ uri: image.uri }} />
+            <Image source={{ uri: imageUrl }} />
           </Pressable>
         </GestureTrigger>
       ))}
@@ -110,7 +106,6 @@ function App() {
           data={images}
           initialIndex={selectedIndex}
           renderItem={renderImage}
-          getItemDimensions={getImageDimensions}
           ListComponent={ScrollView}
           onDismiss={() => setVisible(false)}
         />
@@ -126,9 +121,8 @@ function App() {
 }
 ```
 
-When dimensions are learned from an image load callback and object items may be recreated, provide
-`getItemKey={(item) => item.uri}` (or another stable unique key). This preserves dimensions when the
-same logical item is recreated at the same index without reusing them after replacement or reorder.
+For accurate pan bounds with `contain`-fitted content, see the
+[Content Dimensions guide](https://react-native-gesture-image-viewer.pages.dev/guide/usage/custom-components#content-dimensions).
 
 ## Contributing
 

@@ -60,14 +60,10 @@ import {
 } from 'react-native-gesture-image-viewer';
 
 const images = [
-  { uri: 'https://picsum.photos/400/200', width: 400, height: 200 },
-  { uri: 'https://picsum.photos/200/400', width: 200, height: 400 },
-  { uri: 'https://picsum.photos/300/300', width: 300, height: 300 },
+  'https://picsum.photos/400/200',
+  'https://picsum.photos/200/400',
+  'https://picsum.photos/300/300',
 ];
-
-function getImageDimensions(image: (typeof images)[number]) {
-  return { width: image.width, height: image.height };
-}
 
 function App() {
   const [visible, setVisible] = useState(false);
@@ -82,10 +78,10 @@ function App() {
     setVisible(true);
   };
 
-  const renderImage = useCallback((image: (typeof images)[number]) => {
+  const renderImage = useCallback((imageUrl: string) => {
     return (
       <Image
-        source={{ uri: image.uri }}
+        source={{ uri: imageUrl }}
         style={{ width: '100%', height: '100%' }}
         resizeMode="contain"
       />
@@ -98,10 +94,10 @@ function App() {
 
   return (
     <View>
-      {images.map((image, index) => (
-        <GestureTrigger key={image.uri} onPress={() => openModal(index)}>
+      {images.map((imageUrl, index) => (
+        <GestureTrigger key={imageUrl} onPress={() => openModal(index)}>
           <Pressable>
-            <Image source={{ uri: image.uri }} />
+            <Image source={{ uri: imageUrl }} />
           </Pressable>
         </GestureTrigger>
       ))}
@@ -110,7 +106,6 @@ function App() {
           data={images}
           initialIndex={selectedIndex}
           renderItem={renderImage}
-          getItemDimensions={getImageDimensions}
           ListComponent={ScrollView}
           onDismiss={() => setVisible(false)}
         />
@@ -126,10 +121,8 @@ function App() {
 }
 ```
 
-이미지 load callback에서 치수를 얻고 객체 item이 다시 생성될 수 있다면
-`getItemKey={(item) => item.uri}`처럼 안정적이고 고유한 key를 제공하세요. 같은 index에서
-동일한 논리적 item이 재생성될 때는 치수를 유지하고, 교체되거나 재정렬된 item에는 이전
-치수가 적용되지 않습니다.
+`contain` 콘텐츠의 정확한 pan 범위가 필요하다면
+[콘텐츠 치수 가이드](https://react-native-gesture-image-viewer.pages.dev/ko/guide/usage/custom-components#콘텐츠-치수)를 참고하세요.
 
 ## 기여하기
 
