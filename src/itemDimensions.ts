@@ -80,6 +80,8 @@ export const resolveItemDimensions = <ItemT>({
     return undefined;
   }
 
+  // `as ItemT` restores the viewer's dense-list invariant, which TypeScript cannot infer from
+  // generic indexed access when `noUncheckedIndexedAccess` is enabled.
   const item = data[index] as ItemT;
   const registered = registry.get(index);
   const itemKey = registered ? resolveItemKey(getItemKey, item, index) : undefined;
@@ -120,6 +122,8 @@ export const registerItemDimensions = <ItemT>({
     return false;
   }
 
+  // `as ItemT` restores the viewer's dense-list invariant, which TypeScript cannot infer from
+  // generic indexed access when `noUncheckedIndexedAccess` is enabled.
   const currentItem = data[index] as ItemT;
   const currentItemKey = resolveItemKey(getItemKey, currentItem, index);
   const reportedItemKey = Object.is(currentItem, item)
