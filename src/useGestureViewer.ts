@@ -916,22 +916,37 @@ export const useGestureViewer = <ItemT, LC>({
           const currentScale = scale.get();
 
           if (currentScale > maxZoomScale) {
-            scale.set(
-              withTiming(maxZoomScale, {
-                duration: 300,
-                easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-              }),
-            );
-
+            const focalX = hasActiveFocal.get() ? lastFocalX.get() : width / 2;
+            const focalY = hasActiveFocal.get() ? lastFocalY.get() : height / 2;
+            // Rebase on the release transform, which may already have reached a content bound.
+            const { translateX: targetTranslateX, translateY: targetTranslateY } =
+              calculateFocalPointTranslation({
+                currentFocalX: focalX,
+                currentFocalY: focalY,
+                height,
+                initialScale: currentScale,
+                initialTranslateX: translateX.get(),
+                initialTranslateY: translateY.get(),
+                nextScale: maxZoomScale,
+                startFocalX: focalX,
+                startFocalY: focalY,
+                width,
+              });
             const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } =
               constrainTranslation({
                 scale: maxZoomScale,
-                translateX: translateX.get(),
-                translateY: translateY.get(),
+                translateX: maxZoomScale <= 1 ? 0 : targetTranslateX,
+                translateY: maxZoomScale <= 1 ? 0 : targetTranslateY,
               });
+            // Matching progress keeps the focal point fixed throughout the unclamped return.
+            const settleConfig = {
+              duration: 300,
+              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+            };
 
-            translateX.set(withTiming(constrainedTranslateX));
-            translateY.set(withTiming(constrainedTranslateY));
+            scale.set(withTiming(maxZoomScale, settleConfig));
+            translateX.set(withTiming(constrainedTranslateX, settleConfig));
+            translateY.set(withTiming(constrainedTranslateY, settleConfig));
 
             return;
           }
