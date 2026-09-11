@@ -29,6 +29,7 @@ import {
   createScrollAction,
   getLoopAdjustedIndex,
   getLoopPhysicalIndex,
+  resolveGeometrySyncTranslationMode,
 } from './utils';
 import { getDismissDistance, shouldDismissByDirection } from './utils/dismiss';
 import { applyTapZoomAtPoint } from './utils/tapZoom';
@@ -196,8 +197,22 @@ export const useGestureViewer = <ItemT, LC>({
         width: viewport.width,
       };
       const previousGeometry = activeGeometryRef.current;
+      const previousGeometryIndex = activeGeometryIndexRef.current;
 
       activeGeometryIndexRef.current = logicalIndex;
+
+      const currentScale = scale.get();
+      const translationMode = resolveGeometrySyncTranslationMode(
+        previousGeometryIndex,
+        logicalIndex,
+        currentScale,
+      );
+
+      if (translationMode === 'reset') {
+        // Complete the page-owned reset before the next item's geometry can reuse the old offset.
+        translateX.set(0);
+        translateY.set(0);
+      }
 
       if (
         previousGeometry?.contentHeight === nextGeometry.contentHeight &&
@@ -217,21 +232,23 @@ export const useGestureViewer = <ItemT, LC>({
         contentHeight.set(fitted.height);
       }
 
-      if (scale.get() > 1) {
-        const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } =
-          clampTranslationToBounds({
-            contentHeight: fitted.height,
-            contentWidth: fitted.width,
-            height: viewport.height,
-            scale: scale.get(),
-            translateX: translateX.get(),
-            translateY: translateY.get(),
-            width: viewport.width,
-          });
-
-        translateX.set(withTiming(constrainedTranslateX));
-        translateY.set(withTiming(constrainedTranslateY));
+      if (translationMode !== 'constrain') {
+        return;
       }
+
+      const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } =
+        clampTranslationToBounds({
+          contentHeight: fitted.height,
+          contentWidth: fitted.width,
+          height: viewport.height,
+          scale: currentScale,
+          translateX: translateX.get(),
+          translateY: translateY.get(),
+          width: viewport.width,
+        });
+
+      translateX.set(withTiming(constrainedTranslateX));
+      translateY.set(withTiming(constrainedTranslateY));
     },
     [contentHeight, contentWidth, scale, translateX, translateY],
   );

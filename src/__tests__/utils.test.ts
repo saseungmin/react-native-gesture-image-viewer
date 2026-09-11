@@ -7,6 +7,7 @@ import {
   clampIndex,
   clampTranslationToBounds,
   getLoopPhysicalIndex,
+  resolveGeometrySyncTranslationMode,
   shouldUseNativeScrollGesture,
 } from '../utils';
 import { getTapZoomTarget } from '../utils/tapZoom';
@@ -37,6 +38,16 @@ describe('getLoopPhysicalIndex', () => {
     expect(getLoopPhysicalIndex(0, 3, false)).toBe(0);
     expect(getLoopPhysicalIndex(2, 3, true)).toBe(3);
     expect(getLoopPhysicalIndex(0, 1, true)).toBe(0);
+  });
+});
+
+describe('resolveGeometrySyncTranslationMode', () => {
+  it('resets a new item and constrains only an existing zoomed item', () => {
+    expect(resolveGeometrySyncTranslationMode(0, 1, 2)).toBe('reset');
+    expect(resolveGeometrySyncTranslationMode(0, 1, 1)).toBe('reset');
+    expect(resolveGeometrySyncTranslationMode(0, 0, 2)).toBe('constrain');
+    expect(resolveGeometrySyncTranslationMode(null, 0, 2)).toBe('constrain');
+    expect(resolveGeometrySyncTranslationMode(0, 0, 1)).toBe('none');
   });
 });
 

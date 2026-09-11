@@ -61,6 +61,18 @@ export const clampIndex = (index: number | undefined, dataLength: number): numbe
   return Math.min(Math.max(Math.trunc(candidateIndex), 0), dataLength - 1);
 };
 
+export const resolveGeometrySyncTranslationMode = (
+  previousIndex: number | null,
+  nextIndex: number,
+  scale: number,
+): 'constrain' | 'none' | 'reset' => {
+  if (previousIndex !== null && previousIndex !== nextIndex) {
+    return 'reset';
+  }
+
+  return scale > 1 ? 'constrain' : 'none';
+};
+
 const isValidDimension = (value: number): boolean => {
   'worklet';
 
