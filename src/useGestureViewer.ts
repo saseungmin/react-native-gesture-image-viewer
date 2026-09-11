@@ -44,7 +44,7 @@ import { useGestureViewerManagerBridge } from './useGestureViewerManagerBridge';
 import { useGestureViewerPaging } from './useGestureViewerPaging';
 import { type EmitSingleTap, useWebClickHandler } from './useWebClickHandler';
 import { useWebSingleTapTimer } from './useWebSingleTapTimer';
-import { clampTranslationToBounds } from './utils';
+import { clampTranslationToBounds, resolveGeometrySyncTranslationMode } from './utils';
 import { getDismissDistance, shouldDismissByDirection } from './utils/dismiss';
 import { applyTapZoomAtPoint } from './utils/tapZoom';
 import { calculateFocalPointTranslation, shouldAcceptFocalPoint } from './utils/zoom';
@@ -158,6 +158,7 @@ export const useGestureViewer = <ItemT>({
     height: number;
     width: number;
   } | null>(null);
+  const activeGeometryIndexRef = useRef<number | null>(null);
 
   const initialTranslateY = useSharedValue(0);
   const initialTranslateX = useSharedValue(0);
@@ -246,6 +247,22 @@ export const useGestureViewer = <ItemT>({
         width: viewport.width,
       };
       const previousGeometry = activeGeometryRef.current;
+      const previousGeometryIndex = activeGeometryIndexRef.current;
+
+      activeGeometryIndexRef.current = index;
+
+      const currentScale = scale.get();
+      const translationMode = resolveGeometrySyncTranslationMode(
+        previousGeometryIndex,
+        index,
+        currentScale,
+      );
+
+      if (translationMode === 'reset') {
+        // Complete the page-owned reset before the next item's geometry can reuse the old offset.
+        translateX.set(0);
+        translateY.set(0);
+      }
 
       if (
         previousGeometry?.contentHeight === nextGeometry.contentHeight &&
@@ -265,19 +282,21 @@ export const useGestureViewer = <ItemT>({
         contentHeight.set(fitted.height);
       }
 
-      if (scale.get() > 1) {
-        const constrained = clampTranslationToBounds({
-          contentHeight: fitted.height,
-          contentWidth: fitted.width,
-          height: viewport.height,
-          width: viewport.width,
-          scale: scale.get(),
-          translateX: translateX.get(),
-          translateY: translateY.get(),
-        });
-        translateX.set(withTiming(constrained.translateX));
-        translateY.set(withTiming(constrained.translateY));
+      if (translationMode !== 'constrain') {
+        return;
       }
+
+      const constrained = clampTranslationToBounds({
+        contentHeight: fitted.height,
+        contentWidth: fitted.width,
+        height: viewport.height,
+        width: viewport.width,
+        scale: currentScale,
+        translateX: translateX.get(),
+        translateY: translateY.get(),
+      });
+      translateX.set(withTiming(constrained.translateX));
+      translateY.set(withTiming(constrained.translateY));
     },
     [contentHeight, contentWidth, scale, translateX, translateY],
   );

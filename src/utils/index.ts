@@ -2,6 +2,19 @@ const isValidDimension = (value: number): boolean => {
   'worklet';
   return Number.isFinite(value) && value > 0;
 };
+
+export const resolveGeometrySyncTranslationMode = (
+  previousIndex: number | null,
+  nextIndex: number,
+  scale: number,
+): 'constrain' | 'none' | 'reset' => {
+  if (previousIndex !== null && previousIndex !== nextIndex) {
+    return 'reset';
+  }
+
+  return scale > 1 ? 'constrain' : 'none';
+};
+
 const clampTranslation = (value: number, max: number): number => {
   'worklet';
   const result = Math.max(-max, Math.min(max, value));
