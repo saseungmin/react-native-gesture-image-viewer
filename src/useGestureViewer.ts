@@ -537,8 +537,9 @@ export const useGestureViewer = <ItemT, LC>({
       didPageStrideChange,
       isInitial: isInitialPositionRender,
     } = getViewerPositionChanges(listPositionSnapshotRef.current, currentPositionSnapshot);
-
-    listPositionSnapshotRef.current = currentPositionSnapshot;
+    const commitPositionSnapshot = () => {
+      listPositionSnapshotRef.current = currentPositionSnapshot;
+    };
 
     const shouldResetToInitialIndex =
       isInitialPositionRender ||
@@ -548,6 +549,7 @@ export const useGestureViewer = <ItemT, LC>({
     const shouldRealignCurrentIndex = didPageStrideChange && !shouldResetToInitialIndex;
 
     if (!shouldResetToInitialIndex && !shouldRealignCurrentIndex) {
+      commitPositionSnapshot();
       return;
     }
 
@@ -559,10 +561,12 @@ export const useGestureViewer = <ItemT, LC>({
     rotation.set(0);
 
     if (dataLength === 0 || !listRef.current) {
+      commitPositionSnapshot();
       return;
     }
 
     if (isInitialPositionRender && adjustedInitialIndex === 0) {
+      commitPositionSnapshot();
       return;
     }
 
@@ -580,11 +584,13 @@ export const useGestureViewer = <ItemT, LC>({
     }
 
     if (shouldRealignCurrentIndex && physicalIndex === 0) {
+      commitPositionSnapshot();
       return;
     }
 
     return scheduleInitialScroll(() => {
       scrollTo(physicalIndex, false);
+      commitPositionSnapshot();
     });
   }, [
     adjustedInitialIndex,

@@ -7,7 +7,7 @@ import {
   within,
   type RenderResult,
 } from '@testing-library/react-native';
-import { forwardRef, memo, useImperativeHandle, type ReactElement } from 'react';
+import { forwardRef, memo, StrictMode, useImperativeHandle, type ReactElement } from 'react';
 import {
   Text,
   type NativeScrollEvent,
@@ -136,6 +136,55 @@ describe('GestureViewer renderItem active state', () => {
     await renderActiveViewer({ id: 'initial-active', initialIndex: 1 });
 
     expectActiveStates(['inactive', 'active', 'inactive']);
+  });
+
+  it('reschedules a deferred initial scroll after Strict Mode effect replay', async () => {
+    const idleGlobal = globalThis as typeof globalThis & {
+      requestIdleCallback?: (callback: () => void) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+    const originalRequestIdleCallback = idleGlobal.requestIdleCallback;
+    const originalCancelIdleCallback = idleGlobal.cancelIdleCallback;
+    const callbacks = new Map<number, () => void>();
+    let callbackId = 0;
+
+    idleGlobal.requestIdleCallback = (callback) => {
+      callbackId += 1;
+      callbacks.set(callbackId, callback);
+      return callbackId;
+    };
+    idleGlobal.cancelIdleCallback = (handle) => {
+      callbacks.delete(handle);
+    };
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    try {
+      await render(
+        <StrictMode>
+          <GestureViewer
+            data={['first', 'second']}
+            height={480}
+            id="strict-initial-scroll"
+            initialIndex={1}
+            ListComponent={TestFlashList}
+            renderItem={(item, index) => <Text>{`${index}:${item}`}</Text>}
+            width={PAGE_WIDTH}
+          />
+        </StrictMode>,
+      );
+
+      expect(callbacks.size).toBe(1);
+
+      await act(async () => {
+        callbacks.forEach((callback) => callback());
+      });
+
+      expect(scrollToIndex).toHaveBeenCalledWith({ animated: false, index: 1 });
+    } finally {
+      consoleErrorSpy.mockRestore();
+      idleGlobal.requestIdleCallback = originalRequestIdleCallback;
+      idleGlobal.cancelIdleCallback = originalCancelIdleCallback;
+    }
   });
 
   it('keeps the current cell active until native momentum settles', async () => {
@@ -954,6 +1003,7 @@ describe('GestureViewer renderItem active state', () => {
   it('supplies an item-bound dimensions setter to render callbacks', async () => {
     const data = ['first', 'second'];
     let firstSetter: ((dimensions: { width: number; height: number }) => void) | undefined;
+    const getItemDimensions = jest.fn(() => undefined);
 
     const renderItem = (
       item: string,
@@ -972,6 +1022,7 @@ describe('GestureViewer renderItem active state', () => {
     const { rerender } = await render(
       <GestureViewer
         data={data}
+        getItemDimensions={getItemDimensions}
         height={480}
         id="dimensions-setter"
         ListComponent={TestFlashList}
@@ -985,6 +1036,7 @@ describe('GestureViewer renderItem active state', () => {
     await rerender(
       <GestureViewer
         data={data}
+        getItemDimensions={getItemDimensions}
         height={480}
         id="dimensions-setter"
         ListComponent={TestFlashList}
@@ -996,6 +1048,21 @@ describe('GestureViewer renderItem active state', () => {
     await act(async () => {
       firstSetter?.({ height: 616, width: 393 });
     });
+
+    await rerender(
+      <GestureViewer
+        data={data}
+        getItemDimensions={getItemDimensions}
+        height={480}
+        id="dimensions-setter"
+        ListComponent={TestFlashList}
+        renderItem={renderItem}
+        width={PAGE_WIDTH + 1}
+      />,
+    );
+
+    expect(getItemDimensions).toHaveBeenCalledTimes(1);
+    expect(getItemDimensions).toHaveBeenCalledWith('first', 0);
   });
 
   it('updates rendered loop data when data identity changes', async () => {

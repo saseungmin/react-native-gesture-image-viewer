@@ -60,6 +60,7 @@ rendered source or its natural dimensions can change, and must not be the index 
 ```tsx
 <GestureViewer
   data={images}
+  ListComponent={FlatList}
   getItemKey={(item) => item.uri}
   renderItem={(item, _index, { setItemDimensions }) => (
     <Image
