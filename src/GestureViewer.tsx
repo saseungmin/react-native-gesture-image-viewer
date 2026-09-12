@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, type ReactElement } from 'react';
 import {
   Platform,
   type ScrollViewProps,
@@ -10,16 +10,47 @@ import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-g
 import Animated from 'react-native-reanimated';
 
 import { registry } from './GestureViewerRegistry';
-import type { GestureViewerProps } from './types';
+import type {
+  GestureViewerItemDimensions,
+  GestureViewerProps,
+  GestureViewerRenderItemInfo,
+} from './types';
 import { useGestureViewer } from './useGestureViewer';
 import {
+  clampIndex,
   createLoopData,
+  getLoopPhysicalIndex,
   isFlashListLike,
   isFlatListLike,
   isScrollViewLike,
   shouldUseNativeScrollGesture,
 } from './utils';
 import WebPagingFixStyle from './WebPagingFixStyle';
+
+type GestureViewerItemCellProps<ItemT> = {
+  item: ItemT;
+  index: number;
+  isActive: boolean;
+  renderItem: (item: ItemT, index: number, info: GestureViewerRenderItemInfo) => ReactElement;
+  setItemDimensions: (index: number, item: ItemT, dimensions: GestureViewerItemDimensions) => void;
+};
+
+function GestureViewerItemCell<ItemT>({
+  item,
+  index,
+  isActive,
+  renderItem,
+  setItemDimensions,
+}: GestureViewerItemCellProps<ItemT>) {
+  const registerItemDimensions = (dimensions: GestureViewerItemDimensions) => {
+    setItemDimensions(index, item, dimensions);
+  };
+
+  return renderItem(item, index, {
+    isActive,
+    setItemDimensions: registerItemDimensions,
+  });
+}
 
 export function GestureViewer<ItemT, LC>({
   id = 'default',
@@ -40,14 +71,14 @@ export function GestureViewer<ItemT, LC>({
 }: GestureViewerProps<ItemT, LC>) {
   const Component = ListComponent as React.ComponentType<any>;
 
-  const dataRef = useRef(data);
-
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
   const width = customWidth || screenWidth;
   const height = customHeight || screenHeight;
+  const normalizedInitialIndex = clampIndex(initialIndex, data.length);
+  const initialListIndex = getLoopPhysicalIndex(normalizedInitialIndex, data.length, enableLoop);
 
-  const loopData = useMemo(() => createLoopData(dataRef, enableLoop), [enableLoop]);
+  const loopData = useMemo(() => createLoopData(data, enableLoop), [data, enableLoop]);
 
   const isScrollView = isScrollViewLike(Component);
   const isFlashList = isFlashListLike(Component);
@@ -68,12 +99,13 @@ export function GestureViewer<ItemT, LC>({
     animatedStyle,
     backdropStyle,
     handleDismiss,
+    setItemDimensions,
   } = useGestureViewer({
     id,
     data,
     width,
     height,
-    initialIndex,
+    initialIndex: normalizedInitialIndex,
     itemSpacing,
     enableLoop,
     ...props,
@@ -106,9 +138,13 @@ export function GestureViewer<ItemT, LC>({
             styles.item,
           ]}
         >
-          {renderItemProp(item, index, {
-            isActive: index === activeListIndex && isFlashListCell,
-          })}
+          <GestureViewerItemCell
+            index={index}
+            isActive={index === activeListIndex && isFlashListCell}
+            item={item}
+            renderItem={renderItemProp}
+            setItemDimensions={setItemDimensions}
+          />
         </View>
       );
     },
@@ -121,6 +157,7 @@ export function GestureViewer<ItemT, LC>({
       isScrollView,
       isFlashList,
       height,
+      setItemDimensions,
     ],
   );
 
@@ -136,10 +173,6 @@ export function GestureViewer<ItemT, LC>({
   const gesture = useMemo(() => {
     return Gesture.Race(dismissGesture, zoomGesture);
   }, [zoomGesture, dismissGesture]);
-
-  useEffect(() => {
-    dataRef.current = data;
-  }, [data]);
 
   useEffect(() => {
     registry.createManager(id);
@@ -225,9 +258,7 @@ export function GestureViewer<ItemT, LC>({
                     {...commonProps}
                     data={loopData}
                     renderItem={renderItem}
-                    initialScrollIndex={
-                      enableLoop && data.length > 1 ? initialIndex + 1 : initialIndex
-                    }
+                    initialScrollIndex={initialListIndex}
                     keyExtractor={keyExtractor}
                     {...(isFlashList
                       ? // NOTE - Deprecated estimatedItemSize for FlashList V2 (https://shopify.github.io/flash-list/docs/v2-changes#deprecated)

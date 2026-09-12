@@ -59,8 +59,13 @@ import {
   useGestureViewerState,
 } from 'react-native-gesture-image-viewer';
 
+const images = [
+  'https://picsum.photos/400/200',
+  'https://picsum.photos/200/400',
+  'https://picsum.photos/300/300',
+];
+
 function App() {
-  const images = [...];
   const [visible, setVisible] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -74,7 +79,13 @@ function App() {
   };
 
   const renderImage = useCallback((imageUrl: string) => {
-    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
+    return (
+      <Image
+        source={{ uri: imageUrl }}
+        style={{ width: '100%', height: '100%' }}
+        resizeMode="contain"
+      />
+    );
   }, []);
 
   useGestureViewerEvent('zoomChange', (data) => {
@@ -83,10 +94,10 @@ function App() {
 
   return (
     <View>
-      {images.map((uri, index) => (
-        <GestureTrigger key={uri} onPress={() => openModal(index)}>
+      {images.map((imageUrl, index) => (
+        <GestureTrigger key={imageUrl} onPress={() => openModal(index)}>
           <Pressable>
-            <Image source={{ uri }} />
+            <Image source={{ uri: imageUrl }} />
           </Pressable>
         </GestureTrigger>
       ))}
@@ -109,6 +120,9 @@ function App() {
   );
 }
 ```
+
+For accurate pan bounds with `contain`-fitted content, see the
+[Content Dimensions guide](https://react-native-gesture-image-viewer.pages.dev/guide/usage/custom-components#content-dimensions).
 
 ## Contributing
 

@@ -47,39 +47,92 @@ export const shouldUseNativeScrollGesture = (
   return platformOS === 'ios' && component !== GestureScrollView && component !== GestureFlatList;
 };
 
-export const createBoundsConstraint =
-  ({ width, height }: { width: number; height: number }) =>
-  ({
-    scale,
-    translateX,
-    translateY,
-  }: {
-    translateX: number;
-    translateY: number;
-    scale: number;
-  }) => {
-    'worklet';
+export const clampIndex = (index: number | undefined, dataLength: number): number => {
+  if (dataLength <= 0) {
+    return 0;
+  }
 
-    if (scale <= 1) {
-      return {
-        translateX,
-        translateY,
-      };
-    }
+  const candidateIndex = index ?? 0;
 
-    const maxTranslateX = (width * scale - width) / 2;
-    const maxTranslateY = (height * scale - height) / 2;
+  if (!Number.isFinite(candidateIndex)) {
+    return 0;
+  }
 
+  return Math.min(Math.max(Math.trunc(candidateIndex), 0), dataLength - 1);
+};
+
+export const resolveGeometrySyncTranslationMode = (
+  previousIndex: number | null,
+  nextIndex: number,
+  scale: number,
+): 'constrain' | 'none' | 'reset' => {
+  if (previousIndex !== null && previousIndex !== nextIndex) {
+    return 'reset';
+  }
+
+  return scale > 1 ? 'constrain' : 'none';
+};
+
+const isValidDimension = (value: number): boolean => {
+  'worklet';
+
+  return Number.isFinite(value) && value > 0;
+};
+
+const clampTranslation = (value: number, max: number): number => {
+  'worklet';
+
+  if (max <= 0) {
+    return 0;
+  }
+
+  const clamped = Math.max(-max, Math.min(max, value));
+
+  return clamped === 0 ? 0 : clamped;
+};
+
+export const clampTranslationToBounds = ({
+  width,
+  height,
+  contentWidth,
+  contentHeight,
+  scale,
+  translateX,
+  translateY,
+}: {
+  width: number;
+  height: number;
+  contentWidth?: number;
+  contentHeight?: number;
+  translateX: number;
+  translateY: number;
+  scale: number;
+}) => {
+  'worklet';
+
+  if (scale <= 1) {
     return {
-      translateX: Math.max(-maxTranslateX, Math.min(maxTranslateX, translateX)),
-      translateY: Math.max(-maxTranslateY, Math.min(maxTranslateY, translateY)),
+      translateX,
+      translateY,
     };
+  }
+
+  const baseContentWidth =
+    contentWidth !== undefined && isValidDimension(contentWidth) ? contentWidth : width;
+  const baseContentHeight =
+    contentHeight !== undefined && isValidDimension(contentHeight) ? contentHeight : height;
+
+  const maxTranslateX = Math.max(0, (baseContentWidth * scale - width) / 2);
+  const maxTranslateY = Math.max(0, (baseContentHeight * scale - height) / 2);
+
+  return {
+    translateX: clampTranslation(translateX, maxTranslateX),
+    translateY: clampTranslation(translateY, maxTranslateY),
   };
+};
 
-export const createLoopData = <T>(dataRef: React.RefObject<T[]>, enableLoop: boolean): T[] => {
-  const data = dataRef.current;
-
-  if (!enableLoop || !data?.length || data.length <= 1) {
+export const createLoopData = <T>(data: T[], enableLoop: boolean): T[] => {
+  if (!enableLoop || data.length <= 1) {
     return data;
   }
 
@@ -92,6 +145,12 @@ export const createLoopData = <T>(dataRef: React.RefObject<T[]>, enableLoop: boo
 
   return [lastItem, ...data, firstItem];
 };
+
+export const getLoopPhysicalIndex = (
+  logicalIndex: number,
+  dataLength: number,
+  enableLoop: boolean,
+): number => (enableLoop && dataLength > 1 ? logicalIndex + 1 : logicalIndex);
 
 export const getLoopAdjustedIndex = (
   scrollIndex: number,

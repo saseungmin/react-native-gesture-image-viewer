@@ -25,12 +25,10 @@ export function useGestureViewerPaging({
   width,
 }: UseGestureViewerPagingArgs): UseGestureViewerPagingResult {
   const [activeListIndex, setActiveListIndex] = useState(adjustedInitialIndex);
-  const activeResetItemSpacing = adjustedInitialIndex > 0 ? itemSpacing : 0;
-  const activeResetWidth = adjustedInitialIndex > 0 ? width : 0;
 
   useEffect(() => {
     setActiveListIndex(adjustedInitialIndex);
-  }, [adjustedInitialIndex, activeResetItemSpacing, activeResetWidth, dataLength]);
+  }, [adjustedInitialIndex, dataLength]);
 
   useEffect(() => {
     if (

@@ -82,12 +82,40 @@ export type GestureViewerSingleTapEvent<ItemT> = {
   item: ItemT;
 };
 
+export type GestureViewerItemDimensions = Readonly<{
+  /**
+   * Natural/source content width. Must be finite and greater than zero.
+   */
+  width: number;
+  /**
+   * Natural/source content height. Must be finite and greater than zero.
+   */
+  height: number;
+}>;
+
+export type GestureViewerItemDimensionsResolver<ItemT> = (
+  item: ItemT,
+  index: number,
+) => GestureViewerItemDimensions | undefined;
+
+export type GestureViewerItemKey = string | number;
+
+export type GestureViewerItemKeyResolver<ItemT> = (
+  item: ItemT,
+  index: number,
+) => GestureViewerItemKey;
+
 export type GestureViewerRenderItemInfo = {
   /**
    * Whether the rendered item is currently active.
    * @remarks The current item remains active during a page transition. When the transition finishes on another item, that item becomes active.
    */
   readonly isActive: boolean;
+  /**
+   * Registers natural/source dimensions for the rendered item after they become available.
+   * @remarks Call this from an image load/event callback or a passive effect after commit. Do not call it directly while rendering or from descendant layout effects.
+   */
+  readonly setItemDimensions: (dimensions: GestureViewerItemDimensions) => void;
 };
 
 export type GestureViewerDismissDirection = 'down' | 'up' | 'both';
@@ -122,6 +150,7 @@ export interface GestureViewerProps<ItemT, LC> {
   data: ItemT[];
   /**
    * The index of the item to display in the `GestureViewer` when the component is mounted.
+   * @remarks The value is normalized to the current data: non-finite or negative values use `0`, values above the available range use the last index, and empty data uses `0`. Updating this prop repositions a mounted viewer.
    * @defaultValue 0
    */
   initialIndex?: number;
@@ -149,6 +178,16 @@ export interface GestureViewerProps<ItemT, LC> {
    * - Prefer this callback over overlaying a pressable in `renderContainer` for fullscreen tap handling.
    */
   onSingleTap?: (event: GestureViewerSingleTapEvent<ItemT>) => void;
+  /**
+   * Returns natural/source dimensions for an item when they are already known.
+   * @remarks Return `undefined` while dimensions are unavailable. Invalid dimensions fall back to the viewer cell size.
+   */
+  getItemDimensions?: GestureViewerItemDimensionsResolver<ItemT>;
+  /**
+   * Returns a stable key used to retain loaded dimensions when equivalent item objects are recreated at the same index.
+   * @remarks Keys must be unique within `data` and change when the rendered content's natural dimensions can change. Do not use the index by itself. This is only needed when object items are recreated and dimensions are reported through `setItemDimensions`.
+   */
+  getItemKey?: GestureViewerItemKeyResolver<ItemT>;
   /**
    * A callback function that is called to render the container.
    * @remarks Useful for composing additional UI (e.g., close button, toolbars) around the viewer.
