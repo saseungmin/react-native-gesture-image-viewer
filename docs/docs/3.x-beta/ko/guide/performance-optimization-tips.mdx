@@ -1,20 +1,21 @@
 # 성능 최적화 팁
 
-#### `renderItem` 함수는 `useCallback`으로 감싸서 불필요한 리렌더링을 방지하세요.
+#### 대용량 이미지의 경우 [`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/)나 [`FastImage`](https://github.com/DylanVann/react-native-fast-image) 사용을 권장합니다.
 
 ```tsx
-import { useCallback, useState } from 'react'; // [!code highlight]
-import { Image, Modal } from 'react-native';
+import { useState } from 'react';
+import { Modal } from 'react-native';
 import { GestureViewer } from 'react-native-gesture-image-viewer';
+import { Image } from 'expo-image'; // [!code highlight]
+
+const images = [...];
+
+function renderImage(imageUrl: string) {
+  return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} contentFit="contain" />; // [!code highlight]
+}
 
 function App() {
-  const images = [...];
   const [visible, setVisible] = useState(false);
-
-  // [!code highlight:3]
-  const renderImage = useCallback((imageUrl: string) => {
-    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
-  }, []);
 
   return (
     <Modal visible={visible} onRequestClose={() => setVisible(false)}>
@@ -28,31 +29,39 @@ function App() {
 }
 ```
 
-#### 대용량 이미지의 경우 [`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/)나 [`FastImage`](https://github.com/DylanVann/react-native-fast-image) 사용을 권장합니다.
+#### 변경되지 않은 `data`를 다시 만들지 마세요.
+
+목록 내용이 바뀔 때 새 배열을 전달하는 것은 올바른 사용법이며 정상적으로 지원됩니다. 다만 부모 컴포넌트가 자주 rerender될 때 동일한 배열을 매번 다시 만들면 viewer와 치수 조정 작업이 반복될 수 있습니다. 변환이 필요하지 않다면 기존 배열을 그대로 전달하고, 실제 파생 데이터만 메모이제이션하세요.
 
 ```tsx
-import { Modal } from 'react-native';
-import { GestureViewer } from 'react-native-gesture-image-viewer';
-import { Image } from 'expo-image'; // [!code highlight]
+import { useMemo } from 'react';
 
-function App() {
-  const images = [...];
-  const [visible, setVisible] = useState(false);
+// ❌ 지양: 렌더링할 때마다 새 배열을 만듭니다.
+<GestureViewer data={[...images]} renderItem={renderImage} />
 
-  const renderImage = useCallback((imageUrl: string) => {
-    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} contentFit="contain" />; // [!code highlight]
-  }, []);
+// ✅ 권장: 내용이 바뀌지 않았다면 기존 prop 또는 state 값을 그대로 사용합니다.
+<GestureViewer data={images} renderItem={renderImage} />
 
-  return (
-    <Modal visible={visible} onRequestClose={() => setVisible(false)}>
-      <GestureViewer
-        data={images}
-        renderItem={renderImage}
-        onDismiss={() => setVisible(false)}
-      />
-    </Modal>
+// ✅ 변환이 필요하다면 원본 값을 기준으로 파생 배열을 메모이제이션합니다.
+function LimitedGallery({ images }: { images: string[] }) {
+  const visibleImages = useMemo(
+    () => images.slice(0, 20),
+    [images],
   );
+
+  return <GestureViewer data={visibleImages} renderItem={renderImage} />;
 }
+```
+
+`data`를 제자리에서 변경하지 말고, 내용이 바뀔 때 배열을 교체하세요.
+
+```tsx
+// ❌ 지양
+images.push(nextImage);
+setImages(images);
+
+// ✅ 권장
+setImages((currentImages) => [...currentImages, nextImage]);
 ```
 
 #### 인접 페이지를 더 많이 마운트해야 하는 경우가 아니라면 render window를 작게 유지하세요.
@@ -60,17 +69,18 @@ function App() {
 기본 `windowSize`는 `3`이며 이전, 현재, 다음 아이템을 마운트합니다. 더 큰 window는 인접 페이지를 더 빨리 보여줄 수 있지만 렌더링, 메모리, 이미지 디코딩 작업도 늘어납니다. 라이브러리는 `windowSize`에 하드 최대값을 두지 않으므로, 큰 값을 선택하는 것은 명시적인 성능 tradeoff입니다.
 
 ```tsx
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { Image, Modal } from 'react-native';
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 
-function App() {
-  const images = [...];
-  const [visible, setVisible] = useState(false);
+const images = [...];
 
-  const renderImage = useCallback((imageUrl: string) => {
-    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
-  }, []);
+function renderImage(imageUrl: string) {
+  return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
+}
+
+function App() {
+  const [visible, setVisible] = useState(false);
 
   return (
     <Modal visible={visible} onRequestClose={() => setVisible(false)}>

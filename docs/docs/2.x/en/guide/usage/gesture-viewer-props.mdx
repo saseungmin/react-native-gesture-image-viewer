@@ -2,7 +2,11 @@
 
 ### `renderItem`
 
-`renderItem` renders each item in `data` and receives `isActive` through its third argument: `renderItem(item, index, { isActive })`. Use it for work that should run only on the active item, such as video playback. See [`renderItem` active state (`isActive`)](/guide/usage/custom-components#renderitem-active-state) for behavior and examples.
+`renderItem` renders each item in `data` and receives `isActive` and `setItemDimensions` through its third argument: `renderItem(item, index, { isActive, setItemDimensions })`.
+
+Use `isActive` for work that should run only on the active item, such as video playback. See [`renderItem` active state (`isActive`)](/guide/usage/custom-components.html#renderitem-active-state) for behavior and examples.
+
+Call `setItemDimensions({ width, height })` after rendered content dimensions become available. See the [item dimensions guide](/guide/usage/item-dimensions.html) for examples and call timing.
 
 ### `enableLoop` (default: `false`)
 
@@ -129,9 +133,19 @@ function App() {
 }
 ```
 
+### `getItemDimensions`
+
+Returns natural/source dimensions for an item when they are already known. Runtime dimensions reported from `renderItem` with `setItemDimensions` take precedence. See the [item dimensions guide](/guide/usage/item-dimensions.html) for examples.
+
+### `getItemKey`
+
+Returns a stable logical key for an item when the same content may be recreated as a new object in the same slot. Use it with runtime `setItemDimensions` values. See the [item dimensions guide](/guide/usage/item-dimensions.html#getitemkey) for details.
+
 ### `initialIndex` (default: `0`)
 
-Sets the initial index value.
+Sets the item index the viewer should display. The value is normalized against the current `data` length: non-finite and negative values become `0`, values above the available range become the last index, and empty data resolves to `0`.
+
+When `initialIndex` changes after the viewer is already mounted, the viewer repositions to the normalized index.
 
 ### `maxZoomScale` (default: `2`)
 
@@ -139,15 +153,39 @@ Controls the maximum zoom scale multiplier.
 
 ## `GestureViewerProps` interface
 
-[Go to source](https://github.com/saseungmin/react-native-gesture-image-viewer/blob/d7981fb/src/types.ts#L112)
+[Go to source](https://github.com/saseungmin/react-native-gesture-image-viewer/blob/f03e1b9/src/types.ts#L85)
 
 ````tsx title="GestureViewerProps"
+export type GestureViewerItemDimensions = Readonly<{
+  /** Natural/source content width. Must be finite and greater than zero. */
+  width: number;
+  /** Natural/source content height. Must be finite and greater than zero. */
+  height: number;
+}>;
+
+export type GestureViewerItemDimensionsResolver<ItemT> = (
+  item: ItemT,
+  index: number,
+) => GestureViewerItemDimensions | undefined;
+
+export type GestureViewerItemKey = string | number;
+
+export type GestureViewerItemKeyResolver<ItemT> = (
+  item: ItemT,
+  index: number,
+) => GestureViewerItemKey;
+
 export type GestureViewerRenderItemInfo = {
   /**
    * Whether the rendered item is currently active.
    * @remarks The current item remains active during a page transition. When the transition finishes on another item, that item becomes active.
    */
   readonly isActive: boolean;
+  /**
+   * Registers natural/source dimensions for the rendered item after they become available.
+   * @remarks Call this from an image load or event callback, or from a passive `useEffect` after commit. Do not call it during render or from a descendant layout effect.
+   */
+  readonly setItemDimensions: (dimensions: GestureViewerItemDimensions) => void;
 };
 
 export interface GestureViewerProps<ItemT, LC> {
@@ -162,7 +200,10 @@ export interface GestureViewerProps<ItemT, LC> {
    */
   data: ItemT[];
   /**
-   * The index of the item to display in the `GestureViewer` when the component is mounted.
+   * The index of the item to display in the `GestureViewer`.
+   * @remarks
+   * - Normalized against the current data length: non-finite and negative values become 0, values above range become the last index, and empty data resolves to 0.
+   * - Prop changes reposition an already-mounted viewer to the normalized index.
    * @defaultValue 0
    */
   initialIndex?: number;
@@ -190,6 +231,16 @@ export interface GestureViewerProps<ItemT, LC> {
    * - Prefer this callback over overlaying a pressable in `renderContainer` for fullscreen tap handling.
    */
   onSingleTap?: (event: GestureViewerSingleTapEvent<ItemT>) => void;
+  /**
+   * Returns natural/source dimensions for an item when they are already known.
+   * @remarks Return `undefined` while dimensions are unavailable. Invalid dimensions fall back to the viewer cell size.
+   */
+  getItemDimensions?: GestureViewerItemDimensionsResolver<ItemT>;
+  /**
+   * Returns a stable logical key when the same item can be recreated as a new object in the same slot.
+   * @remarks Use this when object identity is not stable across rerenders. The key must identify the same rendered content and change when the rendered source or natural dimensions change. Do not return the array index alone. If the item changes position, the viewer falls back to `getItemDimensions` or the viewer cell size until the new slot reports dimensions again.
+   */
+  getItemKey?: GestureViewerItemKeyResolver<ItemT>;
   /**
    * A callback function that is called to render the container.
    * @remarks Useful for composing additional UI (e.g., close button, toolbars) around the viewer.

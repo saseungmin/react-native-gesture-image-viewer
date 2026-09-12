@@ -84,44 +84,67 @@ You can inject various types of content components like [`expo-image`](https://d
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 import { Image } from 'expo-image';
 
-function App() {
-  const renderImage = useCallback((imageUrl: string) => {
-    return (
-      <Image
-        source={{ uri: imageUrl }}
-        style={{ width: '100%', height: '100%' }}
-        contentFit="contain"
-      />
-    );
-  }, []);
+const images = [
+  'https://images.unsplash.com/photo-1682687220742-aba13b6e50ba',
+  'https://images.unsplash.com/photo-1682687220063-4742bd7fd538',
+  'https://images.unsplash.com/photo-1682687218147-9806132dc697',
+];
 
+function renderImage(imageUrl: string) {
+  return (
+    <Image
+      source={{ uri: imageUrl }}
+      style={{ width: '100%', height: '100%' }}
+      contentFit="contain"
+    />
+  );
+}
+
+function App() {
   return <GestureViewer data={images} renderItem={renderImage} />;
 }
 ```
+
+For accurate zoom and pan bounds with `contain` content, see the [item dimensions guide](/3.x-beta/guide/usage/item-dimensions.html).
 
 <span id="renderitem-active-state" />
 
 ### `renderItem` active state (`isActive`)
 
-For content such as video that should play or perform work only while it is visible, use `isActive` from the third `renderItem` argument. It is `true` only for the currently selected content. During a page transition, the previous content remains active; when the move finishes, the newly selected content becomes active. Use [`useGestureViewerState`](/guide/usage/gesture-viewer-state) instead when UI outside the item needs the global `currentIndex`.
+For content such as video that should play or perform work only while it is visible, use `isActive` from the third `renderItem` argument. It is `true` only for the currently selected content. During a page transition, the previous content remains active; when the move finishes, the newly selected content becomes active. Use [`useGestureViewerState`](/3.x-beta/guide/usage/gesture-viewer-state.html) instead when UI outside the item needs the global `currentIndex`.
 
 ```tsx
-import type { GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';
+import { GestureViewer, type GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';
+import Video from 'react-native-video';
 
-const renderMedia = useCallback(
-  // [!code highlight:1]
-  (item: MediaItem, _index: number, { isActive }: GestureViewerRenderItemInfo) => {
-    return (
-      <Video
-        source={{ uri: item.uri }}
-        style={{ width: '100%', height: '100%' }}
-        paused={!isActive}
-        resizeMode="contain"
-      />
-    );
+type MediaItem = {
+  id: string;
+  uri: string;
+};
+
+const mediaItems: MediaItem[] = [
+  {
+    id: 'video-1',
+    uri: 'https://www.w3schools.com/html/mov_bbb.mp4',
   },
-  [],
-);
+  {
+    id: 'video-2',
+    uri: 'https://www.w3schools.com/html/movie.mp4',
+  },
+];
 
-return <GestureViewer data={mediaItems} renderItem={renderMedia} />;
+function renderMedia(item: MediaItem, _index: number, { isActive }: GestureViewerRenderItemInfo) {
+  return (
+    <Video
+      source={{ uri: item.uri }}
+      style={{ width: '100%', height: '100%' }}
+      paused={!isActive}
+      resizeMode="contain"
+    />
+  );
+}
+
+function App() {
+  return <GestureViewer data={mediaItems} renderItem={renderMedia} />;
+}
 ```

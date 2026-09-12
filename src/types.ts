@@ -16,12 +16,40 @@ export type GestureViewerSingleTapEvent<ItemT> = {
   item: ItemT;
 };
 
+export type GestureViewerItemDimensions = Readonly<{
+  /**
+   * Natural/source content width. Must be finite and greater than zero.
+   */
+  width: number;
+  /**
+   * Natural/source content height. Must be finite and greater than zero.
+   */
+  height: number;
+}>;
+
+export type GestureViewerItemDimensionsResolver<ItemT> = (
+  item: ItemT,
+  index: number,
+) => GestureViewerItemDimensions | undefined;
+
+export type GestureViewerItemKey = string | number;
+
+export type GestureViewerItemKeyResolver<ItemT> = (
+  item: ItemT,
+  index: number,
+) => GestureViewerItemKey;
+
 export type GestureViewerRenderItemInfo = {
   /**
    * Whether the rendered item is currently active.
    * @remarks The current item remains active during a page transition. When the transition finishes on another item, that item becomes active.
    */
   readonly isActive: boolean;
+  /**
+   * Registers natural/source dimensions for the rendered item after they become available.
+   * @remarks Call this from an image load or event callback, or from a passive `useEffect` after commit. Do not call it during render or from a descendant layout effect.
+   */
+  readonly setItemDimensions: (dimensions: GestureViewerItemDimensions) => void;
 };
 
 export type GestureViewerDismissDirection = 'down' | 'up' | 'both';
@@ -83,6 +111,16 @@ export interface GestureViewerProps<ItemT> {
    * - Prefer this callback over overlaying a pressable in `renderContainer` for fullscreen tap handling.
    */
   onSingleTap?: (event: GestureViewerSingleTapEvent<ItemT>) => void;
+  /**
+   * Returns natural/source dimensions for an item when they are already known.
+   * @remarks Return `undefined` while dimensions are unavailable. Invalid dimensions fall back to the viewer cell size.
+   */
+  getItemDimensions?: GestureViewerItemDimensionsResolver<ItemT>;
+  /**
+   * Returns a stable logical key for an item when the same logical item may be recreated as a new object.
+   * @remarks Use this when item identity is not object-stable across rerenders. The key must identify the same rendered content and change when the rendered source or natural dimensions change. Do not return the array index alone. When omitted, runtime dimensions are only reused for the exact same item object.
+   */
+  getItemKey?: GestureViewerItemKeyResolver<ItemT>;
   /**
    * A callback function that is called to render the container.
    * @remarks Useful for composing additional UI (e.g., close button, toolbars) around the viewer.

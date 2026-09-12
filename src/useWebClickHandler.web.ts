@@ -27,6 +27,8 @@ export type EmitSingleTap<ItemT> = (x: number, y: number, tapTarget?: WebTapTarg
 
 export type WebClickHandlerConfig<ItemT> = {
   clearPendingWebSingleTap: () => void;
+  contentHeight: SharedValue<number>;
+  contentWidth: SharedValue<number>;
   emitSingleTap: EmitSingleTap<ItemT>;
   enableDoubleTapZoom: boolean;
   getCurrentTapTarget: () => WebTapTarget<ItemT> | null;
@@ -42,6 +44,8 @@ export type WebClickHandlerConfig<ItemT> = {
 
 export function createWebClickHandler<ItemT>({
   clearPendingWebSingleTap,
+  contentHeight,
+  contentWidth,
   emitSingleTap,
   enableDoubleTapZoom,
   getCurrentTapTarget,
@@ -78,6 +82,8 @@ export function createWebClickHandler<ItemT>({
     if (event.detail === 2) {
       clearPendingWebSingleTap();
       applyTapZoomAtPoint({
+        contentHeight: contentHeight.get(),
+        contentWidth: contentWidth.get(),
         x,
         y,
         width,
@@ -100,6 +106,8 @@ export function createWebClickHandler<ItemT>({
 
 export function useWebClickHandler<ItemT>({
   clearPendingWebSingleTap,
+  contentHeight,
+  contentWidth,
   emitSingleTap,
   enableDoubleTapZoom,
   getCurrentTapTarget,
@@ -116,6 +124,8 @@ export function useWebClickHandler<ItemT>({
     () =>
       createWebClickHandler({
         clearPendingWebSingleTap,
+        contentHeight,
+        contentWidth,
         emitSingleTap,
         enableDoubleTapZoom,
         getCurrentTapTarget,
@@ -130,6 +140,8 @@ export function useWebClickHandler<ItemT>({
       }),
     [
       clearPendingWebSingleTap,
+      contentHeight,
+      contentWidth,
       emitSingleTap,
       enableDoubleTapZoom,
       getCurrentTapTarget,

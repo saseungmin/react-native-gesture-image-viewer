@@ -16,25 +16,44 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const photos = [
   {
     uri: 'https://picsum.photos/400/200',
+    width: 400,
+    height: 200,
     note: 'Single tap anywhere to hide or show the viewer controls.',
   },
   {
     uri: 'https://picsum.photos/300/200',
+    width: 300,
+    height: 200,
     note: 'Pinch to zoom and swipe left or right to move between items.',
   },
   {
     uri: 'https://picsum.photos/200/200',
+    width: 200,
+    height: 200,
     note: 'Use the toolbar buttons for zoom, rotate, and reset actions.',
   },
   {
     uri: 'https://picsum.photos/200/300',
+    width: 200,
+    height: 300,
     note: 'Swipe down to dismiss the viewer at any time.',
   },
   {
     uri: 'https://picsum.photos/200/400',
+    width: 200,
+    height: 400,
     note: 'Loop mode lets you keep paging without stopping at the end.',
   },
 ] as const;
+
+const photoDimensions = new Map<string, { height: number; width: number }>(
+  photos.map(({ uri, width, height }) => [uri, { height, width }] as const),
+);
+const photoUris = photos.map(({ uri }) => uri);
+
+function getPhotoDimensions(uri: string) {
+  return photoDimensions.get(uri);
+}
 
 type HorizontalSwipeOptions = GestureViewerProps<string>['horizontalSwipe'];
 
@@ -189,7 +208,7 @@ function Example() {
       >
         <View style={{ flex: 1 }}>
           <GestureViewer
-            data={photos.map(({ uri }) => uri)}
+            data={photoUris}
             initialIndex={selectedIndex}
             onDismiss={() => setVisible(false)}
             onDismissStart={() => setShowExternalUI(false)}
@@ -197,6 +216,7 @@ function Example() {
             autoPlayInterval={selectedScenario.autoPlayInterval}
             enableLoop={enableLoop}
             pageSpacing={16}
+            getItemDimensions={getPhotoDimensions}
             renderItem={renderImage}
             {...(selectedScenario.horizontalSwipe
               ? { horizontalSwipe: selectedScenario.horizontalSwipe }

@@ -1,4 +1,61 @@
+import { clampTranslationToBounds, resolveGeometrySyncTranslationMode } from '../utils';
+import { getTapZoomTarget } from '../utils/tapZoom';
 import { calculateFocalPointTranslation, shouldAcceptFocalPoint } from '../utils/zoom';
+
+describe('content-aware bounds', () => {
+  it('clamps fitted content edges symmetrically and centers undersized axes', () => {
+    const bound = (translateX: number, translateY: number, scale: number) =>
+      clampTranslationToBounds({
+        contentHeight: 616,
+        contentWidth: 393,
+        height: 852,
+        scale,
+        translateX,
+        translateY,
+        width: 393,
+      });
+    expect(bound(426, 426, 2)).toEqual({
+      translateX: 196.5,
+      translateY: 190,
+    });
+    expect(bound(-426, -426, 2)).toEqual({
+      translateX: -196.5,
+      translateY: -190,
+    });
+    expect(bound(20, 118, 1.2)).toEqual({
+      translateX: 20,
+      translateY: 0,
+    });
+  });
+
+  it('clamps extreme taps and falls back to viewport bounds', () => {
+    expect(
+      getTapZoomTarget({
+        contentHeight: 616,
+        contentWidth: 393,
+        height: 852,
+        maxZoomScale: 2,
+        scale: 1,
+        width: 393,
+        x: 196.5,
+        y: 852,
+      }),
+    ).toEqual({ scale: 2, translateX: 0, translateY: -190 });
+    expect(
+      getTapZoomTarget({ height: 852, maxZoomScale: 2, scale: 1, width: 393, x: 196.5, y: 852 }),
+    ).toEqual({ scale: 2, translateX: 0, translateY: -426 });
+  });
+});
+
+describe('resolveGeometrySyncTranslationMode', () => {
+  it('resets a new item and constrains only an existing zoomed item', () => {
+    expect(resolveGeometrySyncTranslationMode(0, 1, 2)).toBe('reset');
+    expect(resolveGeometrySyncTranslationMode(0, 1, 1)).toBe('reset');
+    expect(resolveGeometrySyncTranslationMode(0, 0, 2)).toBe('constrain');
+    expect(resolveGeometrySyncTranslationMode(null, 0, 2)).toBe('constrain');
+    expect(resolveGeometrySyncTranslationMode(0, 0, 1)).toBe('none');
+  });
+});
 
 describe('calculateFocalPointTranslation', () => {
   it('keeps translation unchanged when zooming around the viewer center', () => {

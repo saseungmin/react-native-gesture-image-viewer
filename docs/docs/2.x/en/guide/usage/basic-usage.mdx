@@ -3,6 +3,7 @@
 ## GestureViewer
 
 ```tsx
+import { useCallback, useState } from 'react';
 import { ScrollView, Image, Modal } from 'react-native';
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 
@@ -26,6 +27,12 @@ function App() {
   );
 }
 ```
+
+:::tip Accurate bounds for `contain` content
+For accurate zoom and pan bounds, provide natural content dimensions with
+`getItemDimensions`, or report them after loading with `setItemDimensions`. See the
+[item dimensions guide](/guide/usage/item-dimensions.html).
+:::
 
 ## [useGestureViewerController](/guide/usage/programmatic-control.html)
 

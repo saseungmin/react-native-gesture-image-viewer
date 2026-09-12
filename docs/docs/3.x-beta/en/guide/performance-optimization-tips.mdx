@@ -1,20 +1,21 @@
 # Performance Optimization Tips
 
-#### Wrap the `renderItem` function with `useCallback` to prevent unnecessary re-renders.
+#### For large images, we recommend using [`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/) or [`FastImage`](https://github.com/DylanVann/react-native-fast-image).
 
 ```tsx
-import { useCallback, useState } from 'react'; // [!code highlight]
-import { Image, Modal } from 'react-native';
+import { useState } from 'react';
+import { Modal } from 'react-native';
 import { GestureViewer } from 'react-native-gesture-image-viewer';
+import { Image } from 'expo-image'; // [!code highlight]
+
+const images = [...];
+
+function renderImage(imageUrl: string) {
+  return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} contentFit="contain" />; // [!code highlight]
+}
 
 function App() {
-  const images = [...];
   const [visible, setVisible] = useState(false);
-
-  // [!code highlight:3]
-  const renderImage = useCallback((imageUrl: string) => {
-    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
-  }, []);
 
   return (
     <Modal visible={visible} onRequestClose={() => setVisible(false)}>
@@ -28,31 +29,39 @@ function App() {
 }
 ```
 
-#### For large images, we recommend using [`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/) or [`FastImage`](https://github.com/DylanVann/react-native-fast-image).
+#### Avoid rebuilding unchanged `data`.
+
+Passing a new array is supported and is the correct way to publish list changes. In a parent that rerenders frequently, however, rebuilding an equivalent array can repeat viewer and dimension-reconciliation work. Pass the existing array when no transformation is needed, and memoize only genuinely derived data.
 
 ```tsx
-import { Modal } from 'react-native';
-import { GestureViewer } from 'react-native-gesture-image-viewer';
-import { Image } from 'expo-image'; // [!code highlight]
+import { useMemo } from 'react';
 
-function App() {
-  const images = [...];
-  const [visible, setVisible] = useState(false);
+// ❌ Avoid: this creates a new array on every render.
+<GestureViewer data={[...images]} renderItem={renderImage} />
 
-  const renderImage = useCallback((imageUrl: string) => {
-    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} contentFit="contain" />; // [!code highlight]
-  }, []);
+// ✅ Prefer: reuse the existing prop or state value when its contents are unchanged.
+<GestureViewer data={images} renderItem={renderImage} />
 
-  return (
-    <Modal visible={visible} onRequestClose={() => setVisible(false)}>
-      <GestureViewer
-        data={images}
-        renderItem={renderImage}
-        onDismiss={() => setVisible(false)}
-      />
-    </Modal>
+// ✅ If a transformation is required, memoize the derived array from its source.
+function LimitedGallery({ images }: { images: string[] }) {
+  const visibleImages = useMemo(
+    () => images.slice(0, 20),
+    [images],
   );
+
+  return <GestureViewer data={visibleImages} renderItem={renderImage} />;
 }
+```
+
+Do not mutate `data` in place. Replace the array when its contents change:
+
+```tsx
+// ❌ Avoid
+images.push(nextImage);
+setImages(images);
+
+// ✅ Prefer
+setImages((currentImages) => [...currentImages, nextImage]);
 ```
 
 #### Keep the render window small unless you need more adjacent pages mounted.
@@ -60,17 +69,18 @@ function App() {
 The default `windowSize` is `3`, which mounts the previous, current, and next items. Larger windows can make adjacent pages feel more ready, but they also increase render, memory, and image decode work. The library does not cap `windowSize`; choosing a large value is an explicit performance tradeoff.
 
 ```tsx
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { Image, Modal } from 'react-native';
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 
-function App() {
-  const images = [...];
-  const [visible, setVisible] = useState(false);
+const images = [...];
 
-  const renderImage = useCallback((imageUrl: string) => {
-    return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
-  }, []);
+function renderImage(imageUrl: string) {
+  return <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />;
+}
+
+function App() {
+  const [visible, setVisible] = useState(false);
 
   return (
     <Modal visible={visible} onRequestClose={() => setVisible(false)}>

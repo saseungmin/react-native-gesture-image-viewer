@@ -26,6 +26,8 @@ export type EmitSingleTap<ItemT> = (x: number, y: number, tapTarget?: WebTapTarg
 
 export type WebClickHandlerConfig<ItemT> = {
   clearPendingWebSingleTap: () => void;
+  contentHeight: SharedValue<number>;
+  contentWidth: SharedValue<number>;
   emitSingleTap: EmitSingleTap<ItemT>;
   enableDoubleTapZoom: boolean;
   getCurrentTapTarget: () => WebTapTarget<ItemT> | null;

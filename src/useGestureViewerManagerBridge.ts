@@ -7,6 +7,8 @@ import { registry } from './GestureViewerRegistry';
 
 type UseGestureViewerManagerBridgeOptions = {
   currentIndexRef: RefObject<number>;
+  contentHeight: SharedValue<number>;
+  contentWidth: SharedValue<number>;
   dataLengthRef: RefObject<number>;
   goToIndex: (index: number, options?: GestureViewerNavigationOptions) => void;
   goToNext: () => void;
@@ -29,6 +31,8 @@ type UseGestureViewerManagerBridgeOptions = {
  */
 export function useGestureViewerManagerBridge({
   currentIndexRef,
+  contentHeight,
+  contentWidth,
   dataLengthRef,
   goToIndex,
   goToNext,
@@ -61,9 +65,27 @@ export function useGestureViewerManagerBridge({
 
     manager.setWidth(width);
     manager.setHeight(height);
-    manager.setZoomSharedValues(scale, translateX, translateY, maxZoomScale);
+    manager.setZoomSharedValues({
+      scale,
+      translateX,
+      translateY,
+      maxZoomScale,
+      contentWidth,
+      contentHeight,
+    });
     manager.setRotation(rotation);
-  }, [height, manager, maxZoomScale, rotation, scale, translateX, translateY, width]);
+  }, [
+    contentHeight,
+    contentWidth,
+    height,
+    manager,
+    maxZoomScale,
+    rotation,
+    scale,
+    translateX,
+    translateY,
+    width,
+  ]);
 
   useEffect(() => {
     if (!manager) {

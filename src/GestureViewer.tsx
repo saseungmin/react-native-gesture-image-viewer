@@ -11,7 +11,11 @@ import { composeGestureViewerGestures } from './gestureViewerGestures';
 import { registry } from './GestureViewerRegistry';
 import { getWebContentProps } from './getWebContentProps';
 import type { RenderWindowSlot } from './renderWindow';
-import type { GestureViewerProps } from './types';
+import type {
+  GestureViewerItemDimensions,
+  GestureViewerProps,
+  GestureViewerRenderItemInfo,
+} from './types';
 import { useGestureViewer } from './useGestureViewer';
 
 type RenderWindowSlotViewProps<ItemT> = {
@@ -20,6 +24,7 @@ type RenderWindowSlotViewProps<ItemT> = {
   isActive: boolean;
   pageStride: number;
   renderItem: GestureViewerProps<ItemT>['renderItem'];
+  setItemDimensions: (index: number, item: ItemT, dimensions: GestureViewerItemDimensions) => void;
   slot: RenderWindowSlot<ItemT>;
   visualPage: SharedValue<number>;
   width: number;
@@ -31,10 +36,14 @@ function RenderWindowSlotView<ItemT>({
   isActive,
   pageStride,
   renderItem,
+  setItemDimensions,
   slot,
   visualPage,
   width,
 }: RenderWindowSlotViewProps<ItemT>) {
+  const registerItemDimensions = (dimensions: GestureViewerItemDimensions) => {
+    setItemDimensions(slot.logicalIndex, slot.item, dimensions);
+  };
   const slotAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: (slot.virtualIndex - visualPage.get()) * pageStride }],
   }));
@@ -52,7 +61,10 @@ function RenderWindowSlotView<ItemT>({
     >
       <Animated.View style={[styles.page, isActive && animatedStyle]}>
         <View style={[styles.item, { height, width }]}>
-          {renderItem(slot.item, slot.logicalIndex, { isActive })}
+          {renderItem(slot.item, slot.logicalIndex, {
+            isActive,
+            setItemDimensions: registerItemDimensions,
+          } satisfies GestureViewerRenderItemInfo)}
         </View>
       </Animated.View>
     </Animated.View>
@@ -90,6 +102,7 @@ export function GestureViewer<ItemT>({
     pageStride,
     renderWindowSlots,
     visualPage,
+    setItemDimensions,
     zoomGesture,
     zoomPinchGesture,
   } = useGestureViewer({
@@ -136,6 +149,7 @@ export function GestureViewer<ItemT>({
                 key={slot.slotKey}
                 pageStride={pageStride}
                 renderItem={renderItem}
+                setItemDimensions={setItemDimensions}
                 slot={slot}
                 visualPage={visualPage}
                 width={width}

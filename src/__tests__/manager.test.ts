@@ -1,4 +1,18 @@
+import type { SharedValue } from 'react-native-reanimated';
+
 import GestureViewerManager from '../GestureViewerManager';
+
+const createSharedValue = (initial: number) => {
+  let value = initial;
+
+  return {
+    get: () => value,
+    set: (next: number) => {
+      const animatedValue = next as unknown as { current?: number; toValue?: number };
+      value = animatedValue.current ?? animatedValue.toValue ?? next;
+    },
+  } as SharedValue<number>;
+};
 
 describe('GestureViewerManager tap events', () => {
   it('emits tap events to tap listeners and supports unsubscribe', () => {
@@ -106,5 +120,41 @@ describe('GestureViewerManager state reader', () => {
 
     expect(manager.getState()).toEqual({ currentIndex: 2, totalCount: 5 });
     expect(listener).toHaveBeenCalledWith({ currentIndex: 2, totalCount: 5 });
+  });
+});
+
+describe('GestureViewerManager content-aware zoom', () => {
+  it('uses active content dimensions and preserves no-dim fallback', () => {
+    const manager = new GestureViewerManager();
+    const scale = createSharedValue(1);
+    const x = createSharedValue(0);
+    const y = createSharedValue(426);
+    manager.setWidth(393);
+    manager.setHeight(852);
+    manager.setZoomSharedValues({
+      scale,
+      translateX: x,
+      translateY: y,
+      maxZoomScale: 2,
+      contentWidth: createSharedValue(393),
+      contentHeight: createSharedValue(616),
+    });
+    manager.zoomIn(1);
+    expect(y.get()).toBe(190);
+    manager.zoomOut(1);
+    expect(y.get()).toBe(0);
+    const fallback = new GestureViewerManager();
+    const fs = createSharedValue(1);
+    const fy = createSharedValue(426);
+    fallback.setWidth(393);
+    fallback.setHeight(852);
+    fallback.setZoomSharedValues({
+      scale: fs,
+      translateX: createSharedValue(0),
+      translateY: fy,
+      maxZoomScale: 2,
+    });
+    fallback.zoomIn(1);
+    expect(fy.get()).toBe(426);
   });
 });
