@@ -2,6 +2,7 @@
   "basic-usage",
   "gesture-features",
   "custom-components",
+  "item-dimensions",
   "programmatic-control",
   "gesture-viewer-state",
   "handling-viewer-events",

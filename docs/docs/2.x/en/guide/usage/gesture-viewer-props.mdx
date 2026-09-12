@@ -2,7 +2,11 @@
 
 ### `renderItem`
 
-`renderItem` renders each item in `data` and receives `isActive` through its third argument: `renderItem(item, index, { isActive })`. Use it for work that should run only on the active item, such as video playback. See [`renderItem` active state (`isActive`)](/guide/usage/custom-components#renderitem-active-state) for behavior and examples.
+`renderItem` renders each item in `data` and receives `isActive` and `setItemDimensions` through its third argument: `renderItem(item, index, { isActive, setItemDimensions })`.
+
+Use `isActive` for work that should run only on the active item, such as video playback. See [`renderItem` active state (`isActive`)](/guide/usage/custom-components.html#renderitem-active-state) for behavior and examples.
+
+Call `setItemDimensions({ width, height })` after rendered content dimensions become available. See the [item dimensions guide](/guide/usage/item-dimensions.html) for examples and call timing.
 
 ### `enableLoop` (default: `false`)
 
@@ -131,33 +135,11 @@ function App() {
 
 ### `getItemDimensions`
 
-Returns natural/source dimensions for an item when they are already known. Use this for `contain` images whose data already includes `width` and `height`; the viewer uses these values to calculate accurate pan and double-tap zoom bounds.
-
-Return `undefined` while dimensions are unavailable. If `renderItem` later calls `setItemDimensions`, the registered runtime dimensions take precedence.
-
-```tsx
-const getImageDimensions = (image: (typeof images)[number]) => ({
-  width: image.width,
-  height: image.height,
-});
-
-<GestureViewer data={images} renderItem={renderImage} getItemDimensions={getImageDimensions} />;
-```
+Returns natural/source dimensions for an item when they are already known. Runtime dimensions reported from `renderItem` with `setItemDimensions` take precedence. See the [item dimensions guide](/guide/usage/item-dimensions.html) for examples.
 
 ### `getItemKey`
 
-Returns a stable logical key for an item when the same content may be recreated as a new object in the same slot. The viewer uses this key to reuse runtime dimensions for that slot across rerenders. The key must identify the same rendered content and change when the rendered source or natural dimensions change. Do not return the array index alone. If the item changes position, the viewer falls back to the getter or to an undefined content size until the new slot reports dimensions again.
-
-```tsx
-const getImageKey = (image: (typeof images)[number]) => image.uri;
-
-<GestureViewer
-  data={images}
-  renderItem={renderImage}
-  getItemDimensions={getImageDimensions}
-  getItemKey={getImageKey}
-/>;
-```
+Returns a stable logical key for an item when the same content may be recreated as a new object in the same slot. Use it with runtime `setItemDimensions` values. See the [item dimensions guide](/guide/usage/item-dimensions.html#getitemkey) for details.
 
 ### `initialIndex` (default: `0`)
 
@@ -256,7 +238,7 @@ export interface GestureViewerProps<ItemT, LC> {
   getItemDimensions?: GestureViewerItemDimensionsResolver<ItemT>;
   /**
    * Returns a stable logical key when the same item can be recreated as a new object in the same slot.
-   * @remarks Use this when object identity is not stable across rerenders. The key must identify the same rendered content and change when the rendered source or natural dimensions change. Do not return the array index alone. If the item changes position, the viewer falls back to the getter or to an undefined content size until the new slot reports dimensions again.
+   * @remarks Use this when object identity is not stable across rerenders. The key must identify the same rendered content and change when the rendered source or natural dimensions change. Do not return the array index alone. If the item changes position, the viewer falls back to `getItemDimensions` or the viewer cell size until the new slot reports dimensions again.
    */
   getItemKey?: GestureViewerItemKeyResolver<ItemT>;
   /**

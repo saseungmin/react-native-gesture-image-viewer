@@ -1,0 +1,168 @@
+# Item Dimensions
+
+`GestureViewer` can calculate more accurate zoom and pan bounds when it knows the natural size of the rendered content.
+
+This is most useful for `contain` images. Without item dimensions, the viewer keeps the previous fallback behavior and treats the full viewer cell as the content size.
+
+After fitting the natural dimensions into the viewport, content stays centered on an axis when it is smaller than the viewport and stops at the content edge when it is larger.
+
+| Situation                                    | Use                                   |
+| -------------------------------------------- | ------------------------------------- |
+| Dimensions are already in `data`             | `getItemDimensions`                   |
+| Dimensions become available after load       | `setItemDimensions`                   |
+| Item objects may be recreated across renders | `getItemKey` with `setItemDimensions` |
+| Dimensions are not provided                  | Viewer-cell fallback                  |
+
+Both `width` and `height` must be finite numbers greater than zero.
+
+## `getItemDimensions`
+
+Use `getItemDimensions` when each item already includes its natural width and height.
+
+```tsx
+import { ScrollView } from 'react-native';
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+import { Image } from 'expo-image';
+
+const images = [
+  { uri: 'https://picsum.photos/400/200', width: 400, height: 200 },
+  { uri: 'https://picsum.photos/200/400', width: 200, height: 400 },
+];
+
+function renderImage(image: (typeof images)[number]) {
+  return (
+    <Image
+      source={{ uri: image.uri }}
+      style={{ width: '100%', height: '100%' }}
+      contentFit="contain"
+    />
+  );
+}
+
+function getImageDimensions(image: (typeof images)[number]) {
+  return { width: image.width, height: image.height };
+}
+
+function App() {
+  return (
+    <GestureViewer
+      data={images}
+      renderItem={renderImage}
+      getItemDimensions={getImageDimensions}
+      ListComponent={ScrollView}
+    />
+  );
+}
+```
+
+Return `undefined` while dimensions are unavailable.
+
+## `setItemDimensions`
+
+Use `setItemDimensions` from the third `renderItem` argument when the image component reports its dimensions after loading.
+
+Call it from an image load or event callback, or from a passive `useEffect` after commit. Do not call it during render or from a descendant layout effect.
+
+Runtime dimensions reported with `setItemDimensions` take precedence over `getItemDimensions`.
+
+### React Native Image
+
+```tsx
+import { Image } from 'react-native';
+import type { GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';
+
+function renderImage(
+  image: { uri: string },
+  _index: number,
+  { setItemDimensions }: GestureViewerRenderItemInfo,
+) {
+  return (
+    <Image
+      source={{ uri: image.uri }}
+      style={{ width: '100%', height: '100%' }}
+      resizeMode="contain"
+      onLoad={({ nativeEvent }) => {
+        setItemDimensions({
+          width: nativeEvent.source.width,
+          height: nativeEvent.source.height,
+        });
+      }}
+    />
+  );
+}
+```
+
+### Expo Image
+
+```tsx
+import { Image } from 'expo-image';
+import type { GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';
+
+function renderImage(
+  image: { uri: string },
+  _index: number,
+  { setItemDimensions }: GestureViewerRenderItemInfo,
+) {
+  return (
+    <Image
+      source={{ uri: image.uri }}
+      style={{ width: '100%', height: '100%' }}
+      contentFit="contain"
+      onLoad={({ source }) => {
+        setItemDimensions({
+          width: source.width,
+          height: source.height,
+        });
+      }}
+    />
+  );
+}
+```
+
+### FastImage
+
+```tsx
+import FastImage from 'react-native-fast-image';
+import type { GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';
+
+function renderImage(
+  image: { uri: string },
+  _index: number,
+  { setItemDimensions }: GestureViewerRenderItemInfo,
+) {
+  return (
+    <FastImage
+      source={{ uri: image.uri }}
+      style={{ width: '100%', height: '100%' }}
+      resizeMode={FastImage.resizeMode.contain}
+      onLoad={({ nativeEvent }) => {
+        setItemDimensions({
+          width: nativeEvent.width,
+          height: nativeEvent.height,
+        });
+      }}
+    />
+  );
+}
+```
+
+## `getItemKey`
+
+When using `setItemDimensions`, add `getItemKey` if the same logical item can be recreated as a new object in the same slot.
+
+```tsx
+<GestureViewer
+  data={images}
+  renderItem={renderImage}
+  getItemKey={(image) => image.uri}
+  ListComponent={ScrollView}
+/>
+```
+
+The key should identify the rendered content. Change the key when the rendered source or natural dimensions change. Avoid returning the array index alone.
+
+Runtime dimensions are retained only for equivalent objects in the same slot. An item moved to another index must provide dimensions for that slot.
+
+## When dimensions are not provided
+
+If neither `getItemDimensions` nor `setItemDimensions` provides valid dimensions, the viewer uses the full viewer cell as the content size. This keeps existing behavior, but `contain` content may pan beyond its visible edge.

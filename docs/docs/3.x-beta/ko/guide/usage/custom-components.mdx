@@ -105,13 +105,13 @@ function App() {
 }
 ```
 
-런타임 치수가 필요하다면 렌더된 컴포넌트에서 load 이후 `setItemDimensions`를 호출하세요. 같은 논리 아이템이 같은 slot에서 다른 객체로 다시 만들어질 수 있다면 `getItemKey`를 함께 사용해 runtime 치수가 그 slot에 유지되도록 하세요.
+`contain` 콘텐츠의 정확한 줌과 팬 범위가 필요하다면 [콘텐츠 크기 가이드](/3.x-beta/ko/guide/usage/item-dimensions.html)를 참고하세요.
 
 <span id="renderitem-active-state" />
 
 ### `renderItem` 활성 상태 (`isActive`)
 
-비디오처럼 현재 표시 중인 콘텐츠에서만 재생이나 작업을 수행해야 한다면 세 번째 `renderItem` 인자의 `isActive`를 사용할 수 있습니다. 이 값은 현재 선택된 콘텐츠에서만 `true`입니다. 페이지 전환 중에는 기존 콘텐츠가 활성 상태를 유지하고, 이동이 완료되면 새로 선택된 콘텐츠가 활성화됩니다. 아이템 외부 UI에서 전역 `currentIndex`가 필요할 때는 [`useGestureViewerState`](/guide/usage/gesture-viewer-state)를 사용하세요.
+비디오처럼 현재 표시 중인 콘텐츠에서만 재생이나 작업을 수행해야 한다면 세 번째 `renderItem` 인자의 `isActive`를 사용할 수 있습니다. 이 값은 현재 선택된 콘텐츠에서만 `true`입니다. 페이지 전환 중에는 기존 콘텐츠가 활성 상태를 유지하고, 이동이 완료되면 새로 선택된 콘텐츠가 활성화됩니다. 아이템 외부 UI에서 전역 `currentIndex`가 필요할 때는 [`useGestureViewerState`](/3.x-beta/ko/guide/usage/gesture-viewer-state.html)를 사용하세요.
 
 ```tsx
 import { GestureViewer, type GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';

@@ -2,7 +2,11 @@
 
 ### `renderItem`
 
-`renderItem`은 `data`의 각 아이템을 렌더링하며, `renderItem(item, index, { isActive })` 형태로 세 번째 인자에서 활성 상태를 제공합니다. 비디오 재생처럼 활성 아이템에서만 필요한 작업을 제어할 때 사용할 수 있습니다. 동작 방식과 예시는 [`renderItem` 활성 상태 (`isActive`)](/guide/usage/custom-components#renderitem-active-state)를 참고하세요.
+`renderItem`은 `data`의 각 아이템을 렌더링하며, `renderItem(item, index, { isActive, setItemDimensions })` 형태로 세 번째 인자에서 `isActive`와 `setItemDimensions`를 제공합니다.
+
+비디오 재생처럼 활성 아이템에서만 필요한 작업은 `isActive`로 제어할 수 있습니다. 동작 방식과 예시는 [`renderItem` 활성 상태 (`isActive`)](/ko/guide/usage/custom-components.html#renderitem-active-state)를 참고하세요.
+
+`setItemDimensions({ width, height })`는 렌더링된 콘텐츠의 원본 크기를 알 수 있게 된 뒤 호출하세요. 예시와 호출 시점은 [콘텐츠 크기 가이드](/ko/guide/usage/item-dimensions.html)를 참고하세요.
 
 ### `enableLoop` (기본값: `false`)
 
@@ -131,33 +135,11 @@ function App() {
 
 ### `getItemDimensions`
 
-아이템의 원본/source 치수를 이미 알고 있을 때 반환합니다. 데이터에 `width`, `height`가 있는 `contain` 이미지에서 사용하면 팬과 더블 탭 줌 범위를 실제 콘텐츠 가장자리에 맞춰 계산할 수 있습니다.
-
-치수를 아직 모르면 `undefined`를 반환하세요. 이후 `renderItem`에서 `setItemDimensions`를 호출하면 런타임에 등록된 치수가 우선됩니다.
-
-```tsx
-const getImageDimensions = (image: (typeof images)[number]) => ({
-  width: image.width,
-  height: image.height,
-});
-
-<GestureViewer data={images} renderItem={renderImage} getItemDimensions={getImageDimensions} />;
-```
+콘텐츠의 원본 크기를 이미 알고 있을 때 반환합니다. `renderItem`에서 `setItemDimensions`로 런타임에 등록한 크기가 우선합니다. 예시는 [콘텐츠 크기 가이드](/ko/guide/usage/item-dimensions.html)를 참고하세요.
 
 ### `getItemKey`
 
-같은 내용이 같은 slot에서 다른 객체로 다시 만들어질 수 있을 때 사용할 안정적인 논리 키를 반환합니다. 이 키를 사용하면 같은 slot의 런타임 치수를 rerender 사이에서 재사용할 수 있습니다. 이 키는 같은 렌더 결과를 가리켜야 하며, 렌더된 source나 원본 치수가 바뀌면 함께 바뀌어야 합니다. 배열 인덱스만 그대로 반환하지 마세요. 아이템이 다른 위치로 이동하면, 새 slot이 치수를 다시 보고할 때까지 getter 또는 undefined content size로 fallback합니다.
-
-```tsx
-const getImageKey = (image: (typeof images)[number]) => image.uri;
-
-<GestureViewer
-  data={images}
-  renderItem={renderImage}
-  getItemDimensions={getImageDimensions}
-  getItemKey={getImageKey}
-/>;
-```
+같은 내용이 같은 슬롯에서 다른 객체로 다시 만들어질 수 있을 때 사용할 안정적인 논리 키를 반환합니다. `setItemDimensions`로 런타임에 등록한 크기와 함께 사용하세요. 자세한 내용은 [콘텐츠 크기 가이드](/ko/guide/usage/item-dimensions.html#getitemkey)를 참고하세요.
 
 ### `initialIndex` (기본값: `0`)
 
@@ -175,9 +157,9 @@ const getImageKey = (image: (typeof images)[number]) => image.uri;
 
 ````tsx title="GestureViewerProps"
 export type GestureViewerItemDimensions = Readonly<{
-  /** 원본/source 콘텐츠 너비입니다. 유한한 양수여야 합니다. */
+  /** 콘텐츠의 원본 너비입니다. 유한한 양수여야 합니다. */
   width: number;
-  /** 원본/source 콘텐츠 높이입니다. 유한한 양수여야 합니다. */
+  /** 콘텐츠의 원본 높이입니다. 유한한 양수여야 합니다. */
   height: number;
 }>;
 
@@ -200,8 +182,8 @@ export type GestureViewerRenderItemInfo = {
    */
   readonly isActive: boolean;
   /**
-   * 렌더링된 아이템의 원본/source 치수를 사용할 수 있게 된 후 등록합니다.
-   * @remarks 이미지 load 또는 event 콜백에서 호출하거나, commit 이후 passive `useEffect`에서 호출하세요. 렌더 중이나 descendant layout effect에서는 호출하지 마세요.
+   * 렌더링된 콘텐츠의 원본 크기를 사용할 수 있게 된 후 등록합니다.
+   * @remarks 이미지 로드 또는 이벤트 콜백에서 호출하거나, 커밋 이후의 일반 `useEffect`에서 호출하세요. 렌더링 중이나 하위 컴포넌트의 `useLayoutEffect`에서는 호출하지 마세요.
    */
   readonly setItemDimensions: (dimensions: GestureViewerItemDimensions) => void;
 };
@@ -250,13 +232,13 @@ export interface GestureViewerProps<ItemT, LC> {
    */
   onSingleTap?: (event: GestureViewerSingleTapEvent<ItemT>) => void;
   /**
-   * 아이템의 원본/source 치수를 이미 알고 있을 때 반환합니다.
-   * @remarks 치수를 아직 모르면 `undefined`를 반환하세요. 잘못된 치수는 뷰어 셀 크기 fallback으로 처리됩니다.
+   * 콘텐츠의 원본 크기를 이미 알고 있을 때 반환합니다.
+   * @remarks 크기를 아직 모르면 `undefined`를 반환하세요. 유효하지 않은 크기는 뷰어 셀 크기로 대체됩니다.
    */
   getItemDimensions?: GestureViewerItemDimensionsResolver<ItemT>;
   /**
-   * 같은 아이템이 같은 slot에서 다른 객체로 다시 만들어질 수 있을 때 사용할 안정적인 논리 키를 반환합니다.
-   * @remarks 객체 identity가 rerender마다 안정적이지 않을 때 사용하세요. 이 키는 같은 렌더 결과를 가리켜야 하며, 렌더된 source나 원본 치수가 바뀌면 함께 바뀌어야 합니다. 배열 인덱스만 그대로 반환하지 마세요. 아이템이 다른 위치로 이동하면, 새 slot이 치수를 다시 보고할 때까지 getter 또는 undefined content size로 fallback합니다.
+   * 같은 아이템이 같은 슬롯에서 다른 객체로 다시 만들어질 수 있을 때 사용할 안정적인 논리 키를 반환합니다.
+   * @remarks 객체 동일성이 리렌더링 사이에 유지되지 않을 때 사용하세요. 이 키는 같은 렌더 결과를 가리켜야 하며, 이미지 소스나 원본 크기가 바뀌면 함께 바뀌어야 합니다. 배열 인덱스만 그대로 반환하지 마세요. 아이템이 다른 위치로 이동하면 새 슬롯에서 크기를 다시 등록할 때까지 `getItemDimensions` 또는 뷰어 셀 크기를 사용합니다.
    */
   getItemKey?: GestureViewerItemKeyResolver<ItemT>;
   /**

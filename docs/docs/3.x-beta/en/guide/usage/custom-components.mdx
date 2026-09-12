@@ -105,13 +105,13 @@ function App() {
 }
 ```
 
-If you need runtime measurements, call `setItemDimensions` from the rendered component after load. If the same logical item can be recreated as a new object in the same slot, pair it with `getItemKey` so the runtime dimensions stay attached to that slot.
+For accurate zoom and pan bounds with `contain` content, see the [item dimensions guide](/3.x-beta/guide/usage/item-dimensions.html).
 
 <span id="renderitem-active-state" />
 
 ### `renderItem` active state (`isActive`)
 
-For content such as video that should play or perform work only while it is visible, use `isActive` from the third `renderItem` argument. It is `true` only for the currently selected content. During a page transition, the previous content remains active; when the move finishes, the newly selected content becomes active. Use [`useGestureViewerState`](/guide/usage/gesture-viewer-state) instead when UI outside the item needs the global `currentIndex`.
+For content such as video that should play or perform work only while it is visible, use `isActive` from the third `renderItem` argument. It is `true` only for the currently selected content. During a page transition, the previous content remains active; when the move finishes, the newly selected content becomes active. Use [`useGestureViewerState`](/3.x-beta/guide/usage/gesture-viewer-state.html) instead when UI outside the item needs the global `currentIndex`.
 
 ```tsx
 import { GestureViewer, type GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';

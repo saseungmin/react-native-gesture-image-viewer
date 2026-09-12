@@ -98,124 +98,30 @@ function App() {
 ```tsx
 import { useCallback } from 'react';
 import { Image } from 'expo-image';
+import { ScrollView } from 'react-native';
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 
 const images = [
-  { uri: 'https://picsum.photos/400/200', width: 400, height: 200 },
-  { uri: 'https://picsum.photos/200/400', width: 200, height: 400 },
+  'https://images.unsplash.com/photo-1682687220742-aba13b6e50ba',
+  'https://images.unsplash.com/photo-1682687220063-4742bd7fd538',
+  'https://images.unsplash.com/photo-1682687218147-9806132dc697',
 ];
 
-function getImageDimensions(image: (typeof images)[number]) {
-  return { width: image.width, height: image.height };
-}
-
 function App() {
-  const renderImage = useCallback((image: (typeof images)[number]) => {
+  const renderImage = useCallback((imageUrl: string) => {
     return (
       <Image
-        source={{ uri: image.uri }}
+        source={{ uri: imageUrl }}
         style={{ width: '100%', height: '100%' }}
         contentFit="contain"
       />
     );
   }, []);
-  return (
-    <GestureViewer data={images} renderItem={renderImage} getItemDimensions={getImageDimensions} />
-  );
+  return <GestureViewer data={images} renderItem={renderImage} ListComponent={ScrollView} />;
 }
 ```
 
-## 콘텐츠 치수
-
-`contain`으로 맞춘 콘텐츠라면 가능할 때 원본/source 치수를 전달하세요. 그래야 팬과 더블 탭 줌 범위가 전체 뷰어 셀이 아니라 실제 보이는 콘텐츠의 가장자리에 맞춰집니다.
-
-다음 중 하나를 선택하면 됩니다.
-
-- 데이터에 치수가 이미 있으면 `getItemDimensions`를 사용하세요.
-- 이미지 로드 후에만 치수를 알 수 있으면 `renderItem`의 `setItemDimensions`를 사용하세요.
-- 같은 논리 아이템이 같은 slot에서 다른 객체로 다시 만들어질 수 있다면 runtime `setItemDimensions` 경로와 함께 `getItemKey`를 사용하세요.
-- 둘 다 생략하면 기존 동작처럼 전체 뷰어 셀을 콘텐츠 크기로 사용하는 fallback이 적용됩니다.
-
-### React Native Image
-
-```tsx
-import { Image } from 'react-native';
-import type { GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';
-
-function renderImage(
-  uri: string,
-  _index: number,
-  { setItemDimensions }: GestureViewerRenderItemInfo,
-) {
-  return (
-    <Image
-      source={{ uri }}
-      style={{ width: '100%', height: '100%' }}
-      resizeMode="contain"
-      onLoad={({ nativeEvent }) => {
-        setItemDimensions({
-          width: nativeEvent.source.width,
-          height: nativeEvent.source.height,
-        });
-      }}
-    />
-  );
-}
-```
-
-### Expo Image
-
-```tsx
-import { Image } from 'expo-image';
-import type { GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';
-
-function renderImage(
-  uri: string,
-  _index: number,
-  { setItemDimensions }: GestureViewerRenderItemInfo,
-) {
-  return (
-    <Image
-      source={{ uri }}
-      style={{ width: '100%', height: '100%' }}
-      contentFit="contain"
-      onLoad={(event) => {
-        setItemDimensions({
-          width: event.source.width,
-          height: event.source.height,
-        });
-      }}
-    />
-  );
-}
-```
-
-### FastImage
-
-```tsx
-import FastImage from 'react-native-fast-image';
-import type { GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';
-
-function renderImage(
-  uri: string,
-  _index: number,
-  { setItemDimensions }: GestureViewerRenderItemInfo,
-) {
-  return (
-    <FastImage
-      source={{ uri }}
-      style={{ width: '100%', height: '100%' }}
-      resizeMode={FastImage.resizeMode.contain}
-      onLoad={({ nativeEvent }) => {
-        setItemDimensions({
-          width: nativeEvent.width,
-          height: nativeEvent.height,
-        });
-      }}
-    />
-  );
-}
-```
+`contain` 콘텐츠의 정확한 줌과 팬 범위가 필요하다면 [콘텐츠 크기 가이드](/ko/guide/usage/item-dimensions.html)를 참고하세요.
 
 <span id="renderitem-active-state" />
 

@@ -2,15 +2,19 @@
 
 ### `renderItem`
 
-`renderItem` renders each item in `data` and receives `isActive` through its third argument: `renderItem(item, index, { isActive })`. Use it for work that should run only on the active item, such as video playback. See [`renderItem` active state (`isActive`)](/guide/usage/custom-components#renderitem-active-state) for behavior and examples.
+`renderItem` renders each item in `data` and receives `isActive` and `setItemDimensions` through its third argument: `renderItem(item, index, { isActive, setItemDimensions })`.
 
-### Item dimensions for zoom bounds
+Use `isActive` for work that should run only on the active item, such as video playback. See [`renderItem` active state (`isActive`)](/3.x-beta/guide/usage/custom-components.html#renderitem-active-state) for behavior and examples.
 
-The third argument also provides `setItemDimensions({ width, height })`; call it from an image load or event callback, or from a passive `useEffect` after commit. Do not call it during render or from a descendant layout effect. When dimensions are already known, `getItemDimensions(item, index)` is the eager alternative. A valid runtime registration takes precedence over the getter; when neither is available, the viewer uses the full cell. Known natural dimensions are centered with contain fitting before zoom bounds are calculated. If the same logical item may be recreated as a new object in the same slot, add `getItemKey(item, index)` so those runtime dimensions stay attached to that slot.
+Call `setItemDimensions({ width, height })` after rendered content dimensions become available. See the [item dimensions guide](/3.x-beta/guide/usage/item-dimensions.html) for examples and call timing.
 
-### Stable keys for runtime dimensions
+### `getItemDimensions`
 
-`getItemKey(item, index)` returns a stable logical key for the item in that slot. Use it when runtime dimensions are reported for a slot that may be recreated as a new object. The key must identify the same rendered content and change when the rendered source or natural dimensions change. Do not return the array index alone. If the item changes position, the viewer falls back to the getter or to an undefined content size until the new slot reports dimensions again.
+`getItemDimensions(item, index)` returns natural dimensions when they are already known. See the [item dimensions guide](/3.x-beta/guide/usage/item-dimensions.html) for precedence and fallback behavior.
+
+### `getItemKey`
+
+`getItemKey(item, index)` returns a stable logical key for runtime dimensions when the same logical item can be recreated as a new object in the same slot. See the [item dimensions guide](/3.x-beta/guide/usage/item-dimensions.html#getitemkey) for key requirements.
 
 ### `enableLoop` (default: `false`)
 
@@ -235,7 +239,7 @@ export interface GestureViewerProps<ItemT> {
   getItemDimensions?: GestureViewerItemDimensionsResolver<ItemT>;
   /**
    * Returns a stable logical key when the same item can be recreated as a new object in the same slot.
-   * @remarks Use this when object identity is not stable across rerenders. The key must identify the same rendered content and change when the rendered source or natural dimensions change. Do not return the array index alone. If the item changes position, the viewer falls back to the getter or to an undefined content size until the new slot reports dimensions again.
+   * @remarks Use this when object identity is not stable across rerenders. The key must identify the same rendered content and change when the rendered source or natural dimensions change. Do not return the array index alone. If the item changes position, the viewer falls back to `getItemDimensions` or the viewer cell size until the new slot reports dimensions again.
    */
   getItemKey?: GestureViewerItemKeyResolver<ItemT>;
   /**

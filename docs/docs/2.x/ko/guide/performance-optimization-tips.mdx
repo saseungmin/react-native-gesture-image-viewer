@@ -67,30 +67,21 @@ setImages((currentImages) => [...currentImages, nextImage]);
 
 #### 대용량 이미지의 경우 [`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/)나 [`FastImage`](https://github.com/DylanVann/react-native-fast-image) 사용을 권장합니다.
 
-이미지 데이터에 원본 치수가 이미 있다면 `getItemDimensions`로 전달하세요. 치수를 로드 이후에만 알 수 있다면 `renderItem`에서 `setItemDimensions`로 보고하고, 같은 논리 아이템이 같은 slot에서 다른 객체로 다시 만들어질 수 있다면 그 runtime 경로와 함께 `getItemKey`를 사용해 치수가 그 slot에 유지되도록 하세요. 추가 레이아웃 측정 없이 `contain` 이미지의 줌/팬 범위를 정확하게 맞출 수 있습니다.
-
 ```tsx
 import { useCallback, useState } from 'react';
 import { ScrollView, Modal } from 'react-native';
 import { GestureViewer } from 'react-native-gesture-image-viewer';
 import { Image } from 'expo-image'; // [!code highlight]
 
-const images = [
-  { uri: 'https://picsum.photos/400/200', width: 400, height: 200 },
-  { uri: 'https://picsum.photos/200/400', width: 200, height: 400 },
-];
-
-function getImageDimensions(image: (typeof images)[number]) {
-  return { width: image.width, height: image.height };
-}
+const images = [...];
 
 function App() {
   const [visible, setVisible] = useState(false);
 
-  const renderImage = useCallback((image: (typeof images)[number]) => {
+  const renderImage = useCallback((imageUrl: string) => {
     return (
       <Image
-        source={{ uri: image.uri }}
+        source={{ uri: imageUrl }}
         style={{ width: '100%', height: '100%' }}
         contentFit="contain"
       />
@@ -101,7 +92,6 @@ function App() {
       <GestureViewer
         data={images}
         renderItem={renderImage}
-        getItemDimensions={getImageDimensions} // [!code highlight]
         ListComponent={ScrollView}
         onDismiss={() => setVisible(false)}
       />
