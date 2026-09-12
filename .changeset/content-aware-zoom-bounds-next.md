@@ -2,10 +2,11 @@
 'react-native-gesture-image-viewer': minor
 ---
 
-Clamp zoom and pan bounds to the rendered content rect for `contain`-fitted items.
+Clamp zoom and pan bounds to the rendered content rect for `contain`-fitted items. Content
+smaller than the viewport stays centered, while larger content stops when its edge reaches the
+viewport edge.
 
-When natural dimensions are already available in each item, provide a stable
-`getItemDimensions` resolver:
+When natural dimensions are already available, provide them through `getItemDimensions`:
 
 ```tsx
 type ImageItem = {
@@ -28,8 +29,8 @@ const getImageDimensions = (item: ImageItem) => ({
 />;
 ```
 
-When dimensions are only known after loading, report them through the third `renderItem`
-argument:
+When dimensions are only known after loading, report them through `setItemDimensions` in the third
+`renderItem` argument:
 
 ```tsx
 <GestureViewer
@@ -51,27 +52,13 @@ Runtime dimensions reported with `setItemDimensions` take precedence over
 `getItemDimensions`. Invalid or unavailable dimensions keep the existing viewer-cell fallback, so
 both APIs are optional and existing arbitrary-content renderers remain compatible.
 
-On each axis, scaled content stays centered while it is smaller than the viewport and stops when
-its rendered edge reaches the viewport edge once it becomes larger. The same bounds apply to
-pinch, pan, double-tap, web, and controller zoom paths.
-
-Runtime registrations are bound to logical item identity while v3 render-window slots are reused. If the same logical item can be recreated as a new object in the same slot, add `getItemKey(item, index)` alongside `setItemDimensions` so the runtime dimensions stay attached to that slot. The key must identify the same rendered content and change when the rendered source or natural dimensions change; do not use the array index alone.
+If equivalent object items are recreated while v3 render-window slots are reused, provide a stable
+content key to retain their loaded dimensions:
 
 ```tsx
-<GestureViewer
-  data={images}
-  renderItem={(item, _index, { setItemDimensions }) => (
-    <Image
-      source={{ uri: item.uri }}
-      style={styles.image}
-      resizeMode="contain"
-      onLoad={({ nativeEvent: { source } }) => {
-        setItemDimensions({ width: source.width, height: source.height });
-      }}
-    />
-  )}
-  getItemKey={(item) => item.uri}
-/>
+getItemKey={(item) => item.uri}
 ```
+
+The same bounds apply to pinch, pan, double-tap, web, and controller zoom paths.
 
 Fixes [#191](https://github.com/saseungmin/react-native-gesture-image-viewer/issues/191).
