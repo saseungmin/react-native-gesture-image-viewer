@@ -1219,7 +1219,6 @@ export const useGestureViewer = <ItemT>({
           if (currentScale > maxZoomScale) {
             const focalX = hasActiveFocal.get() ? lastFocalX.get() : width / 2;
             const focalY = hasActiveFocal.get() ? lastFocalY.get() : height / 2;
-            // Rebase on the release transform, which may already have reached a content bound.
             const { translateX: targetTranslateX, translateY: targetTranslateY } =
               calculateFocalPointTranslation({
                 currentFocalX: focalX,
@@ -1239,7 +1238,6 @@ export const useGestureViewer = <ItemT>({
                 translateX: maxZoomScale <= 1 ? 0 : targetTranslateX,
                 translateY: maxZoomScale <= 1 ? 0 : targetTranslateY,
               });
-            // Matching progress keeps the focal point fixed throughout the unclamped return.
             const settleConfig = {
               duration: 300,
               easing: Easing.bezier(0.25, 0.1, 0.25, 1),
