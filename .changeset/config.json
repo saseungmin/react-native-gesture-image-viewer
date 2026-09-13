@@ -10,7 +10,7 @@
   "fixed": [],
   "linked": [],
   "access": "public",
-  "baseBranch": "main",
+  "baseBranch": "v2.x",
   "updateInternalDependencies": "patch",
   "ignore": ["react-native-gesture-image-viewer-example", "docs"],
   "format": "oxfmt"

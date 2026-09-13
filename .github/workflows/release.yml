@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - next
+      - v2.x
       - v1.x
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
@@ -42,7 +42,7 @@ jobs:
           commit-message: 'chore(release): version packages'
           pr-title: 'chore(release): version packages'
           version-script: 'pnpm changeset version'
-          publish-script: 'pnpm changeset publish'
+          publish-script: pnpm changeset publish ${{ github.ref_name == 'v2.x' && '--tag v2' || github.ref_name == 'v1.x' && '--tag v1' || '' }}
           create-github-releases: true
           push-git-tags: true
         env:
