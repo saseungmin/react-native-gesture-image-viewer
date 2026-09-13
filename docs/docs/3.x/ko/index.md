@@ -4,7 +4,7 @@ pageType: home
 hero:
   name: React Native Gesture Image Viewer
   text: 부드럽고 유연한 이미지 뷰어
-  tagline: 리스트 없는 제스처 페이징을 위한 v3 정식 버전 문서
+  tagline: Reanimated 기반의 이미지 제스처와 완전한 제어
   actions:
     - theme: brand
       text: 빠른 시작
