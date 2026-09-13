@@ -39,7 +39,7 @@ React Native에서 이미지 갤러리나 콘텐츠 뷰어를 구현할 때, 복
 ### 예제 및 데모
 
 - [📁 예제 프로젝트](/example/) - 실제 구현 코드와 다양한 사용 사례
-- [🥠 Expo Snack (v2 데모)](https://snack.expo.dev/@harang/react-native-gesture-image-viewer-v2) - Expo Snack에서 바로 체험
+- [🥠 Expo Snack (v3 데모)](https://snack.expo.dev/@harang/react-native-gesture-image-viewer-v3) - Expo Snack에서 바로 체험
 
 ### 🤖 AI
 
