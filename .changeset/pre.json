@@ -12,6 +12,7 @@
     "configurable-horizontal-swipe",
     "content-aware-zoom-bounds-next",
     "expose-active-render-item",
+    "fix-over-pinch-focal-drift",
     "pinch-gesture-handoff",
     "v3-gesture-render-window"
   ]
