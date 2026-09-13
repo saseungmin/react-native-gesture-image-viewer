@@ -1,5 +1,13 @@
 # react-native-gesture-image-viewer
 
+## 3.0.0-beta.4
+
+### Patch Changes
+
+- [#198](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/198) [`8696e63`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/8696e6319ce0853cda88f247bded2f1f6a86deba) Thanks [@saseungmin](https://github.com/saseungmin)! - Fix focal-point drift when a pinch settles back to `maxZoomScale`, while respecting
+  the rendered content bounds. Keep scale and translation animations synchronized
+  throughout the return.
+
 ## 3.0.0-beta.3
 
 ### Minor Changes
