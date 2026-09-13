@@ -1,0 +1,150 @@
+import { Tab, Tabs } from '@rspress/core/theme';
+
+# 커스텀 컴포넌트
+
+`react-native-gesture-image-viewer`는 강력한 기능으로 완벽한 컴포넌트 커스터마이징이 가능합니다. 이미지뿐만 아니라 원하는 컴포넌트로 제스처를 지원하는 아이템을 만들 수 있습니다.
+
+## 모달 컴포넌트
+
+다음과 같이 원하는 `Modal`을 사용하여 뷰어를 만들 수 있습니다.
+
+<Tabs>
+  <Tab label="Use Modal">
+    ```tsx
+    import { Image, Modal } from 'react-native';
+    import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+    function App() {
+      const images = [...];
+      const [visible, setVisible] = useState(false);
+
+      return (
+        <Modal visible={visible} onRequestClose={() => setVisible(false)}>
+          <GestureViewer
+            data={images}
+            renderItem={renderImage}
+            onDismiss={() => setVisible(false)}
+          />
+        </Modal>
+      );
+    }
+    ```
+
+  </Tab>
+  <Tab label="Use react-nativee-modal">
+    ```tsx
+    import { Image } from 'react-native';
+    import Modal from 'react-native-modal';
+    import { GestureViewer } from 'react-native-gesture-image-viewer';
+
+    function App() {
+      const images = [...];
+      const [visible, setVisible] = useState(false);
+
+      return (
+        <Modal
+          isVisible={visible}
+          onBackButtonPress={() => setVisible(false)}
+          onBackdropPress={() => setVisible(false)}
+          hasBackdrop={false}
+          style={styles.modal}
+          useNativeDriver={true}
+          hideModalContentWhileAnimating={true}
+          animationInTiming={300}
+          animationOutTiming={300}
+        >
+          <GestureViewer
+            data={images}
+            renderItem={renderImage}
+            onDismiss={() => setVisible(false)}
+          />
+        </Modal>
+      );
+    }
+    ```
+
+  </Tab>
+</Tabs>
+
+## Render Window
+
+3.x는 사용자가 넘기는 리스트 컴포넌트 대신 내부 render window를 사용합니다. 콘텐츠 커스터마이징은 `renderItem`을 사용하고, 기본 window가 부족할 때만 `windowSize`나 `pageSpacing`을 조정하세요.
+
+```tsx
+function App() {
+  return <GestureViewer data={images} renderItem={renderImage} windowSize={5} pageSpacing={16} />;
+}
+```
+
+## 콘텐츠 컴포넌트
+
+`renderItem` props를 통해 [`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/), [`FastImage`](https://github.com/DylanVann/react-native-fast-image) 등 다양한 종류의 콘텐츠 컴포넌트를 주입하여 제스처를 사용할 수 있습니다.
+
+```tsx
+import { GestureViewer } from 'react-native-gesture-image-viewer';
+import { Image } from 'expo-image';
+
+const images = [
+  'https://images.unsplash.com/photo-1682687220742-aba13b6e50ba',
+  'https://images.unsplash.com/photo-1682687220063-4742bd7fd538',
+  'https://images.unsplash.com/photo-1682687218147-9806132dc697',
+];
+
+function renderImage(imageUrl: string) {
+  return (
+    <Image
+      source={{ uri: imageUrl }}
+      style={{ width: '100%', height: '100%' }}
+      contentFit="contain"
+    />
+  );
+}
+
+function App() {
+  return <GestureViewer data={images} renderItem={renderImage} />;
+}
+```
+
+`contain` 콘텐츠의 정확한 줌과 팬 범위가 필요하다면 [콘텐츠 크기 가이드](/ko/guide/usage/item-dimensions.html)를 참고하세요.
+
+<span id="renderitem-active-state" />
+
+### `renderItem` 활성 상태 (`isActive`)
+
+비디오처럼 현재 표시 중인 콘텐츠에서만 재생이나 작업을 수행해야 한다면 세 번째 `renderItem` 인자의 `isActive`를 사용할 수 있습니다. 이 값은 현재 선택된 콘텐츠에서만 `true`입니다. 페이지 전환 중에는 기존 콘텐츠가 활성 상태를 유지하고, 이동이 완료되면 새로 선택된 콘텐츠가 활성화됩니다. 아이템 외부 UI에서 전역 `currentIndex`가 필요할 때는 [`useGestureViewerState`](/ko/guide/usage/gesture-viewer-state.html)를 사용하세요.
+
+```tsx
+import { GestureViewer, type GestureViewerRenderItemInfo } from 'react-native-gesture-image-viewer';
+import Video from 'react-native-video';
+
+type MediaItem = {
+  id: string;
+  uri: string;
+};
+
+const mediaItems: MediaItem[] = [
+  {
+    id: 'video-1',
+    uri: 'https://www.w3schools.com/html/mov_bbb.mp4',
+  },
+  {
+    id: 'video-2',
+    uri: 'https://www.w3schools.com/html/movie.mp4',
+  },
+];
+
+function renderMedia(item: MediaItem, _index: number, { isActive }: GestureViewerRenderItemInfo) {
+  return (
+    <Video
+      source={{ uri: item.uri }}
+      style={{ width: '100%', height: '100%' }}
+      paused={!isActive}
+      resizeMode="contain"
+    />
+  );
+}
+
+function App() {
+  return <GestureViewer data={mediaItems} renderItem={renderMedia} />;
+}
+```

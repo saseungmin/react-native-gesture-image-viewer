@@ -34,12 +34,12 @@ Existing libraries often have limited customization options or performance issue
 
 Full documentation is available at: <https://react-native-gesture-image-viewer.pages.dev>
 
-> v3 is currently in beta. Install it with `react-native-gesture-image-viewer@beta` and use the [v3 beta docs](https://react-native-gesture-image-viewer.pages.dev/3.x-beta/). The docs root still points to the stable v2 documentation.
+> v3 is stable. Install `react-native-gesture-image-viewer` and follow the [v2 → v3 migration guide](https://react-native-gesture-image-viewer.pages.dev/guide/migration-from-2.x.html). For v2 maintenance releases, install `react-native-gesture-image-viewer@2` and use the [v2 docs](https://react-native-gesture-image-viewer.pages.dev/2.x/).
 
 ### Examples & Demo
 
 - [📁 Example Project](/example/) - Real implementation code with various use cases
-- [🥠 Expo Go](https://snack.expo.dev/@harang/react-native-gesture-image-viewer-v2) - Try it instantly on Expo Snack
+- [🥠 Expo Go (v3 demo)](https://snack.expo.dev/@harang/react-native-gesture-image-viewer-v3) - Try it instantly on Expo Snack
 
 ### 🤖 AI
 

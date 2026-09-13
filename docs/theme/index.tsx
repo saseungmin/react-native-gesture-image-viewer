@@ -9,16 +9,16 @@ import {
 } from '@rspress/core/theme-original';
 
 const PACKAGE_NAME = 'react-native-gesture-image-viewer';
-const BETA_RELEASE_STORAGE_KEY = `${PACKAGE_NAME}-v3-beta-release`;
+const STABLE_RELEASE_STORAGE_KEY = `${PACKAGE_NAME}-v3-stable-release`;
 
-const BETA_RELEASE_CONTENT = {
+const STABLE_RELEASE_CONTENT = {
   en: {
-    href: '/3.x-beta/guide/getting-started/overview.html',
-    message: 'v3 beta is live. Learn more',
+    href: '/guide/migration-from-2.x.html',
+    message: 'v3 is stable. See what changed',
   },
   ko: {
-    href: '/3.x-beta/ko/guide/getting-started/overview.html',
-    message: 'v3 beta 출시. 자세히 보기',
+    href: '/ko/guide/migration-from-2.x.html',
+    message: 'v3 정식 출시. 변경 사항 보기',
   },
 } as const;
 
@@ -27,8 +27,8 @@ function getPackageName(version: string) {
     return `${PACKAGE_NAME}@1.x`;
   }
 
-  if (version === '3.x-beta') {
-    return `${PACKAGE_NAME}@beta`;
+  if (version === '2.x') {
+    return `${PACKAGE_NAME}@2`;
   }
 
   return PACKAGE_NAME;
@@ -54,7 +54,7 @@ function HomeLayout() {
 
 function Layout() {
   const lang = useLang();
-  const content = lang === 'ko' ? BETA_RELEASE_CONTENT.ko : BETA_RELEASE_CONTENT.en;
+  const content = lang === 'ko' ? STABLE_RELEASE_CONTENT.ko : STABLE_RELEASE_CONTENT.en;
 
   return (
     <BasicLayout
@@ -62,7 +62,7 @@ function Layout() {
         <Banner
           href={content.href}
           message={content.message}
-          storageKey={BETA_RELEASE_STORAGE_KEY}
+          storageKey={STABLE_RELEASE_STORAGE_KEY}
         />
       }
     />

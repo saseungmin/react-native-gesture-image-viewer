@@ -1,0 +1,7 @@
+# Preserve links to the former v3 beta documentation.
+/3.x-beta / 301
+/3.x-beta/* /:splat 301
+
+# The default version is served without a version prefix.
+/3.x / 301
+/3.x/* /:splat 301
