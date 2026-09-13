@@ -3,6 +3,8 @@ packages:
   - example
   - docs
 allowBuilds:
-  '@evilmartians/lefthook@2.1.9': true
+  '@evilmartians/lefthook@2.1.12': true
+  '@parcel/watcher@2.6.0': true
   'msgpackr-extract@3.0.4': true
+  'unrs-resolver@1.12.2': true
 autoInstallPeers: true

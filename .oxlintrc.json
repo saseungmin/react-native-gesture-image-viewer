@@ -10,7 +10,15 @@
   "rules": {
     "react/react-in-jsx-scope": "off",
     "react/style-prop-object": "off",
-    "react/react-compiler": "off",
+    // Preserve the previous react/react-compiler opt-out after its rule split.
+    // https://github.com/oxc-project/oxc/pull/25500
+    "react/capitalized-calls": "off",
+    "react/exhaustive-effect-dependencies": "off",
+    "react/globals": "off",
+    "react/memo-dependencies": "off",
+    "react/preserve-manual-memoization": "off",
+    "react/refs": "off",
+    "react/set-state-in-effect": "off",
     "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }]
   },
   "settings": {
