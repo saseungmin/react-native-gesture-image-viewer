@@ -34,12 +34,12 @@ React Native에서 이미지 갤러리나 콘텐츠 뷰어를 구현할 때, 복
 
 전체 문서는 <https://react-native-gesture-image-viewer.pages.dev>에서 확인할 수 있습니다.
 
-> v3는 현재 beta입니다. `react-native-gesture-image-viewer@beta`로 설치하고 [v3 beta 문서](https://react-native-gesture-image-viewer.pages.dev/3.x-beta/ko/)를 사용하세요. 문서 루트는 여전히 stable v2 문서를 가리킵니다.
+> v3가 정식 출시되었습니다. `react-native-gesture-image-viewer`를 설치하고 [v2 → v3 마이그레이션 가이드](https://react-native-gesture-image-viewer.pages.dev/ko/guide/migration-from-2.x.html)를 참고하세요. v2 유지보수 버전은 `react-native-gesture-image-viewer@2`로 설치하고 [v2 문서](https://react-native-gesture-image-viewer.pages.dev/2.x/ko/)를 사용하세요.
 
 ### 예제 및 데모
 
 - [📁 예제 프로젝트](/example/) - 실제 구현 코드와 다양한 사용 사례
-- [🥠 Expo Snack](https://snack.expo.dev/@harang/react-native-gesture-image-viewer-v2) - Expo Snack에서 바로 체험
+- [🥠 Expo Snack (v2 데모)](https://snack.expo.dev/@harang/react-native-gesture-image-viewer-v2) - Expo Snack에서 바로 체험
 
 ### 🤖 AI
 

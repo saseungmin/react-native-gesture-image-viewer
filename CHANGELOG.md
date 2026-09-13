@@ -1,5 +1,236 @@
 # react-native-gesture-image-viewer
 
+## 3.0.0
+
+### Major Changes
+
+- [#177](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/177) [`660006c`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/660006c84c79d13b3d9ebda7751c2002d0f7c1a4) Thanks [@saseungmin](https://github.com/saseungmin)! - Replace the boolean `enableHorizontalSwipe` prop with configurable `horizontalSwipe` options.
+
+  This is a breaking API change. Migrate gesture disabling from the removed boolean prop:
+
+  ```tsx
+  // Before
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    enableHorizontalSwipe={false}
+  />
+
+  // After
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    horizontalSwipe={{ enabled: false }}
+  />
+  ```
+
+  The new options also allow applications to control the distance and velocity required to change pages:
+
+  ```tsx
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    horizontalSwipe={{
+      enabled: true,
+      distanceThresholdRatio: 0.4,
+      velocityThreshold: 1200,
+    }}
+  />
+  ```
+
+  All fields are optional. `enabled` defaults to `true`, `distanceThresholdRatio` defaults to `0.25` of the viewer width, and `velocityThreshold` defaults to `800` points per second.
+
+  A page transition is committed when either the absolute drag distance is strictly greater than the configured width ratio or the absolute velocity is strictly greater than the configured velocity threshold. Finite non-negative values, including `0` and distance ratios greater than `1`, are supported. Invalid values fall back to their defaults.
+
+  Setting `horizontalSwipe.enabled` to `false` disables only touch and mouse horizontal gestures. Controller navigation and autoplay continue to work.
+
+- [#173](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/173) [`da58c6f`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/da58c6f31f7f6230023ead29326e0747cbaeda2b) Thanks [@saseungmin](https://github.com/saseungmin)! - Replace consumer-supplied list paging with an internal gesture-driven render window in v3.
+
+  `GestureViewer` no longer depends on a consumer-provided `ScrollView`, `FlatList`, or `FlashList` to move between items. Instead, v3 owns paging internally with Reanimated shared values and a small render window around the current item.
+
+  By default, the viewer mounts three render-window slots: previous, current, and next. When the user swipes, or when app code moves to an adjacent item with `goToIndex`, `goToNext`, or `goToPrevious`, the viewer moves the visual page first, then rebases the internal center virtual index and recalculates the mounted slots. Non-adjacent `goToIndex` calls rebase immediately because the target page is not guaranteed to be mounted inside the small render window.
+
+  Breaking changes:
+
+  - Removed `ListComponent`.
+  - Removed `listProps`.
+  - Removed `enableSnapMode`.
+  - Removed `itemSpacing`; use `pageSpacing` instead.
+  - Paging props that previously belonged to `FlatList`, `FlashList`, or `ScrollView` are no longer forwarded.
+
+  New and updated APIs:
+
+  - Added `windowSize` to control how many internal render-window slots are mounted. The value is normalized to an odd number of at least `3`.
+  - Added `pageSpacing` to render visible horizontal space between pages.
+  - Updated `goToIndex` to accept `goToIndex(index, { animated?: boolean })`.
+  - Keep `horizontalSwipe.enabled` scoped to user gestures only. Programmatic navigation through the controller still works when horizontal swipe gestures are disabled.
+
+  Migration example:
+
+  ```tsx
+  // v2
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    ListComponent={FlatList}
+    listProps={{
+      keyExtractor: (item) => item.id,
+      initialScrollIndex: 2,
+      showsHorizontalScrollIndicator: false,
+    }}
+    enableSnapMode
+    itemSpacing={16}
+  />
+  ```
+
+  ```tsx
+  // v3
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    initialIndex={2}
+    pageSpacing={16}
+    windowSize={3}
+  />
+  ```
+
+  Programmatic navigation example:
+
+  ```tsx
+  const controller = useGestureViewerController();
+
+  controller.goToIndex(2);
+  controller.goToIndex(2, { animated: false });
+  controller.goToNext();
+  controller.goToPrevious();
+  ```
+
+  Gesture lock example:
+
+  ```tsx
+  function Viewer() {
+    const controller = useGestureViewerController();
+
+    return (
+      <>
+        <Button title="Next" onPress={() => controller.goToNext()} />
+        <GestureViewer data={images} renderItem={renderImage} horizontalSwipe={{ enabled: false }} />
+      </>
+    );
+  }
+  ```
+
+  In the example above, users cannot swipe horizontally, but the button can still move the viewer because gesture locking and controller navigation are intentionally separated.
+
+  Common `listProps` replacements:
+
+  | v2 list prop or pattern                                  | v3 replacement                                                                          |
+  | -------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+  | `initialScrollIndex`                                     | `initialIndex`                                                                          |
+  | `keyExtractor`                                           | Use `getItemKey` for cached item dimensions. Render-window slots are keyed internally. |
+  | `scrollToIndex(...)` through a list ref                  | `useGestureViewerController().goToIndex(...)`                                           |
+  | `snapToInterval`, `pagingEnabled`, `decelerationRate`    | Removed. Paging is gesture-owned.                                                       |
+  | `itemSpacing`                                            | `pageSpacing`                                                                           |
+  | `windowSize`, `maxToRenderPerBatch`, `estimatedItemSize` | `windowSize` on `GestureViewer`                                                         |
+
+### Minor Changes
+
+- [#196](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/196) [`f24aa25`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/f24aa250ae4edaca4cd513954ee3ce9feb8c4fa9) Thanks [@saseungmin](https://github.com/saseungmin)! - Clamp zoom and pan bounds to the rendered content rect for `contain`-fitted items. Content
+  smaller than the viewport stays centered, while larger content stops when its edge reaches the
+  viewport edge.
+
+  When natural dimensions are already available, provide them through `getItemDimensions`:
+
+  ```tsx
+  type ImageItem = {
+    uri: string;
+    width: number;
+    height: number;
+  };
+
+  const getImageDimensions = (item: ImageItem) => ({
+    width: item.width,
+    height: item.height,
+  });
+
+  <GestureViewer
+    data={images}
+    getItemDimensions={getImageDimensions}
+    renderItem={(item) => (
+      <Image source={{ uri: item.uri }} style={styles.image} resizeMode="contain" />
+    )}
+  />;
+  ```
+
+  When dimensions are only known after loading, report them through `setItemDimensions` in the third
+  `renderItem` argument:
+
+  ```tsx
+  <GestureViewer
+    data={images}
+    renderItem={(item, _index, { setItemDimensions }) => (
+      <Image
+        source={{ uri: item.uri }}
+        style={styles.image}
+        resizeMode="contain"
+        onLoad={({ nativeEvent: { source } }) => {
+          setItemDimensions({ width: source.width, height: source.height });
+        }}
+      />
+    )}
+  />
+  ```
+
+  Runtime dimensions reported with `setItemDimensions` take precedence over
+  `getItemDimensions`. Invalid or unavailable dimensions keep the existing viewer-cell fallback, so
+  both APIs are optional and existing arbitrary-content renderers remain compatible.
+
+  If equivalent object items are recreated while v3 render-window slots are reused, provide a stable
+  content key to retain their loaded dimensions:
+
+  ```tsx
+  getItemKey={(item) => item.uri}
+  ```
+
+  The same bounds apply to pinch, pan, double-tap, web, and controller zoom paths.
+
+  Fixes [#191](https://github.com/saseungmin/react-native-gesture-image-viewer/issues/191).
+
+- [#178](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/178) [`d6eec7c`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/d6eec7c28470c0ca4ae99877b9fb78cca9a61345) Thanks [@saseungmin](https://github.com/saseungmin)! - Expose the committed active item through the third `renderItem` argument.
+
+  ```tsx
+  <GestureViewer
+    data={mediaItems}
+    renderItem={(item, index, { isActive }) => <MediaItem item={item} paused={!isActive} />}
+  />
+  ```
+
+  `isActive` is `true` for exactly one mounted virtual slot when data is present, including loop windows that contain duplicate logical indices. The current item remains active while an animated page transition is in progress, and the target becomes active only after the transition commits. Existing two-argument `renderItem` callbacks remain compatible.
+
+### Patch Changes
+
+- [#189](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/189) [`4632798`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/46327984bb2f6451db9662a3236327ae41bc07c6) Thanks [@saseungmin](https://github.com/saseungmin)! - Prevent adjacent images from bleeding into the active page when pinch zoom takes over after horizontal paging.
+
+  Page slots now clip their contents, and an interrupted horizontal swipe snaps back to the committed page before pinch zoom updates transforms.
+
+- [#176](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/176) [`9708b96`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/9708b966a0c487c28769e08a5e4f69b1586beab3) Thanks [@saseungmin](https://github.com/saseungmin)! - Refactor the gesture viewer's internal paging responsibilities into focused hooks without changing the public API.
+
+  Paging shared values, transition commands, horizontal gestures, and manager bridge effects now have dedicated ownership. This keeps `useGestureViewer` focused on navigation policy and reduces the risk of inconsistent paging state during future changes.
+
+- [#198](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/198) [`8696e63`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/8696e6319ce0853cda88f247bded2f1f6a86deba) Thanks [@saseungmin](https://github.com/saseungmin)! - Fix focal-point drift when a pinch settles back to `maxZoomScale`, while respecting
+  the rendered content bounds. Keep scale and translation animations synchronized
+  throughout the return.
+
+- [#186](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/186) [`f223e29`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/f223e29793b05f12e7622d314ab4f07bed4cc34c) Thanks [@saseungmin](https://github.com/saseungmin)! - Fix gesture conflicts between pinch zoom, one-finger drags, and single taps.
+
+  When a second finger is added during swipe-to-dismiss, horizontal paging, or panning a zoomed image, pinch zoom now takes control. Any interrupted dismiss movement resets before zooming begins.
+
+  Single-tap callbacks are no longer triggered after pinching, swiping, or dragging. Native taps now allow at most 10 points of movement to avoid treating an attempted drag as a tap.
+
+- [#206](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/206) [`4f599e9`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/4f599e9d331d16f2f48014f80ecd26a7f657aa60) Thanks [@saseungmin](https://github.com/saseungmin)! - Refresh the build toolchain and generated TypeScript declarations. Relative declaration
+  imports now include `.js` extensions, and component return types reference `React.JSX`.
+  The emitted runtime JavaScript is unchanged.
+
 ## 3.0.0-beta.5
 
 ### Patch Changes

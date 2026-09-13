@@ -7,11 +7,12 @@ If you're using **React Native Reanimated v3**, **version 1.x** of this library 
 
 👉 **[Go to v1.x Documentation](/1.x/guide/getting-started/installation.html)**
 
-Version 2.x only supports React Native Reanimated v4.
+Version 3.x supports React Native Reanimated v4.
 :::
 
 :::info Important
-`react-native-gesture-image-viewer` is a high-performance viewer library built on [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated) and [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler).  
+`react-native-gesture-image-viewer` is a high-performance viewer library built on [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated) and [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler).
+
 Therefore, you **must install** React Native Reanimated and Gesture Handler before using this library. Please refer to the official documentation of these libraries for detailed setup guides.
 :::
 
@@ -40,16 +41,11 @@ Therefore, you **must install** React Native Reanimated and Gesture Handler befo
 
 #### Expo
 
-:::warning Expo Go Support
-To use Reanimated 4 in Expo Go environment, you need to use [Expo SDK 54(beta)](https://expo.dev/go).
-:::
+Use Expo's [Reanimated installation guide](https://docs.expo.dev/versions/latest/sdk/reanimated/) to install versions compatible with your Expo SDK:
 
-Run prebuild to update the native code in the ios and android directories.
+<PackageManagerTabs command="expo install react-native-reanimated react-native-worklets" />
 
-<PackageManagerTabs command="expo prebuild" />
-
-And that's it! Reanimated 4 is now configured in your Expo project.  
- Since Expo SDK 50, the Expo starter template includes the Reanimated babel plugin by default.
+The Babel plugin is configured automatically by `babel-preset-expo`. For Expo Go, use an Expo SDK that includes Reanimated 4.
 
 #### React Native CLI
 
@@ -81,7 +77,8 @@ module.exports = {
 
 ## Install React Native Gesture Image Viewer
 
-You’re all set! 🎉  
-Start by installing `react-native-gesture-image-viewer`
+You’re all set! 🎉
 
-<PackageManagerTabs command="install react-native-gesture-image-viewer@2" />
+Start by installing the stable release of `react-native-gesture-image-viewer`
+
+<PackageManagerTabs command="install react-native-gesture-image-viewer" />

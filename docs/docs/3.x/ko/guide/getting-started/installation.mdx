@@ -7,11 +7,12 @@ import { Steps, PackageManagerTabs } from '@rspress/core/theme';
 
 👉 **[1.x 문서로 이동](/1.x/ko/guide/getting-started/installation.html)**
 
-2.x 버전은 React Native Reanimated v4만 지원합니다.
+3.x 버전은 React Native Reanimated v4를 지원합니다.
 :::
 
 :::info 중요
-`react-native-gesture-image-viewer`는 [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated)와 [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler)를 기반으로 한 높은 성능의 뷰어 라이브러리입니다.  
+`react-native-gesture-image-viewer`는 [`react-native-reanimated`](https://www.npmjs.com/package/react-native-reanimated)와 [`react-native-gesture-handler`](https://www.npmjs.com/package/react-native-gesture-handler)를 기반으로 한 높은 성능의 뷰어 라이브러리입니다.
+
 따라서 이 라이브러리를 사용하기 전에 React Native Reanimated와 Gesture Handler를 **반드시 설치**해야 합니다. 자세한 설정 가이드는 각 라이브러리의 공식 문서를 참고해주세요.
 :::
 
@@ -40,16 +41,11 @@ import { Steps, PackageManagerTabs } from '@rspress/core/theme';
 
 #### Expo
 
-:::warning Expo Go 지원
-Expo Go 환경에서 Reanimated 4를 사용하려면 [Expo SDK 54(beta)](https://expo.dev/go)를 사용해야 합니다.
-:::
+Expo SDK와 호환되는 버전은 [Expo Reanimated 설치 가이드](https://docs.expo.dev/versions/latest/sdk/reanimated/)에 따라 설치하세요.
 
-Expo를 사용할 경우 `expo prebuild`를 실행하여 ios와 android 디렉토리의 네이티브 코드를 업데이트합니다.
+<PackageManagerTabs command="expo install react-native-reanimated react-native-worklets" />
 
-<PackageManagerTabs command="expo prebuild" />
-
-끝입니다! 이제 Expo 프로젝트에서 Reanimated 4가 구성되었습니다.
-Expo SDK 50부터는 Expo 스타터 템플릿에 기본적으로 Reanimated Babel 플러그인이 포함되어 있습니다.
+`babel-preset-expo`가 Babel 플러그인을 자동으로 구성합니다. Expo Go에서는 Reanimated 4가 포함된 Expo SDK를 사용하세요.
 
 #### React Native CLI
 
@@ -81,7 +77,8 @@ module.exports = {
 
 ## React Native Gesture Image Viewer 설치
 
-모든 설정이 끝났습니다! 🎉  
-이제 `react-native-gesture-image-viewer`를 설치하면 됩니다.
+모든 설정이 끝났습니다! 🎉
 
-<PackageManagerTabs command="install react-native-gesture-image-viewer@2" />
+이제 `react-native-gesture-image-viewer`의 정식 버전을 설치하면 됩니다.
+
+<PackageManagerTabs command="install react-native-gesture-image-viewer" />
