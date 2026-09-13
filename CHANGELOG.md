@@ -1,5 +1,12 @@
 # react-native-gesture-image-viewer
 
+## 3.0.0-beta.5
+
+### Patch Changes
+
+- [#206](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/206) [`4f599e9`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/4f599e9d331d16f2f48014f80ecd26a7f657aa60) Thanks [@saseungmin](https://github.com/saseungmin)! - Refresh the build toolchain and generated TypeScript declarations. Relative declaration imports now include `.js` extensions, and component return types reference `React.JSX`.  
+The emitted runtime JavaScript is unchanged.
+
 ## 3.0.0-beta.4
 
 ### Patch Changes
