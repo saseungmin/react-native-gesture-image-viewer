@@ -10,9 +10,9 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@rspress/core": "^2.0.13",
-    "@shikijs/transformers": "^4.1.0",
-    "@types/node": "^24",
+    "@rspress/core": "^2.0.21",
+    "@shikijs/transformers": "^4.4.3",
+    "@types/node": "^24.13.4",
     "typescript": "^5.9.3"
   }
 }

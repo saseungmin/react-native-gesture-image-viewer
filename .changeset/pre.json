@@ -1,19 +1,4 @@
 {
   "mode": "pre",
-  "tag": "beta",
-  "initialVersions": {
-    "react-native-gesture-image-viewer": "2.3.3",
-    "react-native-gesture-image-viewer-example": "1.0.0",
-    "docs": "1.0.0"
-  },
-  "changesets": [
-    "calm-images-stay",
-    "clean-gesture-viewer-paging",
-    "configurable-horizontal-swipe",
-    "content-aware-zoom-bounds-next",
-    "expose-active-render-item",
-    "fix-over-pinch-focal-drift",
-    "pinch-gesture-handoff",
-    "v3-gesture-render-window"
-  ]
+  "tag": "beta"
 }

@@ -1,8 +1,10 @@
 {
-  "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
+  "$schema": "https://unpkg.com/@changesets/config@4.0.0/schema.json",
   "changelog": [
     "@changesets/changelog-github",
-    { "repo": "saseungmin/react-native-gesture-image-viewer" }
+    {
+      "repo": "saseungmin/react-native-gesture-image-viewer"
+    }
   ],
   "commit": false,
   "fixed": [],
@@ -10,5 +12,6 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["react-native-gesture-image-viewer-example", "docs"]
+  "ignore": ["react-native-gesture-image-viewer-example", "docs"],
+  "format": "oxfmt"
 }
