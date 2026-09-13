@@ -24,6 +24,9 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      - name: Audit high and critical vulnerabilities
+        run: pnpm audit:security
+
       - name: Format check
         run: pnpm format:check
 
@@ -57,8 +60,11 @@ jobs:
       - name: Build package
         run: pnpm build
 
-      - name: Build example for Web
-        run: pnpm example:build
+      - name: Check Expo dependency compatibility
+        run: pnpm -C example exec expo install --check
+
+      - name: Build example for Web, iOS, and Android
+        run: pnpm -C example exec expo export --platform all
 
       - name: Typecheck docs
         run: pnpm docs:typecheck
