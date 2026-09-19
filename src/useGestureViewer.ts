@@ -47,7 +47,7 @@ import { type EmitSingleTap, useWebClickHandler } from './useWebClickHandler';
 import { useWebSingleTapTimer } from './useWebSingleTapTimer';
 import { clampTranslationToBounds, resolveGeometrySyncTranslationMode } from './utils';
 import { getDismissDistance, shouldDismissByDirection } from './utils/dismiss';
-import { applyTapZoomAtPoint } from './utils/tapZoom';
+import { applyTapZoomAtPoint, finishTapZoomOut } from './utils/tapZoom';
 import { calculateFocalPointTranslation, shouldAcceptFocalPoint } from './utils/zoom';
 
 const NATIVE_TAP_MAX_DISTANCE = 10;
@@ -169,6 +169,7 @@ export const useGestureViewer = <ItemT>({
   const translateY = useSharedValue(0);
   const translateX = useSharedValue(0);
   const scale = useSharedValue(1);
+  const tapZoomTarget = useSharedValue<number | null>(null);
   const rotation = useSharedValue(0);
   const contentWidth = useSharedValue(width);
   const contentHeight = useSharedValue(height);
@@ -185,6 +186,11 @@ export const useGestureViewer = <ItemT>({
     translateX,
     translateY,
   });
+
+  const finishPendingZoomOut = useCallback(() => {
+    'worklet';
+    finishTapZoomOut({ tapZoomTarget, scale, translateX, translateY });
+  }, [tapZoomTarget, scale, translateX, translateY]);
 
   const triggerScale = useSharedValue(1);
   const triggerTranslateX = useSharedValue(0);
@@ -927,8 +933,10 @@ export const useGestureViewer = <ItemT>({
     onDismissStart,
   ]);
 
+  // Keep recognizers stable across zoom changes; choose ownership at touch-down
+  // on the UI thread instead of toggling enabled mid-touch through React state.
   const dismissGesture = useMemo(() => {
-    const canDismiss = !isTriggerOpening && !isPinching && !isZoomed && dismissOptions.enabled;
+    const canDismiss = !isTriggerOpening && !isPinching && dismissOptions.enabled;
     const resetDismissTranslation = () => {
       'worklet';
       cancelAnimation(translateY);
@@ -946,6 +954,11 @@ export const useGestureViewer = <ItemT>({
       .enabled(canDismiss)
       .onTouchesDown((event, stateManager) => {
         if (event.numberOfTouches === 1) {
+          finishPendingZoomOut();
+          if (scale.get() > 1) {
+            stateManager.fail();
+            return;
+          }
           nativeInteractionHadMultipleTouches.set(false);
           return;
         }
@@ -998,11 +1011,11 @@ export const useGestureViewer = <ItemT>({
         }
       });
   }, [
+    finishPendingZoomOut,
     dismissOptions,
     handleDismiss,
     isPinching,
     isTriggerOpening,
-    isZoomed,
     nativeInteractionHadMultipleTouches,
     pageTransitionLocked,
     scale,
@@ -1097,6 +1110,7 @@ export const useGestureViewer = <ItemT>({
           }
 
           applyTapZoomAtPoint({
+            tapZoomTarget,
             contentHeight: contentHeight.get(),
             contentWidth: contentWidth.get(),
             x: event.x,
@@ -1110,6 +1124,7 @@ export const useGestureViewer = <ItemT>({
           });
         }),
     [
+      tapZoomTarget,
       contentHeight,
       contentWidth,
       enableDoubleTapZoom,
@@ -1334,13 +1349,18 @@ export const useGestureViewer = <ItemT>({
   const zoomPanGesture = useMemo(
     () =>
       Gesture.Pan()
-        .enabled(enablePanWhenZoomed && !isPinching && isZoomed)
+        .enabled(enablePanWhenZoomed && !isPinching)
         .maxPointers(1)
         .activeCursor('grabbing')
         .averageTouches(true)
         .onTouchesDown((event, stateManager) => {
           stopPanInertia();
           if (event.numberOfTouches === 1) {
+            finishPendingZoomOut();
+            if (scale.get() <= 1) {
+              stateManager.fail();
+              return;
+            }
             nativeInteractionHadMultipleTouches.set(false);
             return;
           }
@@ -1392,13 +1412,13 @@ export const useGestureViewer = <ItemT>({
           startPanInertia(event.velocityX, event.velocityY);
         }),
     [
+      finishPendingZoomOut,
       startPanInertia,
       stopPanInertia,
       translateX,
       translateY,
       enablePanWhenZoomed,
       isPinching,
-      isZoomed,
       scale,
       initialTranslateX,
       initialTranslateY,
@@ -1415,6 +1435,7 @@ export const useGestureViewer = <ItemT>({
   );
 
   const onWebClick = useWebClickHandler({
+    tapZoomTarget,
     clearPendingWebSingleTap,
     contentHeight,
     contentWidth,

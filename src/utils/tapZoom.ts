@@ -1,5 +1,5 @@
 import type { SharedValue } from 'react-native-reanimated';
-import { Easing, withTiming } from 'react-native-reanimated';
+import { cancelAnimation, Easing, withTiming } from 'react-native-reanimated';
 
 import { clampTranslationToBounds } from '.';
 
@@ -50,6 +50,7 @@ export const applyTapZoomAtPoint = ({
   scale,
   translateX,
   translateY,
+  tapZoomTarget,
 }: {
   x: number;
   y: number;
@@ -61,6 +62,7 @@ export const applyTapZoomAtPoint = ({
   scale: SharedValue<number>;
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
+  tapZoomTarget?: SharedValue<number | null>;
 }) => {
   'worklet';
 
@@ -81,5 +83,34 @@ export const applyTapZoomAtPoint = ({
 
   translateX.set(withTiming(target.translateX, timingConfig));
   translateY.set(withTiming(target.translateY, timingConfig));
-  scale.set(withTiming(target.scale, timingConfig));
+  // Cancel the previous scale animation before publishing the new target so its
+  // cancellation callback cannot clear the new transition.
+  cancelAnimation(scale);
+  tapZoomTarget?.set(target.scale);
+  scale.set(
+    withTiming(target.scale, timingConfig, () => {
+      tapZoomTarget?.set(null);
+    }),
+  );
 };
+
+/** A new touch can take over an explicitly requested return to fitted scale. */
+export function finishTapZoomOut({
+  tapZoomTarget,
+  scale,
+  translateX,
+  translateY,
+}: {
+  tapZoomTarget: SharedValue<number | null>;
+  scale: SharedValue<number>;
+  translateX: SharedValue<number>;
+  translateY: SharedValue<number>;
+}) {
+  'worklet';
+  if (tapZoomTarget.get() !== 1) return;
+  cancelAnimation(scale);
+  tapZoomTarget.set(null);
+  scale.set(1);
+  translateX.set(0);
+  translateY.set(0);
+}

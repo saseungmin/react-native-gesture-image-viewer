@@ -36,6 +36,7 @@ export type WebClickHandlerConfig<ItemT> = {
   isInteractionLocked: () => boolean;
   maxZoomScale: number;
   scale: SharedValue<number>;
+  tapZoomTarget?: SharedValue<number | null>;
   scheduleWebSingleTap: ScheduleWebSingleTap;
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
@@ -53,6 +54,7 @@ export function createWebClickHandler<ItemT>({
   isInteractionLocked,
   maxZoomScale,
   scale,
+  tapZoomTarget,
   scheduleWebSingleTap,
   translateX,
   translateY,
@@ -90,6 +92,7 @@ export function createWebClickHandler<ItemT>({
         height,
         maxZoomScale,
         scale,
+        tapZoomTarget,
         translateX,
         translateY,
       });
@@ -115,6 +118,7 @@ export function useWebClickHandler<ItemT>({
   isInteractionLocked,
   maxZoomScale,
   scale,
+  tapZoomTarget,
   scheduleWebSingleTap,
   translateX,
   translateY,
@@ -133,6 +137,7 @@ export function useWebClickHandler<ItemT>({
         isInteractionLocked,
         maxZoomScale,
         scale,
+        tapZoomTarget,
         scheduleWebSingleTap,
         translateX,
         translateY,
@@ -149,6 +154,7 @@ export function useWebClickHandler<ItemT>({
       isInteractionLocked,
       maxZoomScale,
       scale,
+      tapZoomTarget,
       scheduleWebSingleTap,
       translateX,
       translateY,
