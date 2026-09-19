@@ -6,13 +6,15 @@ import type {
   GestureViewerEventType,
   GestureViewerState,
 } from './types';
-import { clampTranslationToBounds, createScrollAction } from './utils';
+import { createScrollAction } from './utils';
+import { animateZoom } from './utils/animateZoom';
 
 type ZoomSharedValuesOptions = {
   scale: SharedValue<number>;
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
   maxZoomScale: number;
+  viewportSize?: SharedValue<{ width: number; height: number }>;
   contentWidth?: SharedValue<number>;
   contentHeight?: SharedValue<number>;
 };
@@ -32,6 +34,7 @@ class GestureViewerManager {
   private rotation: SharedValue<number> | null = null;
   private translateX: SharedValue<number> | null = null;
   private translateY: SharedValue<number> | null = null;
+  private viewportSize: SharedValue<{ width: number; height: number }> | null = null;
   private contentWidth: SharedValue<number> | null = null;
   private contentHeight: SharedValue<number> | null = null;
   private resetTransformCallback: (() => void) | null = null;
@@ -152,6 +155,7 @@ class GestureViewerManager {
     translateX,
     translateY,
     maxZoomScale,
+    viewportSize,
     contentWidth,
     contentHeight,
   }: ZoomSharedValuesOptions) {
@@ -159,6 +163,7 @@ class GestureViewerManager {
     this.translateX = translateX;
     this.translateY = translateY;
     this.maxZoomScale = maxZoomScale;
+    this.viewportSize = viewportSize ?? null;
     this.contentWidth = contentWidth ?? null;
     this.contentHeight = contentHeight ?? null;
   }
@@ -221,16 +226,7 @@ class GestureViewerManager {
 
     const nextScale = Math.min(this.scale.get() * (1 + multiplier), this.maxZoomScale);
 
-    this.scale.set(withTiming(nextScale));
-
-    const { translateX, translateY } = this.constrainZoomTranslation({
-      translateX: this.translateX.get(),
-      translateY: this.translateY.get(),
-      scale: nextScale,
-    });
-
-    this.translateX.set(withTiming(translateX));
-    this.translateY.set(withTiming(translateY));
+    this.animateZoomToScale(nextScale);
   };
 
   zoomOut = (multiplier = 0.25) => {
@@ -246,22 +242,7 @@ class GestureViewerManager {
 
     const nextScale = Math.max(this.scale.get() / (1 + multiplier), 1);
 
-    this.scale.set(withTiming(nextScale));
-
-    if (nextScale === 1) {
-      this.translateX.set(withTiming(0));
-      this.translateY.set(withTiming(0));
-      return;
-    }
-
-    const { translateX, translateY } = this.constrainZoomTranslation({
-      translateX: this.translateX.get(),
-      translateY: this.translateY.get(),
-      scale: nextScale,
-    });
-
-    this.translateX.set(withTiming(translateX));
-    this.translateY.set(withTiming(translateY));
+    this.animateZoomToScale(nextScale);
   };
 
   resetZoom = (scale = 1) => {
@@ -378,6 +359,7 @@ class GestureViewerManager {
     this.scale = null;
     this.translateX = null;
     this.translateY = null;
+    this.viewportSize = null;
     this.contentWidth = null;
     this.contentHeight = null;
     this.rotation = null;
@@ -390,23 +372,23 @@ class GestureViewerManager {
     this.notifyListeners();
   };
 
-  private constrainZoomTranslation = ({
-    scale,
-    translateX,
-    translateY,
-  }: {
-    scale: number;
-    translateX: number;
-    translateY: number;
-  }) => {
-    return clampTranslationToBounds({
-      contentHeight: this.contentHeight?.get(),
-      contentWidth: this.contentWidth?.get(),
-      height: this.height,
-      scale,
-      translateX,
-      translateY,
+  private animateZoomToScale = (nextScale: number) => {
+    if (!this.scale || !this.translateX || !this.translateY) return;
+    animateZoom({
       width: this.viewportWidth || this.pagingStride,
+      height: this.height,
+      viewportSize: this.viewportSize,
+      contentWidth: this.contentWidth,
+      contentHeight: this.contentHeight,
+      rotation: this.rotation,
+      scale: this.scale,
+      translateX: this.translateX,
+      translateY: this.translateY,
+      target: {
+        scale: nextScale,
+        translateX: this.translateX.get(),
+        translateY: this.translateY.get(),
+      },
     });
   };
 }

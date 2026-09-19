@@ -10,6 +10,8 @@ export type UseGestureViewerPagingArgs = {
   autoPlayInterval: number;
   contentHeight: SharedValue<number>;
   contentWidth: SharedValue<number>;
+  rotation: SharedValue<number>;
+  viewportSize: SharedValue<{ width: number; height: number }>;
   currentIndex: number;
   dataLength: number;
   enableDoubleTapZoom: boolean;
