@@ -39,6 +39,11 @@ function createArgs(
     autoPlayInterval: 3000,
     contentHeight: createSharedValue(480),
     contentWidth: createSharedValue(320),
+    rotation: createSharedValue(0),
+    viewportSize: { get: () => ({ width: 320, height: 480 }) } as SharedValue<{
+      width: number;
+      height: number;
+    }>,
     currentIndex: 0,
     dataLength: 3,
     enableDoubleTapZoom: true,
@@ -272,12 +277,16 @@ describe('useGestureViewerPaging web active state', () => {
     expect(result.current.activeListIndex).toBe(2);
   });
 
-  it('passes active content dimensions to double-click zoom', async () => {
+  it('passes active content dimensions and rotation to double-click zoom', async () => {
+    const contentHeight = createSharedValue(616);
+    const contentWidth = createSharedValue(393);
+    const rotation = createSharedValue(90);
     const { result } = await renderHook(() =>
       useGestureViewerPaging(
         createArgs({
-          contentHeight: createSharedValue(616),
-          contentWidth: createSharedValue(393),
+          contentHeight,
+          contentWidth,
+          rotation,
         }),
       ),
     );
@@ -295,8 +304,9 @@ describe('useGestureViewerPaging web active state', () => {
 
     expect(applyTapZoomAtPoint).toHaveBeenCalledWith(
       expect.objectContaining({
-        contentHeight: 616,
-        contentWidth: 393,
+        contentHeight,
+        contentWidth,
+        rotation,
       }),
     );
   });

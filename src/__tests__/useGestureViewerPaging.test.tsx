@@ -32,6 +32,11 @@ function createArgs(
     autoPlayInterval: 3000,
     contentHeight: createSharedValue(480),
     contentWidth: createSharedValue(320),
+    rotation: createSharedValue(0),
+    viewportSize: { get: () => ({ width: 320, height: 480 }) } as SharedValue<{
+      width: number;
+      height: number;
+    }>,
     currentIndex: 0,
     dataLength: 3,
     enableDoubleTapZoom: true,
