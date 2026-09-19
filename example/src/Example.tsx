@@ -105,6 +105,7 @@ const scenarioIds: ScenarioId[] = [
 ];
 
 function Example() {
+  const [inertiaPreset, setInertiaPreset] = useState<0 | 1 | 2>(0);
   const [visible, setVisible] = useState(false);
   const [enableLoop, setEnableLoop] = useState(false);
   const [showExternalUI, setShowExternalUI] = useState(true);
@@ -159,6 +160,10 @@ function Example() {
     <View style={styles.container}>
       <View style={styles.buttonWrapper}>
         <Button
+          title={`Pan inertia: ${['OFF', 'Default', 'Faster stop'][inertiaPreset]}`}
+          onPress={() => setInertiaPreset((value) => ((value + 1) % 3) as 0 | 1 | 2)}
+        />
+        <Button
           title={`Loop: ${enableLoop ? 'ON' : 'OFF'}`}
           onPress={() => setEnableLoop(!enableLoop)}
         />
@@ -208,6 +213,13 @@ function Example() {
       >
         <View style={{ flex: 1 }}>
           <GestureViewer
+            panInertia={
+              inertiaPreset === 0
+                ? false
+                : inertiaPreset === 1
+                  ? true
+                  : { enabled: true, deceleration: 0.995 }
+            }
             data={photoUris}
             initialIndex={selectedIndex}
             onDismiss={() => setVisible(false)}

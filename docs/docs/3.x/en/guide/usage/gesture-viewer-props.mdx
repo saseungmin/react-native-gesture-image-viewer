@@ -8,6 +8,33 @@ Use `isActive` for work that should run only on the active item, such as video p
 
 Call `setItemDimensions({ width, height })` after rendered content dimensions become available. See the [item dimensions guide](/guide/usage/item-dimensions.html) for examples and call timing.
 
+### `panInertia` (default: `false`)
+
+Adds momentum when a zoomed pan is released. Pass `true` for defaults, or a configuration object with an explicit `enabled` field:
+
+```tsx
+<GestureViewer data={data} renderItem={renderItem} panInertia />
+<GestureViewer
+  data={data}
+  renderItem={renderItem}
+  panInertia={{ enabled: true, deceleration: 0.995 }}
+/>
+```
+
+```ts
+type GestureViewerPanInertiaConfig = {
+  enabled: boolean;
+  deceleration?: number;
+};
+// panInertia?: boolean | GestureViewerPanInertiaConfig
+```
+
+Omitting the prop, passing `false`, or setting `enabled: false` preserves release-without-momentum behavior. An empty object is not valid. `enablePanWhenZoomed` must also be enabled.
+
+`deceleration` defaults to `0.998`; values closer to `1` glide longer. Only finite values strictly between `0` and `1` are accepted; invalid values fall back to the default. Changing it affects the next release. Disabling inertia stops any running glide.
+
+Movement stops at the fitted content bounds without rubber-banding or changing pages. Supply `getItemDimensions` or `setItemDimensions` for content-aware bounds; otherwise the viewer dimensions are used. A new touch/pinch or changes to zoom, rotation, geometry, navigation, or dismissal interrupt inertia. System reduced-motion preferences are respected.
+
 ### `getItemDimensions`
 
 `getItemDimensions(item, index)` returns natural dimensions when they are already known. See the [item dimensions guide](/guide/usage/item-dimensions.html) for precedence and fallback behavior.
@@ -357,6 +384,7 @@ export interface GestureViewerProps<ItemT> {
    * @defaultValue true
    */
   enablePanWhenZoomed?: boolean;
+  panInertia?: boolean | { enabled: boolean; deceleration?: number };
   /**
    * Controls two-finger pinch gestures.
    * @remarks When `false`, two-finger zoom gestures are disabled.
