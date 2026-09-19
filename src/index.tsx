@@ -11,6 +11,7 @@ export type {
   GestureViewerItemKey,
   GestureViewerItemKeyResolver,
   GestureViewerProps,
+  GestureViewerPanInertiaConfig,
   GestureViewerRenderItemInfo,
   GestureViewerState,
   GestureViewerSingleTapEvent,

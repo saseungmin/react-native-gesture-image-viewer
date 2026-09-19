@@ -67,6 +67,12 @@ type ConditionalListProps<ItemT, LC> = LC extends typeof RNFlatList<ItemT>
       : LC extends typeof GHScrollView
         ? React.ComponentProps<typeof GHScrollView>
         : GetComponentProps<ItemT, LC>;
+export type GestureViewerPanInertiaConfig = {
+  /** Explicitly enables inertia when passing a configuration object. */
+  enabled: boolean;
+  /** Velocity decay rate. Finite values strictly between 0 and 1; otherwise defaults to 0.998. */
+  deceleration?: number;
+};
 
 export type TriggerRect = {
   x: number;
@@ -295,6 +301,13 @@ export interface GestureViewerProps<ItemT, LC> {
    * @defaultValue true
    */
   enablePanWhenZoomed?: boolean;
+  /**
+   * Momentum after releasing a zoomed pan. Requires enablePanWhenZoomed.
+   * Pass true for defaults, or an object with enabled: true to customize.
+   * Respects the system reduced-motion setting. Stops at the content bounds.
+   * @defaultValue false
+   */
+  panInertia?: boolean | GestureViewerPanInertiaConfig;
   /**
    * Controls two-finger pinch gestures.
    * @remarks When `false`, two-finger zoom gestures are disabled.
