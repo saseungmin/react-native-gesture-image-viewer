@@ -168,6 +168,7 @@ export const useGestureViewer = <ItemT>({
   const translateX = useSharedValue(0);
   const scale = useSharedValue(1);
   const rotation = useSharedValue(0);
+  const viewportSize = useSharedValue({ width, height });
   const contentWidth = useSharedValue(width);
   const contentHeight = useSharedValue(height);
 
@@ -230,6 +231,12 @@ export const useGestureViewer = <ItemT>({
   const syncActiveContentDimensions = useCallback(
     (index = pendingIndexRef.current) => {
       const viewport = viewportRef.current;
+      if (
+        viewportSize.get().width !== viewport.width ||
+        viewportSize.get().height !== viewport.height
+      ) {
+        viewportSize.set(viewport);
+      }
       const fitted = fitItemDimensions(
         resolveItemDimensions({
           data: dataRef.current,
@@ -289,6 +296,7 @@ export const useGestureViewer = <ItemT>({
       const constrained = clampTranslationToBounds({
         contentHeight: fitted.height,
         contentWidth: fitted.width,
+        rotation: rotation.get(),
         height: viewport.height,
         width: viewport.width,
         scale: currentScale,
@@ -298,7 +306,7 @@ export const useGestureViewer = <ItemT>({
       translateX.set(withTiming(constrained.translateX));
       translateY.set(withTiming(constrained.translateY));
     },
-    [contentHeight, contentWidth, scale, translateX, translateY],
+    [contentHeight, contentWidth, rotation, scale, translateX, translateY, viewportSize],
   );
 
   const setItemDimensions = useCallback(
@@ -334,6 +342,7 @@ export const useGestureViewer = <ItemT>({
       return clampTranslationToBounds({
         contentHeight: contentHeight.get(),
         contentWidth: contentWidth.get(),
+        rotation: rotation.get(),
         height,
         scale: targetScale,
         translateX: targetX,
@@ -341,7 +350,7 @@ export const useGestureViewer = <ItemT>({
         width,
       });
     },
-    [contentHeight, contentWidth, height, width],
+    [contentHeight, contentWidth, height, rotation, width],
   );
 
   const resetTransformState = useCallback(() => {
@@ -514,6 +523,7 @@ export const useGestureViewer = <ItemT>({
   }, [navigateByDirection]);
 
   useGestureViewerManagerBridge({
+    viewportSize,
     contentHeight,
     contentWidth,
     currentIndexRef,
@@ -564,10 +574,44 @@ export const useGestureViewer = <ItemT>({
   );
 
   useAnimatedReaction(
-    () => rotation.get(),
-    (currentRotation, previousRotation) => {
+    () => ({ rotation: rotation.get(), scale: scale.get() }),
+    (current, previous) => {
+      const currentRotation = current.rotation;
+      const previousRotation = previous?.rotation ?? null;
       if (currentRotation !== previousRotation && hasRotationChangeListeners.get()) {
         scheduleOnRN(emitRotationChange, currentRotation, previousRotation);
+      }
+
+      if (
+        previous !== null &&
+        (currentRotation !== previousRotation || current.scale < previous.scale) &&
+        !pageTransitionLocked.get() &&
+        current.scale > 1
+      ) {
+        const currentX = translateX.get();
+        const currentY = translateY.get();
+        const constrained = constrainTranslation({
+          scale: current.scale,
+          translateX: currentX,
+          translateY: currentY,
+        });
+
+        // Keep an active gesture anchored to the corrected position. Pinch baselines
+        // live at startScale; pan baselines use the current screen coordinates.
+        const baselineRatio = hasActiveFocal.get() ? startScale.get() / current.scale : 1;
+        // Ignore rounding noise so it cannot cancel an otherwise valid timing animation.
+        if (Math.abs(constrained.translateX - currentX) > 0.000001) {
+          initialTranslateX.set(
+            initialTranslateX.get() + (constrained.translateX - currentX) * baselineRatio,
+          );
+          translateX.set(constrained.translateX);
+        }
+        if (Math.abs(constrained.translateY - currentY) > 0.000001) {
+          initialTranslateY.set(
+            initialTranslateY.get() + (constrained.translateY - currentY) * baselineRatio,
+          );
+          translateY.set(constrained.translateY);
+        }
       }
 
       const currentIsRotated = currentRotation % 360 !== 0;
@@ -1074,8 +1118,10 @@ export const useGestureViewer = <ItemT>({
           }
 
           applyTapZoomAtPoint({
-            contentHeight: contentHeight.get(),
-            contentWidth: contentWidth.get(),
+            viewportSize,
+            contentHeight,
+            contentWidth,
+            rotation,
             x: event.x,
             y: event.y,
             width,
@@ -1087,8 +1133,10 @@ export const useGestureViewer = <ItemT>({
           });
         }),
     [
+      viewportSize,
       contentHeight,
       contentWidth,
+      rotation,
       enableDoubleTapZoom,
       height,
       maxZoomScale,
@@ -1380,8 +1428,10 @@ export const useGestureViewer = <ItemT>({
 
   const onWebClick = useWebClickHandler({
     clearPendingWebSingleTap,
+    viewportSize,
     contentHeight,
     contentWidth,
+    rotation,
     emitSingleTap,
     enableDoubleTapZoom,
     getCurrentTapTarget,

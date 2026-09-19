@@ -7,6 +7,7 @@ import { registry } from './GestureViewerRegistry';
 
 type UseGestureViewerManagerBridgeOptions = {
   currentIndexRef: RefObject<number>;
+  viewportSize: SharedValue<{ width: number; height: number }>;
   contentHeight: SharedValue<number>;
   contentWidth: SharedValue<number>;
   dataLengthRef: RefObject<number>;
@@ -31,6 +32,7 @@ type UseGestureViewerManagerBridgeOptions = {
  */
 export function useGestureViewerManagerBridge({
   currentIndexRef,
+  viewportSize,
   contentHeight,
   contentWidth,
   dataLengthRef,
@@ -71,10 +73,12 @@ export function useGestureViewerManagerBridge({
       translateY,
       maxZoomScale,
       contentWidth,
+      viewportSize,
       contentHeight,
     });
     manager.setRotation(rotation);
   }, [
+    viewportSize,
     contentHeight,
     contentWidth,
     height,
