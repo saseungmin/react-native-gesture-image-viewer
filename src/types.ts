@@ -2,6 +2,13 @@ import type React from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import type { WithTimingConfig } from 'react-native-reanimated';
 
+export type GestureViewerPanInertiaConfig = {
+  /** Explicitly enables inertia when passing a configuration object. */
+  enabled: boolean;
+  /** Velocity decay rate. Finite values strictly between 0 and 1; otherwise defaults to 0.998. */
+  deceleration?: number;
+};
+
 export type TriggerRect = {
   x: number;
   y: number;
@@ -236,6 +243,13 @@ export interface GestureViewerProps<ItemT> {
    * @defaultValue true
    */
   enablePanWhenZoomed?: boolean;
+  /**
+   * Momentum after releasing a zoomed pan. Requires enablePanWhenZoomed.
+   * Pass true for defaults, or an object with enabled: true to customize.
+   * Respects the system reduced-motion setting. Stops at the content bounds.
+   * @defaultValue false
+   */
+  panInertia?: boolean | GestureViewerPanInertiaConfig;
   /**
    * Controls two-finger pinch gestures.
    * @remarks When `false`, two-finger zoom gestures are disabled.
