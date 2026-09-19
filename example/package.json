@@ -11,10 +11,10 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~57.0.15",
+    "@expo/metro-runtime": "~57.0.16",
     "@expo/vector-icons": "^15.1.1",
     "@shopify/flash-list": "2.0.2",
-    "expo": "~57.0.22",
+    "expo": "~57.0.24",
     "expo-font": "~57.0.4",
     "expo-image": "~57.0.5",
     "expo-status-bar": "~57.0.1",
