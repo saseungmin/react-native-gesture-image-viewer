@@ -10,7 +10,7 @@ import {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import type GestureViewerManager from './GestureViewerManager';
 import { registry } from './GestureViewerRegistry';
@@ -23,6 +23,7 @@ import {
 import { scheduleInitialScroll } from './scheduleInitialScroll';
 import type { GestureViewerItemDimensions, GestureViewerProps, TriggerRect } from './types';
 import { useGestureViewerPaging } from './useGestureViewerPaging';
+import { usePanInertia } from './usePanInertia';
 import {
   clampIndex,
   clampTranslationToBounds,
@@ -94,6 +95,7 @@ export const useGestureViewer = <ItemT, LC>({
   enablePinchZoom = true,
   enableHorizontalSwipe = true,
   enablePanWhenZoomed = true,
+  panInertia,
   enableLoop = false,
   maxZoomScale = 2,
   itemSpacing = 0,
@@ -147,6 +149,20 @@ export const useGestureViewer = <ItemT, LC>({
   const rotation = useSharedValue(0);
   const contentWidth = useSharedValue(width);
   const contentHeight = useSharedValue(height);
+
+  const inertiaHadMultipleTouches = useSharedValue(false);
+  const { startPanInertia, stopPanInertia } = usePanInertia({
+    panInertia,
+    enablePanWhenZoomed,
+    width,
+    height,
+    contentWidth,
+    contentHeight,
+    scale,
+    rotation,
+    translateX,
+    translateY,
+  });
 
   const triggerScale = useSharedValue(1);
   const triggerTranslateX = useSharedValue(0);
@@ -756,6 +772,7 @@ export const useGestureViewer = <ItemT, LC>({
   }, [onDismiss]);
 
   const handleDismiss = useCallback(() => {
+    scheduleOnUI(stopPanInertia);
     onDismissStart?.();
 
     const dismissTargetIndex = pendingIndexRef.current;
@@ -791,7 +808,14 @@ export const useGestureViewer = <ItemT, LC>({
     }
 
     dismissWithoutTrigger();
-  }, [animateDismissToRect, dismissWithoutTrigger, id, isValidTriggerRect, onDismissStart]);
+  }, [
+    stopPanInertia,
+    animateDismissToRect,
+    dismissWithoutTrigger,
+    id,
+    isValidTriggerRect,
+    onDismissStart,
+  ]);
 
   const dismissGesture = useMemo(() => {
     const canDismiss = !isZoomed && dismissOptions.enabled;
@@ -838,10 +862,14 @@ export const useGestureViewer = <ItemT, LC>({
         .enabled(enablePinchZoom)
         .onTouchesDown((event) => {
           if (event.numberOfTouches === 2) {
+            stopPanInertia();
+            inertiaHadMultipleTouches.set(true);
             scheduleOnRN(setIsPinching, true);
           }
         })
         .onStart((event) => {
+          stopPanInertia();
+          inertiaHadMultipleTouches.set(true);
           startScale.set(scale.get());
           initialTranslateX.set(translateX.get());
           initialTranslateY.set(translateY.get());
@@ -982,6 +1010,8 @@ export const useGestureViewer = <ItemT, LC>({
           scheduleOnRN(setIsPinching, false);
         }),
     [
+      stopPanInertia,
+      inertiaHadMultipleTouches,
       scale,
       enablePinchZoom,
       maxZoomScale,
@@ -1007,7 +1037,13 @@ export const useGestureViewer = <ItemT, LC>({
         .enabled(enablePanWhenZoomed && isZoomed)
         .activeCursor('grabbing')
         .averageTouches(true)
+        .onTouchesDown((event) => {
+          stopPanInertia();
+          // Keep v2's existing pan arbitration; only suppress inertia after multitouch.
+          inertiaHadMultipleTouches.set(event.numberOfTouches > 1);
+        })
         .onBegin(() => {
+          stopPanInertia();
           initialTranslateX.set(translateX.get());
           initialTranslateY.set(translateY.get());
         })
@@ -1028,8 +1064,17 @@ export const useGestureViewer = <ItemT, LC>({
             translateX.set(constrainedTranslateX);
             translateY.set(constrainedTranslateY);
           }
+        })
+        .onEnd((event, success) => {
+          if (!success || inertiaHadMultipleTouches.get()) {
+            return;
+          }
+          startPanInertia(event.velocityX, event.velocityY);
         }),
     [
+      startPanInertia,
+      stopPanInertia,
+      inertiaHadMultipleTouches,
       translateX,
       translateY,
       enablePanWhenZoomed,
