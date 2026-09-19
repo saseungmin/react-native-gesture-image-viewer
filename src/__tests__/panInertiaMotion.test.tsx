@@ -1,5 +1,10 @@
-import { act, cleanup, renderHook } from '@testing-library/react-native';
-import { useSharedValue } from 'react-native-reanimated';
+import { act, cleanup, render, renderHook } from '@testing-library/react-native';
+import {
+  ReduceMotion,
+  ReducedMotionConfig,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { usePanInertia } from '../usePanInertia';
 
@@ -22,6 +27,7 @@ describe('pan inertia frame progression', () => {
       return {
         translateX,
         translateY,
+        scale,
         ...usePanInertia({
           panInertia: { enabled: true, deceleration },
           enablePanWhenZoomed: true,
@@ -72,5 +78,28 @@ describe('pan inertia frame progression', () => {
     expect(stopped).toBeLessThan(200);
     await act(() => jest.advanceTimersByTime(1000));
     expect(slow.current.translateX.get()).toBe(stopped);
+  });
+  it('does not cancel replacement reset animations when scale changes', async () => {
+    const result = await setup();
+    await act(() => result.current.startPanInertia(1500, 400));
+    await act(() => jest.advanceTimersByTime(64));
+    await act(() => {
+      result.current.scale.set(withTiming(1, { duration: 300 }));
+      result.current.translateX.set(withTiming(0, { duration: 300 }));
+      result.current.translateY.set(withTiming(0, { duration: 300 }));
+    });
+    await act(() => jest.advanceTimersByTime(500));
+    expect(result.current.scale.get()).toBe(1);
+    expect(result.current.translateX.get()).toBe(0);
+    expect(result.current.translateY.get()).toBe(0);
+  });
+
+  it('honors reduced motion without gliding', async () => {
+    await render(<ReducedMotionConfig mode={ReduceMotion.Always} />);
+    const result = await setup();
+    await act(() => result.current.startPanInertia(1500, -400));
+    await act(() => jest.advanceTimersByTime(500));
+    expect(result.current.translateX.get()).toBe(0);
+    expect(result.current.translateY.get()).toBe(0);
   });
 });
