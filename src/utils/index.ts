@@ -11,6 +11,7 @@ import {
 import type { FlatListComponent, ScrollViewComponent } from '../types';
 
 import { FlashList } from './FlashList';
+import { getTranslationBounds } from './translationBounds';
 
 export const isScrollViewLike = (
   component: React.ComponentType<any>,
@@ -73,12 +74,6 @@ export const resolveGeometrySyncTranslationMode = (
   return scale > 1 ? 'constrain' : 'none';
 };
 
-const isValidDimension = (value: number): boolean => {
-  'worklet';
-
-  return Number.isFinite(value) && value > 0;
-};
-
 const clampTranslation = (value: number, max: number): number => {
   'worklet';
 
@@ -117,13 +112,13 @@ export const clampTranslationToBounds = ({
     };
   }
 
-  const baseContentWidth =
-    contentWidth !== undefined && isValidDimension(contentWidth) ? contentWidth : width;
-  const baseContentHeight =
-    contentHeight !== undefined && isValidDimension(contentHeight) ? contentHeight : height;
-
-  const maxTranslateX = Math.max(0, (baseContentWidth * scale - width) / 2);
-  const maxTranslateY = Math.max(0, (baseContentHeight * scale - height) / 2);
+  const { maxTranslateX, maxTranslateY } = getTranslationBounds({
+    width,
+    height,
+    contentWidth,
+    contentHeight,
+    scale,
+  });
 
   return {
     translateX: clampTranslation(translateX, maxTranslateX),
