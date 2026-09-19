@@ -1,7 +1,4 @@
-const isValidDimension = (value: number): boolean => {
-  'worklet';
-  return Number.isFinite(value) && value > 0;
-};
+import { getTranslationBounds } from './translationBounds';
 
 export const resolveGeometrySyncTranslationMode = (
   previousIndex: number | null,
@@ -47,12 +44,13 @@ export const clampTranslationToBounds = ({
     };
   }
 
-  const baseWidth =
-    contentWidth !== undefined && isValidDimension(contentWidth) ? contentWidth : width;
-  const baseHeight =
-    contentHeight !== undefined && isValidDimension(contentHeight) ? contentHeight : height;
-  const maxTranslateX = Math.max(0, (baseWidth * scale - width) / 2);
-  const maxTranslateY = Math.max(0, (baseHeight * scale - height) / 2);
+  const { maxTranslateX, maxTranslateY } = getTranslationBounds({
+    width,
+    height,
+    contentWidth,
+    contentHeight,
+    scale,
+  });
 
   return {
     translateX: clampTranslation(translateX, maxTranslateX),
