@@ -23,6 +23,7 @@ export type UseGestureViewerPagingArgs = {
   maxZoomScale: number;
   onSingleTap?: (x: number, y: number) => void;
   scale: SharedValue<number>;
+  tapZoomTarget?: SharedValue<number | null>;
   scrollTo: (index: number, animated: boolean) => void;
   syncCurrentIndex: (nextIndex: number) => void;
   syncPendingIndex: (nextIndex: number) => void;

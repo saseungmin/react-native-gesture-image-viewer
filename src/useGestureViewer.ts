@@ -33,7 +33,7 @@ import {
   resolveGeometrySyncTranslationMode,
 } from './utils';
 import { getDismissDistance, shouldDismissByDirection } from './utils/dismiss';
-import { applyTapZoomAtPoint } from './utils/tapZoom';
+import { applyTapZoomAtPoint, finishTapZoomOut } from './utils/tapZoom';
 import { calculateFocalPointTranslation, shouldAcceptFocalPoint } from './utils/zoom';
 
 type UseGestureViewerProps<ItemT, LC> = Omit<
@@ -145,6 +145,7 @@ export const useGestureViewer = <ItemT, LC>({
   const translateY = useSharedValue(0);
   const translateX = useSharedValue(0);
   const scale = useSharedValue(1);
+  const tapZoomTarget = useSharedValue<number | null>(null);
   const backdropOpacity = useSharedValue(1);
   const rotation = useSharedValue(0);
   const contentWidth = useSharedValue(width);
@@ -163,6 +164,11 @@ export const useGestureViewer = <ItemT, LC>({
     translateX,
     translateY,
   });
+
+  const finishPendingZoomOut = useCallback(() => {
+    'worklet';
+    finishTapZoomOut({ tapZoomTarget, scale, translateX, translateY });
+  }, [tapZoomTarget, scale, translateX, translateY]);
 
   const triggerScale = useSharedValue(1);
   const triggerTranslateX = useSharedValue(0);
@@ -817,8 +823,10 @@ export const useGestureViewer = <ItemT, LC>({
     onDismissStart,
   ]);
 
+  // Keep recognizers stable across zoom changes; choose ownership at touch-down
+  // on the UI thread instead of toggling enabled mid-touch through React state.
   const dismissGesture = useMemo(() => {
-    const canDismiss = !isZoomed && dismissOptions.enabled;
+    const canDismiss = dismissOptions.enabled;
 
     return Gesture.Pan()
       .minDistance(10)
@@ -828,6 +836,10 @@ export const useGestureViewer = <ItemT, LC>({
       .failOffsetX([-10, 10])
       .withRef(dismissGestureRef)
       .enabled(canDismiss)
+      .onTouchesDown((event, stateManager) => {
+        if (event.numberOfTouches === 1) finishPendingZoomOut();
+        if (event.numberOfTouches > 1 || scale.get() > 1) stateManager.fail();
+      })
       .onUpdate((event) => {
         translateY.set(event.translationY / dismissOptions.resistance);
       })
@@ -854,7 +866,7 @@ export const useGestureViewer = <ItemT, LC>({
           }),
         );
       });
-  }, [translateY, dismissOptions, handleDismiss, isZoomed]);
+  }, [translateY, dismissOptions, handleDismiss, finishPendingZoomOut, scale]);
 
   const zoomPinchGesture = useMemo(
     () =>
@@ -1034,11 +1046,16 @@ export const useGestureViewer = <ItemT, LC>({
   const zoomPanGesture = useMemo(
     () =>
       Gesture.Pan()
-        .enabled(enablePanWhenZoomed && isZoomed)
+        .enabled(enablePanWhenZoomed)
         .activeCursor('grabbing')
         .averageTouches(true)
-        .onTouchesDown((event) => {
+        .onTouchesDown((event, stateManager) => {
           stopPanInertia();
+          if (event.numberOfTouches === 1) finishPendingZoomOut();
+          if (scale.get() <= 1) {
+            stateManager.fail();
+            return;
+          }
           // Keep v2's existing pan arbitration; only suppress inertia after multitouch.
           inertiaHadMultipleTouches.set(event.numberOfTouches > 1);
         })
@@ -1072,13 +1089,13 @@ export const useGestureViewer = <ItemT, LC>({
           startPanInertia(event.velocityX, event.velocityY);
         }),
     [
+      finishPendingZoomOut,
       startPanInertia,
       stopPanInertia,
       inertiaHadMultipleTouches,
       translateX,
       translateY,
       enablePanWhenZoomed,
-      isZoomed,
       scale,
       initialTranslateX,
       initialTranslateY,
@@ -1127,6 +1144,7 @@ export const useGestureViewer = <ItemT, LC>({
         .numberOfTaps(2)
         .onEnd((event) => {
           applyTapZoomAtPoint({
+            tapZoomTarget,
             contentHeight: contentHeight.get(),
             contentWidth: contentWidth.get(),
             x: event.x,
@@ -1140,6 +1158,7 @@ export const useGestureViewer = <ItemT, LC>({
           });
         }),
     [
+      tapZoomTarget,
       contentHeight,
       contentWidth,
       enableDoubleTapZoom,
@@ -1195,6 +1214,7 @@ export const useGestureViewer = <ItemT, LC>({
 
   const { activeListIndex, onMomentumScrollEnd, onScroll, onScrollBeginDrag, onWebClick } =
     useGestureViewerPaging({
+      tapZoomTarget,
       adjustedInitialIndex,
       autoPlay,
       autoPlayInterval,
