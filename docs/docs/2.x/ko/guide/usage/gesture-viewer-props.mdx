@@ -133,6 +133,33 @@ function App() {
 }
 ```
 
+### `panInertia` (기본값: `false`)
+
+확대한 이미지를 드래그하고 손을 떼면 관성으로 이동하다 감속합니다. 기본 설정은 `true`, 세부 설정은 `enabled`를 명시한 객체로 전달합니다.
+
+```tsx
+<GestureViewer data={data} renderItem={renderItem} panInertia />
+<GestureViewer
+  data={data}
+  renderItem={renderItem}
+  panInertia={{ enabled: true, deceleration: 0.995 }}
+/>
+```
+
+```ts
+type GestureViewerPanInertiaConfig = {
+  enabled: boolean;
+  deceleration?: number;
+};
+// panInertia?: boolean | GestureViewerPanInertiaConfig
+```
+
+생략하거나 `false`, `{ enabled: false }`를 전달하면 기존처럼 관성 없이 멈춥니다. 빈 객체는 허용하지 않으며 `enablePanWhenZoomed`도 켜져 있어야 합니다.
+
+`deceleration` 기본값은 `0.998`이며 `1`에 가까울수록 오래 미끄러집니다. `0`보다 크고 `1`보다 작은 유한한 값만 허용하며 잘못된 값은 기본값으로 대체합니다. 감속률 변경은 다음 드래그 종료부터 적용하고, 관성을 비활성화하면 진행 중인 움직임도 멈춥니다.
+
+이미지 경계에서 멈추며 탄성 효과나 페이지 전환은 포함하지 않습니다. 실제 콘텐츠 경계를 사용하려면 `getItemDimensions` 또는 `setItemDimensions`로 크기를 제공하세요. 없으면 뷰어 크기를 기준으로 제한합니다. 새 터치·핀치, 확대·회전·크기 변경, 페이지 이동, 닫기는 관성을 중단합니다. 시스템의 동작 줄이기 설정도 따릅니다.
+
 ### `getItemDimensions`
 
 콘텐츠의 원본 크기를 이미 알고 있을 때 반환합니다. `renderItem`에서 `setItemDimensions`로 런타임에 등록한 크기가 우선합니다. 예시는 [콘텐츠 크기 가이드](/ko/guide/usage/item-dimensions.html)를 참고하세요.
@@ -348,6 +375,7 @@ export interface GestureViewerProps<ItemT, LC> {
    * @defaultValue true
    */
   enablePanWhenZoomed?: boolean;
+  panInertia?: boolean | { enabled: boolean; deceleration?: number };
   /**
    * 두 손가락 핀치 제스처를 제어합니다.
    * @remarks `false`이면 두 손가락 줌 제스처가 비활성화됩니다.
