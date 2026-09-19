@@ -1,7 +1,7 @@
 import { act, cleanup, renderHook } from '@testing-library/react-native';
 import * as Reanimated from 'react-native-reanimated';
 
-import type { GestureViewerProps } from '../types';
+import type { GestureViewerPanInertiaConfig } from '../types';
 import { usePanInertia } from '../usePanInertia';
 
 jest.mock('react-native-reanimated', () => ({
@@ -10,9 +10,13 @@ jest.mock('react-native-reanimated', () => ({
   cancelAnimation: jest.fn(),
 }));
 
-async function setup(panInertia: GestureViewerProps<unknown>['panInertia'] = true) {
+async function setup(panInertia: boolean | GestureViewerPanInertiaConfig | undefined = true) {
   const hook = await renderHook(
-    (props: { option: GestureViewerProps<unknown>['panInertia']; pan: boolean; width: number }) => {
+    (props: {
+      option: boolean | GestureViewerPanInertiaConfig | undefined;
+      pan: boolean;
+      width: number;
+    }) => {
       const scale = Reanimated.useSharedValue(2);
       const rotation = Reanimated.useSharedValue(0);
       const translateX = Reanimated.useSharedValue(0);

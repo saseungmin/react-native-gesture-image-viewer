@@ -8,7 +8,7 @@ import {
 } from 'react-native-reanimated';
 import { scheduleOnUI } from 'react-native-worklets';
 
-import type { GestureViewerProps } from './types';
+import type { GestureViewerPanInertiaConfig } from './types';
 import { resolvePanInertia } from './utils/panInertia';
 import { getTranslationBounds } from './utils/translationBounds';
 
@@ -65,7 +65,7 @@ export function usePanInertia({
   translateX,
   translateY,
 }: {
-  panInertia: GestureViewerProps<unknown>['panInertia'];
+  panInertia: boolean | GestureViewerPanInertiaConfig | undefined;
   enablePanWhenZoomed: boolean;
   width: number;
   height: number;
