@@ -26,6 +26,7 @@ export const clampTranslationToBounds = ({
   height,
   contentWidth,
   contentHeight,
+  rotation = 0,
   scale,
   translateX,
   translateY,
@@ -34,6 +35,7 @@ export const clampTranslationToBounds = ({
   height: number;
   contentWidth?: number;
   contentHeight?: number;
+  rotation?: number;
   translateX: number;
   translateY: number;
   scale: number;
@@ -51,8 +53,15 @@ export const clampTranslationToBounds = ({
     contentWidth !== undefined && isValidDimension(contentWidth) ? contentWidth : width;
   const baseHeight =
     contentHeight !== undefined && isValidDimension(contentHeight) ? contentHeight : height;
-  const maxTranslateX = Math.max(0, (baseWidth * scale - width) / 2);
-  const maxTranslateY = Math.max(0, (baseHeight * scale - height) / 2);
+  // Preserve exact extents at quarter turns, including negative and accumulated angles.
+  const angle = ((rotation % 180) + 180) % 180;
+  const radians = (angle * Math.PI) / 180;
+  const cosine = angle === 90 ? 0 : Math.abs(Math.cos(radians));
+  const sine = angle === 90 ? 1 : Math.abs(Math.sin(radians));
+  const effectiveWidth = baseWidth * cosine + baseHeight * sine;
+  const effectiveHeight = baseWidth * sine + baseHeight * cosine;
+  const maxTranslateX = Math.max(0, (effectiveWidth * scale - width) / 2);
+  const maxTranslateY = Math.max(0, (effectiveHeight * scale - height) / 2);
 
   return {
     translateX: clampTranslation(translateX, maxTranslateX),

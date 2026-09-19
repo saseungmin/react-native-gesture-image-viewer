@@ -21,7 +21,12 @@ const sharedValue = {
   get: jest.fn(() => 1),
   set: jest.fn(),
 } as never;
-const contentDimensions = { contentHeight: sharedValue, contentWidth: sharedValue };
+const contentDimensions = {
+  viewportSize: { get: () => ({ width: 100, height: 200 }) } as never,
+  contentHeight: sharedValue,
+  contentWidth: sharedValue,
+  rotation: sharedValue,
+};
 
 describe('useWebClickHandler', () => {
   beforeEach(() => {
@@ -63,9 +68,7 @@ describe('useWebClickHandler', () => {
 
     expect(clearPendingWebSingleTap).toHaveBeenCalledTimes(1);
     expect(pendingSingleTap).toBeNull();
-    expect(applyTapZoomAtPoint).toHaveBeenCalledWith(
-      expect.objectContaining({ contentHeight: 1, contentWidth: 1 }),
-    );
+    expect(applyTapZoomAtPoint).toHaveBeenCalledWith(expect.objectContaining(contentDimensions));
     expect(emitSingleTap).not.toHaveBeenCalled();
   });
 
