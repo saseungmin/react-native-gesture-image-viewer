@@ -73,6 +73,22 @@ describe('catching release rubber-banding', () => {
           finalizePan();
         }
       });
+      await act(() => jest.advanceTimersByTime(80));
+      expect(read()[5]!.scale!).toBeGreaterThan(1);
+      expect(read()[5]!.scale!).toBeLessThan(2);
+      const beforeTouch = read();
+      await act(() => {
+        pan.handlers.onTouchesDown?.({ numberOfTouches: 1 } as never, { fail: jest.fn() } as never);
+        result.current.dismissGesture.handlers.onTouchesDown?.(
+          { numberOfTouches: 1 } as never,
+          { fail: jest.fn() } as never,
+        );
+      });
+      // A stationary touch must not finish the zoom-out before a drag activates.
+      expect(read()).toEqual(beforeTouch);
+      await act(() => jest.advanceTimersByTime(80));
+      expect(read()[5]!.scale!).toBeGreaterThan(1);
+      expect(read()[5]!.scale!).toBeLessThan(beforeTouch[5]!.scale!);
       await act(() => jest.advanceTimersByTime(1000));
       expect(read()[5]).toEqual({ scale: 1 });
       expect(read()[4]).toEqual({ translateX: 0 });

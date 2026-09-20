@@ -845,12 +845,13 @@ export const useGestureViewer = <ItemT, LC>({
       .withRef(dismissGestureRef)
       .enabled(canDismiss)
       .onTouchesDown((event, stateManager) => {
-        if (event.numberOfTouches === 1) {
-          finishPendingZoomOut();
-        }
-        if (event.numberOfTouches > 1 || scale.get() > 1) {
+        if (event.numberOfTouches > 1 || (scale.get() > 1 && tapZoomTarget.get() !== 1)) {
           stateManager.fail();
         }
+      })
+      .onStart(() => {
+        // A touch alone must leave tap zoom running; only an active drag takes over.
+        finishPendingZoomOut();
       })
       .onUpdate((event) => {
         translateY.set(event.translationY / dismissOptions.resistance);
@@ -878,7 +879,7 @@ export const useGestureViewer = <ItemT, LC>({
           }),
         );
       });
-  }, [translateY, dismissOptions, handleDismiss, finishPendingZoomOut, scale]);
+  }, [translateY, dismissOptions, handleDismiss, finishPendingZoomOut, scale, tapZoomTarget]);
 
   const zoomPinchGesture = useMemo(
     () =>
@@ -1063,10 +1064,7 @@ export const useGestureViewer = <ItemT, LC>({
         .averageTouches(true)
         .onTouchesDown((event, stateManager) => {
           stopPanInertia();
-          if (event.numberOfTouches === 1) {
-            finishPendingZoomOut();
-          }
-          if (scale.get() <= 1) {
+          if (scale.get() <= 1 || tapZoomTarget.get() === 1) {
             stateManager.fail();
             return;
           }
@@ -1130,7 +1128,6 @@ export const useGestureViewer = <ItemT, LC>({
         }),
     [
       tapZoomTarget,
-      finishPendingZoomOut,
       startPanInertia,
       stopPanInertia,
       inertiaHadMultipleTouches,
