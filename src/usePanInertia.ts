@@ -18,13 +18,14 @@ import { getTranslationBounds } from './utils/translationBounds';
 // animations share these translations and must be allowed to finish.
 function stopAxis(translation: SharedValue<number>, owner: SharedValue<number>, max?: number) {
   'worklet';
-  if (owner.get() !== 0) {
-    owner.set(0);
-    cancelAnimation(translation);
-    if (max !== undefined) {
-      const position = Math.max(-max, Math.min(max, translation.get()));
-      translation.set(position === 0 ? 0 : position);
-    }
+  if (owner.get() === 0) {
+    return;
+  }
+  owner.set(0);
+  cancelAnimation(translation);
+  if (max !== undefined) {
+    const position = Math.max(-max, Math.min(max, translation.get()));
+    translation.set(position === 0 ? 0 : position);
   }
 }
 
@@ -52,12 +53,13 @@ function startAxis(
   }
   const onComplete = (finished?: boolean) => {
     'worklet';
-    if (owner.get() === token) {
-      owner.set(0);
-      if (finished) {
-        const settled = Math.max(-max, Math.min(max, translation.get()));
-        translation.set(settled === 0 ? 0 : settled);
-      }
+    if (owner.get() !== token) {
+      return;
+    }
+    owner.set(0);
+    if (finished) {
+      const settled = Math.max(-max, Math.min(max, translation.get()));
+      translation.set(settled === 0 ? 0 : settled);
     }
   };
   owner.set(token);
