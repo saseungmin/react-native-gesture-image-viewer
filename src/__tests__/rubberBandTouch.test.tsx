@@ -9,6 +9,81 @@ describe('catching release rubber-banding', () => {
     jest.useRealTimers();
   });
 
+  it.each([
+    ['pan-first', 1],
+    ['tap-first', 1],
+    ['pan-first', -1],
+    ['tap-first', -1],
+  ] as const)(
+    'centers both axes when double-tapping a caught overshoot (%s, direction %s)',
+    async (order, direction) => {
+      const { result } = await renderHook(() =>
+        useGestureViewer({
+          data: ['portrait'],
+          width: 400,
+          height: 800,
+          panInertia: true,
+          getItemDimensions: () => ({ width: 200, height: 400 }),
+        }),
+      );
+      const read = () =>
+        (
+          result.current.animatedStyle as unknown as {
+            initial: { updater: () => { transform: Record<string, number>[] } };
+          }
+        ).initial.updater().transform;
+      await act(() => {
+        const pinch = result.current.zoomGesture
+          .toGestureArray()
+          .find((g) => g.handlerName === 'PinchGestureHandler')!;
+        pinch.handlers.onStart?.({ focalX: 200, focalY: 400 } as never);
+        pinch.handlers.onUpdate?.({ scale: 2, focalX: 200, focalY: 400 } as never);
+      });
+      await act(() => jest.advanceTimersByTime(32));
+      const gestures = result.current.zoomGesture.toGestureArray();
+      const pan = gestures.find((g) => g.handlerName === 'PanGestureHandler')!;
+      const single = gestures.find((g) => g.config.numberOfTaps === 1)!;
+      const double = gestures.find((g) => g.config.numberOfTaps === 2)!;
+      await act(() => {
+        pan.handlers.onTouchesDown?.({ numberOfTouches: 1 } as never, { fail: jest.fn() } as never);
+        pan.handlers.onBegin?.({} as never);
+        pan.handlers.onUpdate?.({
+          translationX: direction * 200,
+          translationY: direction * 400,
+        } as never);
+        pan.handlers.onEnd?.(
+          { velocityX: direction * 1000, velocityY: direction * 1000 } as never,
+          true,
+        );
+      });
+      await act(() => jest.advanceTimersByTime(16));
+      expect(direction * read()[4]!.translateX!).toBeGreaterThan(200);
+      expect(direction * read()[3]!.translateY!).toBeGreaterThan(400);
+      await act(() => {
+        pan.handlers.onTouchesDown?.({ numberOfTouches: 1 } as never, { fail: jest.fn() } as never);
+        pan.handlers.onBegin?.({} as never);
+        single.handlers.onTouchesDown?.({ numberOfTouches: 1 } as never, {} as never);
+        const finalizePan = () => pan.handlers.onFinalize?.({} as never, false);
+        const zoomOut = () => double.handlers.onEnd?.({ x: 200, y: 400 } as never, true);
+        if (order === 'pan-first') {
+          finalizePan();
+          zoomOut();
+        } else {
+          zoomOut();
+          finalizePan();
+        }
+      });
+      await act(() => jest.advanceTimersByTime(1000));
+      expect(read()[5]).toEqual({ scale: 1 });
+      expect(read()[4]).toEqual({ translateX: 0 });
+      expect(read()[3]).toEqual({ translateY: 0 });
+      // No follow-up gesture should be necessary to repair the fitted image.
+      await act(() => jest.advanceTimersByTime(1000));
+      expect(read()[4]).toEqual({ translateX: 0 });
+      expect(read()[3]).toEqual({ translateY: 0 });
+    },
+  );
+
   it.each([false, true])('holds the overshoot and returns on release (drag: %s)', async (drag) => {
     const { result } = await renderHook(() =>
       useGestureViewer({

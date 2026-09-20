@@ -1112,7 +1112,9 @@ export const useGestureViewer = <ItemT, LC>({
           startPanInertia(event.velocityX, event.velocityY);
         })
         .onFinalize((_event, success) => {
-          if (success || inertiaHadMultipleTouches.get()) {
+          // A tap zoom owns the translations once it starts; a late pan failure
+          // must not replace that animation with an overscroll return.
+          if (success || tapZoomTarget.get() !== null || inertiaHadMultipleTouches.get()) {
             return;
           }
           // Holding and releasing without a drag never reaches onEnd.
@@ -1127,6 +1129,7 @@ export const useGestureViewer = <ItemT, LC>({
           }
         }),
     [
+      tapZoomTarget,
       finishPendingZoomOut,
       startPanInertia,
       stopPanInertia,
