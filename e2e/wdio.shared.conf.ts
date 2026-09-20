@@ -87,8 +87,10 @@ export const sharedConfig: Omit<Options.Testrunner, 'capabilities'> = {
     }
     try {
       const udid = String(browser.capabilities['appium:udid'] ?? process.env.E2E_DEVICE_UDID ?? '');
+      const androidSdk = process.env.ANDROID_HOME ?? process.env.ANDROID_SDK_ROOT;
+      const adb = androidSdk ? resolve(androidSdk, 'platform-tools/adb') : 'adb';
       const output = browser.isAndroid
-        ? execFileSync('adb', [...(udid ? ['-s', udid] : []), 'logcat', '-d', '-t', '1000'], {
+        ? execFileSync(adb, [...(udid ? ['-s', udid] : []), 'logcat', '-d', '-t', '1000'], {
             timeout: 20_000,
           })
         : execFileSync(

@@ -17,9 +17,11 @@ run(resolve(e2eDirectory, 'node_modules/.bin/appium'), [
   platform === 'android' ? 'uiautomator2' : 'xcuitest',
 ]);
 if (platform === 'android') {
+  const androidSdk = process.env.ANDROID_HOME ?? process.env.ANDROID_SDK_ROOT;
+  if (!androidSdk) throw new Error('Set ANDROID_HOME to the Android SDK directory.');
   run('java', ['-version']);
-  run('adb', ['version']);
-  run('emulator', ['-list-avds']);
+  run(resolve(androidSdk, 'platform-tools/adb'), ['version']);
+  run(resolve(androidSdk, 'emulator/emulator'), ['-list-avds']);
 } else {
   run('xcodebuild', ['-version']);
   run('xcrun', ['simctl', 'list', 'runtimes']);

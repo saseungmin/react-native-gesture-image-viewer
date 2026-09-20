@@ -101,6 +101,10 @@ The WebdriverIO Appium service owns the local server lifecycle. It binds to
 each test relaunches the app to reset its in-memory state. Tests and spec files
 have zero automatic retries.
 
+On CI, iOS uses a headless simulator so Appium does not restart the already-booted
+device to open a Simulator window. Its connection timeout is five minutes to cover
+cold session setup; test timeouts and zero-retry behavior remain unchanged.
+
 | Environment variable   | Purpose                                                         |
 | ---------------------- | --------------------------------------------------------------- |
 | `E2E_DEVICE_UDID`      | Explicit Android serial or iOS simulator UDID; required         |
