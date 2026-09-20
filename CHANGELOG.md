@@ -1,5 +1,25 @@
 # react-native-gesture-image-viewer
 
+## 3.1.0
+
+### Minor Changes
+
+- [#210](https://github.com/saseungmin/react-native-gesture-image-viewer/pull/210) [`b0220e9`](https://github.com/saseungmin/react-native-gesture-image-viewer/commit/b0220e97f49c8ec241b583d6e48f45431d765286) Thanks [@saseungmin](https://github.com/saseungmin)! - Add opt-in `panInertia` to let zoomed images glide and gradually stop after a drag.
+  
+  ```tsx
+  // Enable with defaults
+  <GestureViewer data={images} renderItem={renderImage} panInertia />
+  
+  // Customize the motion
+  <GestureViewer
+    data={images}
+    renderItem={renderImage}
+    panInertia={{ enabled: true, deceleration: 0.9998, velocityFactor: 1, rubberBandEffect: true, rubberBandFactor: 3 }}
+  />
+  ```
+  
+  Disabled by default. When enabled, it uses a longer glide with edge rubber-banding. Customize the decay, velocity multiplier, and edge response as needed.
+
 ## 3.0.0
 
 ### Major Changes
