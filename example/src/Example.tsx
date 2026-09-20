@@ -6,6 +6,7 @@ import {
   GestureTrigger,
   GestureViewer,
   type GestureViewerProps,
+  type GestureViewerPanInertiaConfig,
   type GestureViewerRenderItemInfo,
   useGestureViewerController,
   useGestureViewerEvent,
@@ -104,8 +105,24 @@ const scenarioIds: ScenarioId[] = [
   'disabledAutoplay',
 ];
 
+const inertiaPresets = [
+  { label: 'OFF', options: false },
+  { label: 'Default', options: true },
+  { label: 'No bounce', options: { enabled: true, rubberBandEffect: false } },
+  {
+    label: 'Long glide',
+    options: {
+      enabled: true,
+      deceleration: 0.9998,
+      velocityFactor: 1,
+      rubberBandEffect: true,
+      rubberBandFactor: 3,
+    },
+  },
+] satisfies { label: string; options: boolean | GestureViewerPanInertiaConfig }[];
+
 function Example() {
-  const [inertiaPreset, setInertiaPreset] = useState<0 | 1 | 2>(0);
+  const [inertiaPreset, setInertiaPreset] = useState(0);
   const [visible, setVisible] = useState(false);
   const [enableLoop, setEnableLoop] = useState(false);
   const [showExternalUI, setShowExternalUI] = useState(true);
@@ -160,8 +177,8 @@ function Example() {
     <View style={styles.container}>
       <View style={styles.buttonWrapper}>
         <Button
-          title={`Pan inertia: ${['OFF', 'Default', 'Faster stop'][inertiaPreset]}`}
-          onPress={() => setInertiaPreset((value) => ((value + 1) % 3) as 0 | 1 | 2)}
+          title={`Pan inertia: ${inertiaPresets[inertiaPreset]!.label}`}
+          onPress={() => setInertiaPreset((value) => (value + 1) % inertiaPresets.length)}
         />
         <Button
           title={`Loop: ${enableLoop ? 'ON' : 'OFF'}`}
@@ -213,13 +230,7 @@ function Example() {
       >
         <View style={{ flex: 1 }}>
           <GestureViewer
-            panInertia={
-              inertiaPreset === 0
-                ? false
-                : inertiaPreset === 1
-                  ? true
-                  : { enabled: true, deceleration: 0.995 }
-            }
+            panInertia={inertiaPresets[inertiaPreset]!.options}
             data={photoUris}
             initialIndex={selectedIndex}
             onDismiss={() => setVisible(false)}

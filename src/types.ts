@@ -1,12 +1,41 @@
 import type React from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import type { WithTimingConfig } from 'react-native-reanimated';
+import type { WithDecayConfig, WithTimingConfig } from 'react-native-reanimated';
+
+// Select individual fields across Reanimated's decay union without exposing
+// velocity, clamp, reduceMotion, or future upstream options in our public API.
+type DecayConfigField<Field extends string, Config = WithDecayConfig> = Config extends unknown
+  ? Field extends keyof Config
+    ? Config[Field]
+    : never
+  : never;
 
 export type GestureViewerPanInertiaConfig = {
   /** Explicitly enables inertia when passing a configuration object. */
   enabled: boolean;
-  /** Velocity decay rate. Finite values strictly between 0 and 1; otherwise defaults to 0.998. */
-  deceleration?: number;
+  /**
+   * Velocity decay rate. Values closer to 1 glide longer.
+   * @remarks Finite values strictly between 0 and 1; otherwise uses the default.
+   * @defaultValue 0.9997
+   */
+  deceleration?: DecayConfigField<'deceleration'>;
+  /**
+   * Multiplier applied to the release velocity when calculating movement.
+   * @remarks Must be finite and greater than zero; otherwise uses the default.
+   * @defaultValue 0.65
+   */
+  velocityFactor?: DecayConfigField<'velocityFactor'>;
+  /**
+   * Allows a brief overshoot at the content bounds before returning to the edge.
+   * @defaultValue true
+   */
+  rubberBandEffect?: DecayConfigField<'rubberBandEffect'>;
+  /**
+   * Strength of the return from an overshoot. Ignored when rubberBandEffect is false.
+   * @remarks Must be finite and greater than zero; otherwise uses the default.
+   * @defaultValue 2
+   */
+  rubberBandFactor?: DecayConfigField<'rubberBandFactor'>;
 };
 
 export type TriggerRect = {
@@ -246,7 +275,7 @@ export interface GestureViewerProps<ItemT> {
   /**
    * Momentum after releasing a zoomed pan. Requires enablePanWhenZoomed.
    * Pass true for defaults, or an object with enabled: true to customize.
-   * Respects the system reduced-motion setting. Stops at the content bounds.
+   * Respects the system reduced-motion setting. Settles within the content bounds.
    * @defaultValue false
    */
   panInertia?: boolean | GestureViewerPanInertiaConfig;

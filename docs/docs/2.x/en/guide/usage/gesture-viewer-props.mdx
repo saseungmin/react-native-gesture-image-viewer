@@ -146,7 +146,14 @@ Adds momentum when a zoomed pan is released. Pass `true` for defaults, or a conf
 <GestureViewer
   data={data}
   renderItem={renderItem}
-  panInertia={{ enabled: true, deceleration: 0.995 }} // [!code highlight]
+  // [!code highlight:7]
+  panInertia={{
+    enabled: true,
+    deceleration: 0.9998,
+    velocityFactor: 1,
+    rubberBandEffect: true,
+    rubberBandFactor: 3,
+  }}
 />
 ```
 
@@ -154,15 +161,27 @@ Adds momentum when a zoomed pan is released. Pass `true` for defaults, or a conf
 type GestureViewerPanInertiaConfig = {
   enabled: boolean;
   deceleration?: number;
+  velocityFactor?: number;
+  rubberBandEffect?: boolean;
+  rubberBandFactor?: number;
 };
 // panInertia?: boolean | GestureViewerPanInertiaConfig
 ```
 
 Omitting the prop, passing `false`, or setting `enabled: false` preserves release-without-momentum behavior. An empty object is not valid. `enablePanWhenZoomed` must also be enabled.
 
-`deceleration` defaults to `0.998`; values closer to `1` glide longer. Only finite values strictly between `0` and `1` are accepted; invalid values fall back to the default. Changing it affects the next release. Disabling inertia stops any running glide.
+Customize only the values you need; omitted fields use these defaults:
 
-Movement stops at the fitted content bounds without rubber-banding or changing pages. Supply `getItemDimensions` or `setItemDimensions` for content-aware bounds; otherwise the viewer dimensions are used. A new touch/pinch or changes to zoom, rotation, geometry, navigation, or dismissal interrupt inertia. System reduced-motion preferences are respected.
+| Option             | Default  | Behavior                                                                                                 |
+| ------------------ | -------- | -------------------------------------------------------------------------------------------------------- |
+| `deceleration`     | `0.9997` | Values closer to `1` glide longer.                                                                       |
+| `velocityFactor`   | `0.65`   | Scales travel for the same release velocity.                                                             |
+| `rubberBandEffect` | `true`   | Briefly overshoots the edge, then returns. Set `false` for a hard stop.                                  |
+| `rubberBandFactor` | `2`      | Return strength: higher values pull back more firmly with less overshoot; only used with rubber-banding. |
+
+`deceleration` must be finite and strictly between `0` and `1`. `velocityFactor` and `rubberBandFactor` must be finite and greater than zero. Invalid values fall back to the corresponding defaults. Changes apply to the next release; disabling inertia stops the current animation and removes any remaining overshoot.
+
+Rubber-banding applies to release momentum. Movement settles within the fitted content bounds and does not change pages. Supply `getItemDimensions` or `setItemDimensions` for content-aware bounds; otherwise the viewer dimensions are used. A new touch holds the image at its current position, including any overshoot; releasing it returns it to the bounds. Pinch, zoom, rotation, geometry, navigation, and dismissal also interrupt inertia. The viewer manages release velocity, bounds, and system reduced-motion behavior internally; these are not configurable through `panInertia`.
 
 ### `getItemDimensions`
 
@@ -387,16 +406,31 @@ export interface GestureViewerProps<ItemT, LC> {
   panInertia?:
     | boolean
     | {
-        /**
-         * Explicitly enables or disables inertia when using a configuration object.
-         */
+        /** Explicitly enables or disables inertia when using a configuration object. */
         enabled: boolean;
         /**
-         * Controls how quickly the release velocity decays. Values closer to `1` glide longer.
-         * @remarks Accepts finite values strictly between `0` and `1`. Invalid values fall back to the default.
-         * @defaultValue 0.998
+         * Velocity decay rate. Values closer to `1` glide longer.
+         * @remarks Finite values strictly between `0` and `1`; invalid values use the default.
+         * @defaultValue 0.9997
          */
         deceleration?: number;
+        /**
+         * Multiplier applied to the release velocity when calculating movement.
+         * @remarks Finite values greater than zero; invalid values use the default.
+         * @defaultValue 0.65
+         */
+        velocityFactor?: number;
+        /**
+         * Allows a brief overshoot at the content bounds before returning to the edge.
+         * @defaultValue true
+         */
+        rubberBandEffect?: boolean;
+        /**
+         * Strength of the return from an overshoot. Ignored when `rubberBandEffect` is false.
+         * @remarks Finite values greater than zero; invalid values use the default.
+         * @defaultValue 2
+         */
+        rubberBandFactor?: number;
       };
   /**
    * Controls two-finger pinch gestures.

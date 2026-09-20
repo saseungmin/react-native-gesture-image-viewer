@@ -53,17 +53,59 @@ describe('pan inertia animation ownership', () => {
     jest.useRealTimers();
   });
 
+  it('forwards custom motion settings while retaining release velocity, bounds and system accessibility', async () => {
+    const { result } = await setup({
+      enabled: true,
+      deceleration: 0.9995,
+      velocityFactor: 1.2,
+      rubberBandEffect: true,
+      rubberBandFactor: 0.4,
+    });
+    await act(() => {
+      result.current.translateX.set(200);
+      result.current.startPanInertia(800, 0);
+    });
+    expect(Reanimated.withDecay).toHaveBeenCalledWith(
+      {
+        velocity: 800,
+        clamp: [-200, 200],
+        deceleration: 0.9995,
+        velocityFactor: 1.2,
+        rubberBandEffect: true,
+        rubberBandFactor: 0.4,
+        reduceMotion: Reanimated.ReduceMotion.System,
+      },
+      expect.any(Function),
+    );
+  });
+
   it('starts each axis with release velocity and fitted bounds', async () => {
     const { result } = await setup({ enabled: true, deceleration: 0.995 });
     await act(() => result.current.startPanInertia(900, -400));
     expect(Reanimated.withDecay).toHaveBeenNthCalledWith(
       1,
-      { velocity: 900, deceleration: 0.995, clamp: [-200, 200] },
+      {
+        velocity: 900,
+        deceleration: 0.995,
+        velocityFactor: 0.65,
+        rubberBandEffect: true,
+        rubberBandFactor: 2,
+        reduceMotion: Reanimated.ReduceMotion.System,
+        clamp: [-200, 200],
+      },
       expect.any(Function),
     );
     expect(Reanimated.withDecay).toHaveBeenNthCalledWith(
       2,
-      { velocity: -400, deceleration: 0.995, clamp: [-400, 400] },
+      {
+        velocity: -400,
+        deceleration: 0.995,
+        velocityFactor: 0.65,
+        rubberBandEffect: true,
+        rubberBandFactor: 2,
+        reduceMotion: Reanimated.ReduceMotion.System,
+        clamp: [-400, 400],
+      },
       expect.any(Function),
     );
   });
@@ -93,7 +135,7 @@ describe('pan inertia animation ownership', () => {
   });
 
   it('skips undersized axes, invalid velocities and outward throws at the edge', async () => {
-    const { result } = await setup();
+    const { result } = await setup({ enabled: true, rubberBandEffect: false });
     await act(() => {
       result.current.contentHeight.set(400);
       result.current.translateX.set(200);
@@ -132,6 +174,37 @@ describe('pan inertia animation ownership', () => {
     expect(Reanimated.cancelAnimation).toHaveBeenCalledTimes(1);
     expect(Reanimated.cancelAnimation).toHaveBeenCalledWith(result.current.translateY);
   });
+
+  it('uses the new viewport bounds when cancelling an overshoot after resize', async () => {
+    const { result, rerender } = await setup();
+    await act(() => {
+      result.current.startPanInertia(800, 0);
+      // Emulate an in-flight frame; this suite stubs the animation implementation.
+      result.current.translateX.set(240);
+    });
+    await rerender({ option: true, pan: true, width: 600 });
+    await act(() => jest.advanceTimersByTime(32));
+    expect(result.current.translateX.get()).toBe(100);
+  });
+
+  it.each([false, { enabled: true, rubberBandEffect: false }])(
+    'returns a held overshoot on release even after settings change to %p',
+    async (option) => {
+      const { result, rerender } = await setup();
+      await act(() => {
+        result.current.startPanInertia(800, 0);
+        result.current.translateX.set(240);
+        result.current.stopPanInertia();
+      });
+      await rerender({ option, pan: true, width: 400 });
+      await act(() => jest.advanceTimersByTime(32));
+      expect(result.current.translateX.get()).toBe(240);
+      await act(() => result.current.startPanInertia(0, 0));
+      expect(result.current.translateX.get()).toBeCloseTo(240);
+      await act(() => jest.advanceTimersByTime(400));
+      expect(result.current.translateX.get()).toBe(200);
+    },
+  );
 
   it.each(['scale', 'rotation', 'contentWidth', 'contentHeight'] as const)(
     'stops owned inertia when %s changes',

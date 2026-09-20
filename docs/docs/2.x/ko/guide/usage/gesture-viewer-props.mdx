@@ -146,7 +146,14 @@ function App() {
 <GestureViewer
   data={data}
   renderItem={renderItem}
-  panInertia={{ enabled: true, deceleration: 0.995 }} // [!code highlight]
+  // [!code highlight:7]
+  panInertia={{
+    enabled: true,
+    deceleration: 0.9998,
+    velocityFactor: 1,
+    rubberBandEffect: true,
+    rubberBandFactor: 3,
+  }}
 />
 ```
 
@@ -154,15 +161,27 @@ function App() {
 type GestureViewerPanInertiaConfig = {
   enabled: boolean;
   deceleration?: number;
+  velocityFactor?: number;
+  rubberBandEffect?: boolean;
+  rubberBandFactor?: number;
 };
 // panInertia?: boolean | GestureViewerPanInertiaConfig
 ```
 
 생략하거나 `false`, `{ enabled: false }`를 전달하면 기존처럼 관성 없이 멈춥니다. 빈 객체는 허용하지 않으며 `enablePanWhenZoomed`도 켜져 있어야 합니다.
 
-`deceleration` 기본값은 `0.998`이며 `1`에 가까울수록 오래 미끄러집니다. `0`보다 크고 `1`보다 작은 유한한 값만 허용하며 잘못된 값은 기본값으로 대체합니다. 감속률 변경은 다음 드래그 종료부터 적용하고, 관성을 비활성화하면 진행 중인 움직임도 멈춥니다.
+필요한 값만 지정하면 생략한 항목에는 다음 기본값을 사용합니다.
 
-이미지 경계에서 멈추며 탄성 효과나 페이지 전환은 포함하지 않습니다. 실제 콘텐츠 경계를 사용하려면 `getItemDimensions` 또는 `setItemDimensions`로 크기를 제공하세요. 없으면 뷰어 크기를 기준으로 제한합니다. 새 터치·핀치, 확대·회전·크기 변경, 페이지 이동, 닫기는 관성을 중단합니다. 시스템의 동작 줄이기 설정도 따릅니다.
+| 옵션               | 기본값   | 동작                                                                                                         |
+| ------------------ | -------- | ------------------------------------------------------------------------------------------------------------ |
+| `deceleration`     | `0.9997` | `1`에 가까울수록 오래 미끄러집니다.                                                                          |
+| `velocityFactor`   | `0.65`   | 같은 드래그 속도에 대한 이동량을 조절합니다.                                                                 |
+| `rubberBandEffect` | `true`   | 경계를 잠깐 넘었다가 돌아옵니다. `false`이면 경계에서 바로 멈춥니다.                                         |
+| `rubberBandFactor` | `2`      | 경계를 넘은 뒤 돌아오는 힘입니다. 값이 클수록 더 강하게 돌아와 덜 튀어나갑니다. 탄성을 켰을 때만 적용됩니다. |
+
+`deceleration`은 `0`보다 크고 `1`보다 작은 유한한 값이어야 합니다. `velocityFactor`와 `rubberBandFactor`는 `0`보다 큰 유한한 값이어야 합니다. 잘못된 값은 각 항목의 기본값으로 대체합니다. 설정 변경은 다음 드래그 종료부터 적용하며, 관성을 비활성화하면 현재 애니메이션을 중단하고 경계를 넘은 위치도 정리합니다.
+
+탄성은 손을 뗀 뒤의 관성 이동에 적용됩니다. 콘텐츠 경계 안에서 멈추며 페이지를 전환하지 않습니다. 실제 콘텐츠 경계를 사용하려면 `getItemDimensions` 또는 `setItemDimensions`로 크기를 제공하세요. 없으면 뷰어 크기를 기준으로 제한합니다. 새 터치는 경계 밖이라도 잡은 위치를 유지하고, 손을 떼면 경계로 돌아옵니다. 핀치, 확대·회전·크기 변경, 페이지 이동, 닫기도 관성을 중단합니다. 실제 드래그 속도와 경계, 시스템의 동작 줄이기 설정은 뷰어 내부에서 관리하며 `panInertia`로 변경할 수 없습니다.
 
 ### `getItemDimensions`
 
@@ -387,16 +406,31 @@ export interface GestureViewerProps<ItemT, LC> {
   panInertia?:
     | boolean
     | {
-        /**
-         * 설정 객체를 사용할 때 관성 활성화 여부를 명시합니다.
-         */
+        /** 설정 객체를 사용할 때 관성 활성화 여부를 명시합니다. */
         enabled: boolean;
         /**
-         * 손을 뗀 뒤 이동 속도가 줄어드는 정도를 조절합니다. `1`에 가까울수록 오래 미끄러집니다.
+         * 속도가 줄어드는 정도입니다. `1`에 가까울수록 오래 미끄러집니다.
          * @remarks `0`보다 크고 `1`보다 작은 유한한 값만 허용합니다. 잘못된 값은 기본값으로 대체합니다.
-         * @defaultValue 0.998
+         * @defaultValue 0.9997
          */
         deceleration?: number;
+        /**
+         * 손을 뗄 때의 속도에 적용해 이동량을 조절하는 배율입니다.
+         * @remarks `0`보다 큰 유한한 값만 허용합니다. 잘못된 값은 기본값으로 대체합니다.
+         * @defaultValue 0.65
+         */
+        velocityFactor?: number;
+        /**
+         * 콘텐츠 경계를 잠깐 넘었다가 가장자리로 돌아오는 탄성을 적용합니다.
+         * @defaultValue true
+         */
+        rubberBandEffect?: boolean;
+        /**
+         * 경계를 넘은 뒤 돌아오는 힘의 크기입니다. `rubberBandEffect`가 false이면 무시합니다.
+         * @remarks `0`보다 큰 유한한 값만 허용합니다. 잘못된 값은 기본값으로 대체합니다.
+         * @defaultValue 2
+         */
+        rubberBandFactor?: number;
       };
   /**
    * 두 손가락 핀치 제스처를 제어합니다.

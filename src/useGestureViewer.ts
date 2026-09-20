@@ -164,6 +164,8 @@ export const useGestureViewer = <ItemT>({
 
   const initialTranslateY = useSharedValue(0);
   const initialTranslateX = useSharedValue(0);
+  const panOverflowX = useSharedValue(0);
+  const panOverflowY = useSharedValue(0);
   const startScale = useSharedValue(1);
 
   const translateY = useSharedValue(0);
@@ -346,13 +348,19 @@ export const useGestureViewer = <ItemT>({
       scale: targetScale,
       translateX: targetX,
       translateY: targetY,
+      overflowX,
+      overflowY,
     }: {
       scale: number;
+      overflowX?: number;
+      overflowY?: number;
       translateX: number;
       translateY: number;
     }) => {
       'worklet';
       return clampTranslationToBounds({
+        overflowX,
+        overflowY,
         contentHeight: contentHeight.get(),
         contentWidth: contentWidth.get(),
         height,
@@ -1379,6 +1387,13 @@ export const useGestureViewer = <ItemT>({
           stopPanInertia();
           initialTranslateX.set(translateX.get());
           initialTranslateY.set(translateY.get());
+          const bounded = constrainTranslation({
+            scale: scale.get(),
+            translateX: translateX.get(),
+            translateY: translateY.get(),
+          });
+          panOverflowX.set(translateX.get() - bounded.translateX);
+          panOverflowY.set(translateY.get() - bounded.translateY);
         })
         .onStart(() => {
           suppressNativeTap.set(true);
@@ -1397,6 +1412,8 @@ export const useGestureViewer = <ItemT>({
             const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } =
               constrainTranslation({
                 scale: currentScale,
+                overflowX: panOverflowX.get(),
+                overflowY: panOverflowY.get(),
                 translateX: newTranslateX,
                 translateY: newTranslateY,
               });
@@ -1410,6 +1427,21 @@ export const useGestureViewer = <ItemT>({
             return;
           }
           startPanInertia(event.velocityX, event.velocityY);
+        })
+        .onFinalize((_event, success) => {
+          if (success || nativeInteractionHadMultipleTouches.get() || pageTransitionLocked.get()) {
+            return;
+          }
+          // Holding and releasing without a drag never reaches onEnd.
+          // Resume the return to bounds only after the touch has finished.
+          const bounded = constrainTranslation({
+            scale: scale.get(),
+            translateX: translateX.get(),
+            translateY: translateY.get(),
+          });
+          if (bounded.translateX !== translateX.get() || bounded.translateY !== translateY.get()) {
+            startPanInertia(0, 0);
+          }
         }),
     [
       finishPendingZoomOut,
@@ -1420,6 +1452,8 @@ export const useGestureViewer = <ItemT>({
       enablePanWhenZoomed,
       isPinching,
       scale,
+      panOverflowX,
+      panOverflowY,
       initialTranslateX,
       initialTranslateY,
       constrainTranslation,
