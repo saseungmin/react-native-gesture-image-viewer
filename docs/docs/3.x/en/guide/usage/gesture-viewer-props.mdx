@@ -50,9 +50,9 @@ Customize only the values you need; omitted fields use these defaults:
 | Option             | Default  | Behavior                                                                                                 |
 | ------------------ | -------- | -------------------------------------------------------------------------------------------------------- |
 | `deceleration`     | `0.9997` | Values closer to `1` glide longer.                                                                       |
-| `velocityFactor`   | `0.65`   | Scales travel for the same release velocity.                                                             |
+| `velocityFactor`   | `0.5`    | Scales travel for the same release velocity.                                                             |
 | `rubberBandEffect` | `true`   | Briefly overshoots the edge, then returns. Set `false` for a hard stop.                                  |
-| `rubberBandFactor` | `2`      | Return strength: higher values pull back more firmly with less overshoot; only used with rubber-banding. |
+| `rubberBandFactor` | `1`      | Return strength: higher values pull back more firmly with less overshoot; only used with rubber-banding. |
 
 `deceleration` must be finite and strictly between `0` and `1`. `velocityFactor` and `rubberBandFactor` must be finite and greater than zero. Invalid values fall back to the corresponding defaults. Changes apply to the next release; disabling inertia stops the current animation and removes any remaining overshoot.
 
@@ -426,7 +426,7 @@ export interface GestureViewerProps<ItemT> {
         /**
          * Multiplier applied to the release velocity when calculating movement.
          * @remarks Finite values greater than zero; invalid values use the default.
-         * @defaultValue 0.65
+         * @defaultValue 0.5
          */
         velocityFactor?: number;
         /**
@@ -437,7 +437,7 @@ export interface GestureViewerProps<ItemT> {
         /**
          * Strength of the return from an overshoot. Ignored when `rubberBandEffect` is false.
          * @remarks Finite values greater than zero; invalid values use the default.
-         * @defaultValue 2
+         * @defaultValue 1
          */
         rubberBandFactor?: number;
       };

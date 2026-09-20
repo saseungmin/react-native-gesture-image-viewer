@@ -22,7 +22,7 @@ export type GestureViewerPanInertiaConfig = {
   /**
    * Multiplier applied to the release velocity when calculating movement.
    * @remarks Must be finite and greater than zero; otherwise uses the default.
-   * @defaultValue 0.65
+   * @defaultValue 0.5
    */
   velocityFactor?: DecayConfigField<'velocityFactor'>;
   /**
@@ -33,7 +33,7 @@ export type GestureViewerPanInertiaConfig = {
   /**
    * Strength of the return from an overshoot. Ignored when rubberBandEffect is false.
    * @remarks Must be finite and greater than zero; otherwise uses the default.
-   * @defaultValue 2
+   * @defaultValue 1
    */
   rubberBandFactor?: DecayConfigField<'rubberBandFactor'>;
 };

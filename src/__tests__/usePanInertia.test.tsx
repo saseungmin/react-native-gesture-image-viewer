@@ -87,9 +87,9 @@ describe('pan inertia animation ownership', () => {
       {
         velocity: 900,
         deceleration: 0.995,
-        velocityFactor: 0.65,
+        velocityFactor: 0.5,
         rubberBandEffect: true,
-        rubberBandFactor: 2,
+        rubberBandFactor: 1,
         reduceMotion: Reanimated.ReduceMotion.System,
         clamp: [-200, 200],
       },
@@ -100,9 +100,9 @@ describe('pan inertia animation ownership', () => {
       {
         velocity: -400,
         deceleration: 0.995,
-        velocityFactor: 0.65,
+        velocityFactor: 0.5,
         rubberBandEffect: true,
-        rubberBandFactor: 2,
+        rubberBandFactor: 1,
         reduceMotion: Reanimated.ReduceMotion.System,
         clamp: [-400, 400],
       },

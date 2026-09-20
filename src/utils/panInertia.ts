@@ -2,9 +2,9 @@ import type { GestureViewerPanInertiaConfig } from '../types';
 
 export const DEFAULT_PAN_INERTIA = {
   deceleration: 0.9997,
-  velocityFactor: 0.65,
+  velocityFactor: 0.5,
   rubberBandEffect: true,
-  rubberBandFactor: 2,
+  rubberBandFactor: 1,
 } as const;
 
 function positiveOrDefault(value: number | undefined, fallback: number): number {

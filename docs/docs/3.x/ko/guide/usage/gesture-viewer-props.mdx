@@ -50,9 +50,9 @@ type GestureViewerPanInertiaConfig = {
 | 옵션               | 기본값   | 동작                                                                                                         |
 | ------------------ | -------- | ------------------------------------------------------------------------------------------------------------ |
 | `deceleration`     | `0.9997` | `1`에 가까울수록 오래 미끄러집니다.                                                                          |
-| `velocityFactor`   | `0.65`   | 같은 드래그 속도에 대한 이동량을 조절합니다.                                                                 |
+| `velocityFactor`   | `0.5`    | 같은 드래그 속도에 대한 이동량을 조절합니다.                                                                 |
 | `rubberBandEffect` | `true`   | 경계를 잠깐 넘었다가 돌아옵니다. `false`이면 경계에서 바로 멈춥니다.                                         |
-| `rubberBandFactor` | `2`      | 경계를 넘은 뒤 돌아오는 힘입니다. 값이 클수록 더 강하게 돌아와 덜 튀어나갑니다. 탄성을 켰을 때만 적용됩니다. |
+| `rubberBandFactor` | `1`      | 경계를 넘은 뒤 돌아오는 힘입니다. 값이 클수록 더 강하게 돌아와 덜 튀어나갑니다. 탄성을 켰을 때만 적용됩니다. |
 
 `deceleration`은 `0`보다 크고 `1`보다 작은 유한한 값이어야 합니다. `velocityFactor`와 `rubberBandFactor`는 `0`보다 큰 유한한 값이어야 합니다. 잘못된 값은 각 항목의 기본값으로 대체합니다. 설정 변경은 다음 드래그 종료부터 적용하며, 관성을 비활성화하면 현재 애니메이션을 중단하고 경계를 넘은 위치도 정리합니다.
 
@@ -426,7 +426,7 @@ export interface GestureViewerProps<ItemT> {
         /**
          * 손을 뗄 때의 속도에 적용해 이동량을 조절하는 배율입니다.
          * @remarks `0`보다 큰 유한한 값만 허용합니다. 잘못된 값은 기본값으로 대체합니다.
-         * @defaultValue 0.65
+         * @defaultValue 0.5
          */
         velocityFactor?: number;
         /**
@@ -437,7 +437,7 @@ export interface GestureViewerProps<ItemT> {
         /**
          * 경계를 넘은 뒤 돌아오는 힘의 크기입니다. `rubberBandEffect`가 false이면 무시합니다.
          * @remarks `0`보다 큰 유한한 값만 허용합니다. 잘못된 값은 기본값으로 대체합니다.
-         * @defaultValue 2
+         * @defaultValue 1
          */
         rubberBandFactor?: number;
       };
