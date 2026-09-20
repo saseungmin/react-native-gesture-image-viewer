@@ -44,8 +44,6 @@ jobs:
           npm --prefix e2e ci
           npm --prefix e2e run typecheck
           mkdir -p e2e/artifacts
-      - name: Check native toolchain
-        run: npm --prefix e2e run doctor:android
       - name: Build standalone APK
         run: npm --prefix e2e run build:android 2>&1 | tee e2e/artifacts/build-android.log
       - name: Enable emulator acceleration
@@ -63,7 +61,7 @@ jobs:
           emulator-port: 5554
           disable-animations: false
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
-          script: npm --prefix e2e run test:android
+          script: npm --prefix e2e run doctor:android && npm --prefix e2e run test:android
       - name: Upload test reports and diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
