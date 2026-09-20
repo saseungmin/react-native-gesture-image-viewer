@@ -384,7 +384,25 @@ export interface GestureViewerProps<ItemT> {
    * @defaultValue true
    */
   enablePanWhenZoomed?: boolean;
-  panInertia?: boolean | { enabled: boolean; deceleration?: number };
+  /**
+   * 확대된 이미지를 드래그하고 손을 떼면 관성을 적용합니다.
+   * @remarks `enablePanWhenZoomed`가 활성화되어 있어야 합니다. 기본 설정은 `true`, 사용자 설정은 `enabled: true`를 포함한 객체로 전달합니다. 콘텐츠 경계와 시스템의 동작 줄이기 설정을 따릅니다.
+   * @defaultValue false
+   */
+  panInertia?:
+    | boolean
+    | {
+        /**
+         * 설정 객체를 사용할 때 관성 활성화 여부를 명시합니다.
+         */
+        enabled: boolean;
+        /**
+         * 손을 뗀 뒤 이동 속도가 줄어드는 정도를 조절합니다. `1`에 가까울수록 오래 미끄러집니다.
+         * @remarks `0`보다 크고 `1`보다 작은 유한한 값만 허용합니다. 잘못된 값은 기본값으로 대체합니다.
+         * @defaultValue 0.998
+         */
+        deceleration?: number;
+      };
   /**
    * 두 손가락 핀치 제스처를 제어합니다.
    * @remarks `false`이면 두 손가락 줌 제스처가 비활성화됩니다.
