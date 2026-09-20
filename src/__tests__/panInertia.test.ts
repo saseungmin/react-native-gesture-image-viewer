@@ -52,17 +52,17 @@ describe('pan inertia public contract', () => {
       velocityFactor: value,
       rubberBandFactor: value,
     });
-    expect(resolved.velocityFactor).toBe(0.65);
-    expect(resolved.rubberBandFactor).toBe(2);
+    expect(resolved.velocityFactor).toBe(0.5);
+    expect(resolved.rubberBandFactor).toBe(1);
   });
 
   it.each([undefined, false, { enabled: false }])('is opt-in: %p', (option) => {
     expect(resolvePanInertia(option)).toEqual({
       enabled: false,
       deceleration: 0.9997,
-      velocityFactor: 0.65,
+      velocityFactor: 0.5,
       rubberBandEffect: true,
-      rubberBandFactor: 2,
+      rubberBandFactor: 1,
     });
   });
 
@@ -77,16 +77,16 @@ describe('pan inertia public contract', () => {
     expect(resolvePanInertia(config)).toEqual({
       enabled: true,
       deceleration: 0.995,
-      velocityFactor: 0.65,
+      velocityFactor: 0.5,
       rubberBandEffect: true,
-      rubberBandFactor: 2,
+      rubberBandFactor: 1,
     });
     expect(resolvePanInertia(true)).toEqual({
       enabled: true,
       deceleration: 0.9997,
-      velocityFactor: 0.65,
+      velocityFactor: 0.5,
       rubberBandEffect: true,
-      rubberBandFactor: 2,
+      rubberBandFactor: 1,
     });
   });
 
