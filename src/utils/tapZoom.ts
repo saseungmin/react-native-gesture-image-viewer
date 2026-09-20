@@ -24,7 +24,9 @@ export const getTapZoomTarget = ({
 }) => {
   'worklet';
   const nextScale = scale > 1 ? 1 : maxZoomScale;
-  if (nextScale <= 1) return { scale: nextScale, translateX: 0, translateY: 0 };
+  if (nextScale <= 1) {
+    return { scale: nextScale, translateX: 0, translateY: 0 };
+  }
   return {
     scale: nextScale,
     ...clampTranslationToBounds({
@@ -107,7 +109,9 @@ export function finishTapZoomOut({
   translateY: SharedValue<number>;
 }) {
   'worklet';
-  if (tapZoomTarget.get() !== 1) return;
+  if (tapZoomTarget.get() !== 1) {
+    return;
+  }
   cancelAnimation(scale);
   tapZoomTarget.set(null);
   scale.set(1);
