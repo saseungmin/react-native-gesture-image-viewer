@@ -116,6 +116,8 @@ function App() {
 
 프로젝트 기여 방법과 개발 환경 설정에 대한 자세한 내용은 [기여 가이드](CONTRIBUTING.md)를 참고해 주세요.
 
+Android와 iOS에서 실제 핀치·스와이프를 검증하는 방법은 [모바일 E2E 설정](e2e/README.md)을 참고해 주세요.
+
 ## 라이선스
 
 [MIT](./LICENSE)

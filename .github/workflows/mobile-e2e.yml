@@ -1,0 +1,112 @@
+name: Mobile E2E
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'example/**'
+      - 'e2e/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.nvmrc'
+      - '.github/actions/setup/**'
+      - '.github/workflows/mobile-e2e.yml'
+  merge_group:
+    types: [checks_requested]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      E2E_ANDROID_ARCH: x86_64
+      E2E_DEVICE_UDID: emulator-5554
+      E2E_ARTIFACT_DIR: ${{ github.workspace }}/e2e/artifacts/android
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: ./.github/actions/setup
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install E2E tools and check types
+        run: |
+          npm --prefix e2e ci
+          npm --prefix e2e run typecheck
+          mkdir -p e2e/artifacts
+      - name: Check native toolchain
+        run: npm --prefix e2e run doctor:android
+      - name: Build standalone APK
+        run: npm --prefix e2e run build:android 2>&1 | tee e2e/artifacts/build-android.log
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run native gesture tests
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          emulator-port: 5554
+          disable-animations: false
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: npm --prefix e2e run test:android
+      - name: Upload test reports and diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: mobile-e2e-android
+          path: e2e/artifacts/
+          if-no-files-found: warn
+          retention-days: 14
+
+  ios:
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      E2E_ARTIFACT_DIR: ${{ github.workspace }}/e2e/artifacts/ios
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: ./.github/actions/setup
+      - name: Install E2E tools and check types
+        run: |
+          npm --prefix e2e ci
+          npm --prefix e2e run typecheck
+          mkdir -p e2e/artifacts
+      - name: Check native toolchain
+        run: npm --prefix e2e run doctor:ios
+      - name: Build standalone simulator app
+        run: npm --prefix e2e run build:ios 2>&1 | tee e2e/artifacts/build-ios.log
+      - name: Create test simulator
+        run: |
+          simulator_id=$(xcrun simctl create GIVE-E2E com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro com.apple.CoreSimulator.SimRuntime.iOS-26-5)
+          echo "E2E_DEVICE_UDID=$simulator_id" >> "$GITHUB_ENV"
+          xcrun simctl boot "$simulator_id"
+          xcrun simctl bootstatus "$simulator_id" -b
+      - name: Run native gesture tests
+        run: npm --prefix e2e run test:ios
+      - name: Shut down test simulator
+        if: always() && env.E2E_DEVICE_UDID != ''
+        run: xcrun simctl shutdown "$E2E_DEVICE_UDID"
+      - name: Upload test reports and diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: mobile-e2e-ios
+          path: e2e/artifacts/
+          if-no-files-found: warn
+          retention-days: 14

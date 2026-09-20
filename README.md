@@ -116,6 +116,8 @@ function App() {
 
 For details on how to contribute to the project and set up the development environment, please refer to the [Contributing Guide](CONTRIBUTING.md).
 
+For native pinch and swipe tests on Android and iOS, see the [mobile E2E setup](e2e/README.md).
+
 ## License
 
 [MIT](./LICENSE)

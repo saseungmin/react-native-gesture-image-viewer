@@ -17,7 +17,7 @@ const pnpmReactNativePackages = [
 ];
 
 module.exports = {
-  modulePathIgnorePatterns: ['<rootDir>/example/node_modules', '<rootDir>/lib/'],
+  modulePathIgnorePatterns: ['<rootDir>/example/node_modules', '<rootDir>/lib/', '<rootDir>/e2e/'],
   preset: '@react-native/jest-preset',
   resolver: 'react-native-worklets/jest/resolver',
   setupFiles: ['react-native-gesture-handler/jestSetup.js'],
