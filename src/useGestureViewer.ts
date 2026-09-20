@@ -962,8 +962,7 @@ export const useGestureViewer = <ItemT>({
       .enabled(canDismiss)
       .onTouchesDown((event, stateManager) => {
         if (event.numberOfTouches === 1) {
-          finishPendingZoomOut();
-          if (scale.get() > 1) {
+          if (scale.get() > 1 && tapZoomTarget.get() !== 1) {
             stateManager.fail();
             return;
           }
@@ -979,6 +978,8 @@ export const useGestureViewer = <ItemT>({
         }
       })
       .onStart(() => {
+        // A touch alone must leave tap zoom running; only an active drag takes over.
+        finishPendingZoomOut();
         suppressNativeTap.set(true);
       })
       .onUpdate((event) => {
@@ -1020,6 +1021,7 @@ export const useGestureViewer = <ItemT>({
       });
   }, [
     finishPendingZoomOut,
+    tapZoomTarget,
     dismissOptions,
     handleDismiss,
     isPinching,
@@ -1364,8 +1366,7 @@ export const useGestureViewer = <ItemT>({
         .onTouchesDown((event, stateManager) => {
           stopPanInertia();
           if (event.numberOfTouches === 1) {
-            finishPendingZoomOut();
-            if (scale.get() <= 1) {
+            if (scale.get() <= 1 || tapZoomTarget.get() === 1) {
               stateManager.fail();
               return;
             }
@@ -1452,7 +1453,6 @@ export const useGestureViewer = <ItemT>({
         }),
     [
       tapZoomTarget,
-      finishPendingZoomOut,
       startPanInertia,
       stopPanInertia,
       translateX,
