@@ -48,6 +48,12 @@
   },
   "overrides": [
     {
+      "files": ["e2e/specs/*.e2e.ts"],
+      "env": {
+        "mocha": true
+      }
+    },
+    {
       "files": ["src/__tests__/*.test.ts", "src/__tests__/*.test.tsx"],
       "env": {
         "jest": true
