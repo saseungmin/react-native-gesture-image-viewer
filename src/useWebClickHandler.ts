@@ -35,6 +35,7 @@ export type WebClickHandlerConfig<ItemT> = {
   isInteractionLocked: () => boolean;
   maxZoomScale: number;
   scale: SharedValue<number>;
+  tapZoomTarget?: SharedValue<number | null>;
   scheduleWebSingleTap: ScheduleWebSingleTap;
   translateX: SharedValue<number>;
   translateY: SharedValue<number>;
