@@ -4,7 +4,7 @@ import { useSharedValue } from 'react-native-reanimated';
 import { useGestureViewer } from '../useGestureViewer';
 import { applyTapZoomAtPoint, finishTapZoomOut } from '../utils/tapZoom';
 
-describe('zoom pan to dismiss handoff', () => {
+describe('dismiss gesture takeover during double-tap zoom-out', () => {
   afterEach(async () => {
     await cleanup();
     jest.useRealTimers();
@@ -46,7 +46,7 @@ describe('zoom pan to dismiss handoff', () => {
   });
 
   it.each(['dismiss-first', 'pan-first'])(
-    'hands an unfinished zoom-out to dismiss (%s)',
+    'lets an active dismiss drag take over without later zoom-out frames overwriting it (%s)',
     async (order) => {
       jest.useFakeTimers();
       const onDismiss = jest.fn();
@@ -99,7 +99,6 @@ describe('zoom pan to dismiss handoff', () => {
         ).initial.updater().transform;
       expect(read()[5]).toEqual({ scale: 1 });
       expect(read()[3]).toEqual({ translateY: 100 });
-      // The old zoom-out animation must not overwrite the active dismiss translation.
       await act(() => jest.advanceTimersByTime(400));
       expect(read()[3]).toEqual({ translateY: 100 });
       await act(() =>

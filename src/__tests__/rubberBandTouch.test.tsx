@@ -2,7 +2,7 @@ import { act, cleanup, renderHook } from '@testing-library/react-native';
 
 import { useGestureViewer } from '../useGestureViewer';
 
-describe('catching release rubber-banding', () => {
+describe('double-tap zoom-out and release after catching rubber-band overshoot', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(async () => {
     await cleanup();
@@ -15,7 +15,7 @@ describe('catching release rubber-banding', () => {
     ['pan-first', -1],
     ['tap-first', -1],
   ] as const)(
-    'centers both axes when double-tapping a caught overshoot (%s, direction %s)',
+    'continues zoom-out through a stationary touch and stays centered (%s, direction %s)',
     async (order, direction) => {
       const { result } = await renderHook(() =>
         useGestureViewer({
@@ -84,7 +84,6 @@ describe('catching release rubber-banding', () => {
           { fail: jest.fn() } as never,
         );
       });
-      // A stationary touch must not finish the zoom-out before a drag activates.
       expect(read()).toEqual(beforeTouch);
       await act(() => jest.advanceTimersByTime(80));
       expect(read()[5]!.scale!).toBeGreaterThan(1);
@@ -93,73 +92,74 @@ describe('catching release rubber-banding', () => {
       expect(read()[5]).toEqual({ scale: 1 });
       expect(read()[4]).toEqual({ translateX: 0 });
       expect(read()[3]).toEqual({ translateY: 0 });
-      // No follow-up gesture should be necessary to repair the fitted image.
       await act(() => jest.advanceTimersByTime(1000));
       expect(read()[4]).toEqual({ translateX: 0 });
       expect(read()[3]).toEqual({ translateY: 0 });
     },
   );
 
-  it.each([false, true])('holds the overshoot and returns on release (drag: %s)', async (drag) => {
-    const { result } = await renderHook(() =>
-      useGestureViewer({
-        data: ['photo'],
-        width: 400,
-        height: 800,
-        panInertia: true,
-      }),
-    );
-    const readX = () =>
-      (
-        result.current.animatedStyle as unknown as {
-          initial: { updater: () => { transform: Record<string, number>[] } };
-        }
-      ).initial.updater().transform[4]!.translateX!;
-    await act(() => {
-      const pinch = result.current.zoomGesture
-        .toGestureArray()
-        .find((g) => g.handlerName === 'PinchGestureHandler')!;
-      pinch.handlers.onStart?.({ focalX: 200, focalY: 400 } as never);
-      pinch.handlers.onUpdate?.({ scale: 2, focalX: 200, focalY: 400 } as never);
-    });
-    await act(() => jest.advanceTimersByTime(32));
-    const pan = result.current.zoomGesture
-      .toGestureArray()
-      .find((g) => g.handlerName === 'PanGestureHandler')!;
-    await act(() => {
-      pan.handlers.onTouchesDown?.({ numberOfTouches: 1 } as never, { fail: jest.fn() } as never);
-      pan.handlers.onBegin?.({} as never);
-      pan.handlers.onUpdate?.({ translationX: 200, translationY: 0 } as never);
-      pan.handlers.onEnd?.({ velocityX: 1000, velocityY: 0 } as never, true);
-      pan.handlers.onFinalize?.({} as never, true);
-    });
-    await act(() => jest.advanceTimersByTime(16));
-    const caught = readX();
-    expect(caught).toBeGreaterThan(203);
-    await act(() => {
-      pan.handlers.onTouchesDown?.({ numberOfTouches: 1 } as never, { fail: jest.fn() } as never);
-      pan.handlers.onBegin?.({} as never);
-    });
-    expect(readX()).toBe(caught);
-    await act(() => jest.advanceTimersByTime(1000));
-    expect(readX()).toBe(caught);
-    if (drag) {
+  it.each([false, true])(
+    'holds overshoot, then returns to bounds on release (drag: %s)',
+    async (drag) => {
+      const { result } = await renderHook(() =>
+        useGestureViewer({
+          data: ['photo'],
+          width: 400,
+          height: 800,
+          panInertia: true,
+        }),
+      );
+      const readX = () =>
+        (
+          result.current.animatedStyle as unknown as {
+            initial: { updater: () => { transform: Record<string, number>[] } };
+          }
+        ).initial.updater().transform[4]!.translateX!;
       await act(() => {
-        pan.handlers.onStart?.({} as never);
-        pan.handlers.onUpdate?.({ translationX: -3, translationY: 0 } as never);
+        const pinch = result.current.zoomGesture
+          .toGestureArray()
+          .find((g) => g.handlerName === 'PinchGestureHandler')!;
+        pinch.handlers.onStart?.({ focalX: 200, focalY: 400 } as never);
+        pinch.handlers.onUpdate?.({ scale: 2, focalX: 200, focalY: 400 } as never);
       });
-      expect(readX()).toBeCloseTo(caught - 3);
-    }
-    const releasePosition = readX();
-    await act(() => {
+      await act(() => jest.advanceTimersByTime(32));
+      const pan = result.current.zoomGesture
+        .toGestureArray()
+        .find((g) => g.handlerName === 'PanGestureHandler')!;
+      await act(() => {
+        pan.handlers.onTouchesDown?.({ numberOfTouches: 1 } as never, { fail: jest.fn() } as never);
+        pan.handlers.onBegin?.({} as never);
+        pan.handlers.onUpdate?.({ translationX: 200, translationY: 0 } as never);
+        pan.handlers.onEnd?.({ velocityX: 1000, velocityY: 0 } as never, true);
+        pan.handlers.onFinalize?.({} as never, true);
+      });
+      await act(() => jest.advanceTimersByTime(16));
+      const caught = readX();
+      expect(caught).toBeGreaterThan(203);
+      await act(() => {
+        pan.handlers.onTouchesDown?.({ numberOfTouches: 1 } as never, { fail: jest.fn() } as never);
+        pan.handlers.onBegin?.({} as never);
+      });
+      expect(readX()).toBe(caught);
+      await act(() => jest.advanceTimersByTime(1000));
+      expect(readX()).toBe(caught);
       if (drag) {
-        pan.handlers.onEnd?.({ velocityX: 0, velocityY: 0 } as never, true);
+        await act(() => {
+          pan.handlers.onStart?.({} as never);
+          pan.handlers.onUpdate?.({ translationX: -3, translationY: 0 } as never);
+        });
+        expect(readX()).toBeCloseTo(caught - 3);
       }
-      // A stationary hold fails pan recognition, but still needs a return animation.
-      pan.handlers.onFinalize?.({} as never, drag);
-    });
-    expect(readX()).toBeCloseTo(releasePosition);
-    await act(() => jest.advanceTimersByTime(2000));
-    expect(readX()).toBe(200);
-  });
+      const releasePosition = readX();
+      await act(() => {
+        if (drag) {
+          pan.handlers.onEnd?.({ velocityX: 0, velocityY: 0 } as never, true);
+        }
+        pan.handlers.onFinalize?.({} as never, drag);
+      });
+      expect(readX()).toBeCloseTo(releasePosition);
+      await act(() => jest.advanceTimersByTime(2000));
+      expect(readX()).toBe(200);
+    },
+  );
 });
