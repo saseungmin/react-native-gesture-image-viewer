@@ -13,11 +13,15 @@
 확대한 이미지를 드래그하고 손을 떼면 관성으로 이동하다 감속합니다. 기본 설정은 `true`, 세부 설정은 `enabled`를 명시한 객체로 전달합니다.
 
 ```tsx
-<GestureViewer data={data} renderItem={renderItem} panInertia />
 <GestureViewer
   data={data}
   renderItem={renderItem}
-  panInertia={{ enabled: true, deceleration: 0.995 }}
+  panInertia // [!code highlight]
+/>
+<GestureViewer
+  data={data}
+  renderItem={renderItem}
+  panInertia={{ enabled: true, deceleration: 0.995 }} // [!code highlight]
 />
 ```
 

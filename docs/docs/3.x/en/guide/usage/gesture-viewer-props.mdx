@@ -13,11 +13,15 @@ Call `setItemDimensions({ width, height })` after rendered content dimensions be
 Adds momentum when a zoomed pan is released. Pass `true` for defaults, or a configuration object with an explicit `enabled` field:
 
 ```tsx
-<GestureViewer data={data} renderItem={renderItem} panInertia />
 <GestureViewer
   data={data}
   renderItem={renderItem}
-  panInertia={{ enabled: true, deceleration: 0.995 }}
+  panInertia // [!code highlight]
+/>
+<GestureViewer
+  data={data}
+  renderItem={renderItem}
+  panInertia={{ enabled: true, deceleration: 0.995 }} // [!code highlight]
 />
 ```
 
