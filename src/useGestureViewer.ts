@@ -961,21 +961,21 @@ export const useGestureViewer = <ItemT>({
       .withRef(dismissGestureRef)
       .enabled(canDismiss)
       .onTouchesDown((event, stateManager) => {
-        if (event.numberOfTouches === 1) {
-          if (scale.get() > 1 && tapZoomTarget.get() !== 1) {
-            stateManager.fail();
-            return;
-          }
-          nativeInteractionHadMultipleTouches.set(false);
-          return;
-        }
-
         if (event.numberOfTouches > 1) {
           nativeInteractionHadMultipleTouches.set(true);
           suppressNativeTap.set(true);
           resetDismissTranslation();
           stateManager.fail();
+          return;
         }
+        if (event.numberOfTouches !== 1) {
+          return;
+        }
+        if (scale.get() > 1 && tapZoomTarget.get() !== 1) {
+          stateManager.fail();
+          return;
+        }
+        nativeInteractionHadMultipleTouches.set(false);
       })
       .onStart(() => {
         finishPendingZoomOut();
@@ -989,12 +989,7 @@ export const useGestureViewer = <ItemT>({
         translateY.set(event.translationY / dismissOptions.resistance);
       })
       .onEnd((event) => {
-        if (nativeInteractionHadMultipleTouches.get()) {
-          resetDismissTranslation();
-          return;
-        }
-
-        if (pageTransitionLocked.get()) {
+        if (nativeInteractionHadMultipleTouches.get() || pageTransitionLocked.get()) {
           resetDismissTranslation();
           return;
         }
@@ -1364,20 +1359,20 @@ export const useGestureViewer = <ItemT>({
         .averageTouches(true)
         .onTouchesDown((event, stateManager) => {
           stopPanInertia();
-          if (event.numberOfTouches === 1) {
-            if (scale.get() <= 1 || tapZoomTarget.get() === 1) {
-              stateManager.fail();
-              return;
-            }
-            nativeInteractionHadMultipleTouches.set(false);
-            return;
-          }
-
           if (event.numberOfTouches > 1) {
             nativeInteractionHadMultipleTouches.set(true);
             suppressNativeTap.set(true);
             stateManager.fail();
+            return;
           }
+          if (event.numberOfTouches !== 1) {
+            return;
+          }
+          if (scale.get() <= 1 || tapZoomTarget.get() === 1) {
+            stateManager.fail();
+            return;
+          }
+          nativeInteractionHadMultipleTouches.set(false);
         })
         .onBegin(() => {
           if (nativeInteractionHadMultipleTouches.get() || pageTransitionLocked.get()) {
