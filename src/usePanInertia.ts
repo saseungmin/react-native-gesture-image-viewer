@@ -1,10 +1,12 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import {
   cancelAnimation,
+  ReduceMotion,
   type SharedValue,
   useAnimatedReaction,
   useSharedValue,
   withDecay,
+  withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnUI } from 'react-native-worklets';
 
@@ -14,11 +16,15 @@ import { getTranslationBounds } from './utils/translationBounds';
 
 // Only cancel animations owned by inertia; pinch settling and controller timing
 // animations share these translations and must be allowed to finish.
-function stopAxis(translation: SharedValue<number>, owner: SharedValue<number>) {
+function stopAxis(translation: SharedValue<number>, owner: SharedValue<number>, max?: number) {
   'worklet';
   if (owner.get() !== 0) {
     owner.set(0);
     cancelAnimation(translation);
+    if (max !== undefined) {
+      const position = Math.max(-max, Math.min(max, translation.get()));
+      translation.set(position === 0 ? 0 : position);
+    }
   }
 }
 
@@ -28,28 +34,53 @@ function startAxis(
   token: number,
   max: number,
   velocity: number,
-  deceleration: number,
+  config: Omit<ReturnType<typeof resolvePanInertia>, 'enabled'>,
 ) {
   'worklet';
-  const position = Math.max(-max, Math.min(max, translation.get()));
-  translation.set(position === 0 ? 0 : position);
+  const current = translation.get();
+  const bounded = Math.max(-max, Math.min(max, current));
+  const isOutside = current !== bounded;
+  const releaseVelocity = Number.isFinite(velocity) ? velocity : 0;
   if (
-    max <= 0 ||
-    !Number.isFinite(velocity) ||
-    velocity === 0 ||
-    (position >= max && velocity > 0) ||
-    (position <= -max && velocity < 0)
+    !isOutside &&
+    (max <= 0 ||
+      releaseVelocity === 0 ||
+      (!config.rubberBandEffect &&
+        ((current >= max && releaseVelocity > 0) || (current <= -max && releaseVelocity < 0))))
   ) {
     return;
   }
-  owner.set(token);
-  translation.set(
-    withDecay({ velocity, deceleration, clamp: [-max, max] }, () => {
-      // Cancellation callbacks from an earlier release cannot clear a newer one.
-      if (owner.get() === token) {
-        owner.set(0);
+  const onComplete = (finished?: boolean) => {
+    'worklet';
+    if (owner.get() === token) {
+      owner.set(0);
+      if (finished) {
+        const settled = Math.max(-max, Math.min(max, translation.get()));
+        translation.set(settled === 0 ? 0 : settled);
       }
-    }),
+    }
+  };
+  owner.set(token);
+  if (isOutside && (!config.rubberBandEffect || max <= 0)) {
+    translation.set(
+      withTiming(
+        bounded === 0 ? 0 : bounded,
+        { duration: 180, reduceMotion: ReduceMotion.System },
+        onComplete,
+      ),
+    );
+    return;
+  }
+  translation.set(
+    withDecay(
+      {
+        ...config,
+        velocity: releaseVelocity,
+        clamp: [-max, max],
+        reduceMotion: ReduceMotion.System,
+      },
+      onComplete,
+    ),
   );
 }
 
@@ -78,21 +109,35 @@ export function usePanInertia({
 }) {
   const options = resolvePanInertia(panInertia);
   const enabled = options.enabled && enablePanWhenZoomed;
-  const deceleration = options.deceleration;
+  const { deceleration, velocityFactor, rubberBandEffect, rubberBandFactor } = options;
   const ownerX = useSharedValue(0);
   const ownerY = useSharedValue(0);
   const sequence = useSharedValue(0);
 
   const stop = useCallback(() => {
     'worklet';
+    // Touch takeover freezes the exact visual position, including any overshoot.
     stopAxis(translateX, ownerX);
     stopAxis(translateY, ownerY);
   }, [ownerX, ownerY, translateX, translateY]);
 
+  const stopAndConstrain = useCallback(() => {
+    'worklet';
+    const { maxTranslateX, maxTranslateY } = getTranslationBounds({
+      width,
+      height,
+      contentWidth: contentWidth.get(),
+      contentHeight: contentHeight.get(),
+      scale: scale.get(),
+    });
+    stopAxis(translateX, ownerX, maxTranslateX);
+    stopAxis(translateY, ownerY, maxTranslateY);
+  }, [ownerX, ownerY, translateX, translateY, width, height, contentWidth, contentHeight, scale]);
+
   const start = useCallback(
     (velocityX: number, velocityY: number) => {
       'worklet';
-      if (!enabled || scale.get() <= 1) {
+      if (scale.get() <= 1) {
         return;
       }
       stop();
@@ -105,8 +150,14 @@ export function usePanInertia({
       });
       const token = sequence.get() + 1;
       sequence.set(token);
-      startAxis(translateX, ownerX, token, maxTranslateX, velocityX, deceleration);
-      startAxis(translateY, ownerY, token, maxTranslateY, velocityY, deceleration);
+      const config = {
+        deceleration,
+        velocityFactor,
+        rubberBandEffect: enabled && rubberBandEffect,
+        rubberBandFactor,
+      };
+      startAxis(translateX, ownerX, token, maxTranslateX, enabled ? velocityX : 0, config);
+      startAxis(translateY, ownerY, token, maxTranslateY, enabled ? velocityY : 0, config);
     },
     [
       enabled,
@@ -122,6 +173,9 @@ export function usePanInertia({
       ownerX,
       ownerY,
       deceleration,
+      velocityFactor,
+      rubberBandEffect,
+      rubberBandFactor,
     ],
   );
 
@@ -129,18 +183,21 @@ export function usePanInertia({
     () => [scale.get(), rotation.get(), contentWidth.get(), contentHeight.get()],
     (current, previous) => {
       if (previous && current.some((value, index) => value !== previous[index])) {
-        stop();
+        stopAndConstrain();
       }
     },
-    [stop],
+    [stopAndConstrain],
   );
 
-  useEffect(() => {
-    // Invalidation runs on the UI thread, atomically with animation ownership.
-    scheduleOnUI(stop);
-  }, [enabled, width, height, stop]);
+  const stopOnUnmount = useRef(stopAndConstrain);
 
-  useEffect(() => () => scheduleOnUI(stop), [stop]);
+  useEffect(() => {
+    stopOnUnmount.current = stopAndConstrain;
+    // Invalidation runs on the UI thread, atomically with animation ownership.
+    scheduleOnUI(stopAndConstrain);
+  }, [enabled, width, height, stopAndConstrain]);
+
+  useEffect(() => () => scheduleOnUI(stopOnUnmount.current), []);
 
   return { startPanInertia: start, stopPanInertia: stop };
 }

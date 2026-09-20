@@ -8,12 +8,12 @@ Add opt-in `panInertia` to let zoomed images glide and gradually stop after a dr
 // Enable with defaults
 <GestureViewer data={images} renderItem={renderImage} panInertia />
 
-// Customize deceleration
+// Customize the motion
 <GestureViewer
   data={images}
   renderItem={renderImage}
-  panInertia={{ enabled: true, deceleration: 0.995 }}
+  panInertia={{ enabled: true, deceleration: 0.9998, velocityFactor: 1, rubberBandEffect: true, rubberBandFactor: 3 }}
 />
 ```
 
-Disabled by default. Deceleration defaults to `0.998`. Inertia stops at content bounds and is interrupted by new gestures.
+Disabled by default. When enabled, it uses a longer glide with edge rubber-banding. Customize the decay, velocity multiplier, and edge response as needed.

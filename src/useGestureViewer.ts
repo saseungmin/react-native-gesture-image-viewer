@@ -140,6 +140,8 @@ export const useGestureViewer = <ItemT, LC>({
 
   const initialTranslateY = useSharedValue(0);
   const initialTranslateX = useSharedValue(0);
+  const panOverflowX = useSharedValue(0);
+  const panOverflowY = useSharedValue(0);
   const startScale = useSharedValue(1);
 
   const translateY = useSharedValue(0);
@@ -330,14 +332,20 @@ export const useGestureViewer = <ItemT, LC>({
       scale: targetScale,
       translateX: targetTranslateX,
       translateY: targetTranslateY,
+      overflowX,
+      overflowY,
     }: {
       translateX: number;
       translateY: number;
       scale: number;
+      overflowX?: number;
+      overflowY?: number;
     }) => {
       'worklet';
 
       return clampTranslationToBounds({
+        overflowX,
+        overflowY,
         contentHeight: contentHeight.get(),
         contentWidth: contentWidth.get(),
         height,
@@ -837,8 +845,12 @@ export const useGestureViewer = <ItemT, LC>({
       .withRef(dismissGestureRef)
       .enabled(canDismiss)
       .onTouchesDown((event, stateManager) => {
-        if (event.numberOfTouches === 1) finishPendingZoomOut();
-        if (event.numberOfTouches > 1 || scale.get() > 1) stateManager.fail();
+        if (event.numberOfTouches === 1) {
+          finishPendingZoomOut();
+        }
+        if (event.numberOfTouches > 1 || scale.get() > 1) {
+          stateManager.fail();
+        }
       })
       .onUpdate((event) => {
         translateY.set(event.translationY / dismissOptions.resistance);
@@ -1051,7 +1063,9 @@ export const useGestureViewer = <ItemT, LC>({
         .averageTouches(true)
         .onTouchesDown((event, stateManager) => {
           stopPanInertia();
-          if (event.numberOfTouches === 1) finishPendingZoomOut();
+          if (event.numberOfTouches === 1) {
+            finishPendingZoomOut();
+          }
           if (scale.get() <= 1) {
             stateManager.fail();
             return;
@@ -1063,6 +1077,13 @@ export const useGestureViewer = <ItemT, LC>({
           stopPanInertia();
           initialTranslateX.set(translateX.get());
           initialTranslateY.set(translateY.get());
+          const bounded = constrainTranslation({
+            scale: scale.get(),
+            translateX: translateX.get(),
+            translateY: translateY.get(),
+          });
+          panOverflowX.set(translateX.get() - bounded.translateX);
+          panOverflowY.set(translateY.get() - bounded.translateY);
         })
         .onUpdate((event) => {
           const currentScale = scale.get();
@@ -1074,6 +1095,8 @@ export const useGestureViewer = <ItemT, LC>({
             const { translateX: constrainedTranslateX, translateY: constrainedTranslateY } =
               constrainTranslation({
                 scale: currentScale,
+                overflowX: panOverflowX.get(),
+                overflowY: panOverflowY.get(),
                 translateX: newTranslateX,
                 translateY: newTranslateY,
               });
@@ -1087,6 +1110,21 @@ export const useGestureViewer = <ItemT, LC>({
             return;
           }
           startPanInertia(event.velocityX, event.velocityY);
+        })
+        .onFinalize((_event, success) => {
+          if (success || inertiaHadMultipleTouches.get()) {
+            return;
+          }
+          // Holding and releasing without a drag never reaches onEnd.
+          // Resume the return to bounds only after the touch has finished.
+          const bounded = constrainTranslation({
+            scale: scale.get(),
+            translateX: translateX.get(),
+            translateY: translateY.get(),
+          });
+          if (bounded.translateX !== translateX.get() || bounded.translateY !== translateY.get()) {
+            startPanInertia(0, 0);
+          }
         }),
     [
       finishPendingZoomOut,
@@ -1097,6 +1135,8 @@ export const useGestureViewer = <ItemT, LC>({
       translateY,
       enablePanWhenZoomed,
       scale,
+      panOverflowX,
+      panOverflowY,
       initialTranslateX,
       initialTranslateY,
       constrainTranslation,
