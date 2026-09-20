@@ -45,6 +45,7 @@ export function useGestureViewerPaging({
   manager,
   maxZoomScale,
   scale,
+  tapZoomTarget,
   scrollTo,
   syncCurrentIndex,
   syncPendingIndex,
@@ -429,6 +430,7 @@ export function useGestureViewerPaging({
           height,
           maxZoomScale,
           scale,
+          tapZoomTarget,
           translateX,
           translateY,
         });
@@ -456,6 +458,7 @@ export function useGestureViewerPaging({
       onSingleTap,
       pauseWebAutoplayWithoutPagingInteraction,
       scale,
+      tapZoomTarget,
       scheduleWebAutoplayResume,
       translateX,
       translateY,

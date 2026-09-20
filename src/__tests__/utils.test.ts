@@ -453,3 +453,26 @@ describe('shouldAcceptFocalPoint', () => {
     ).toBe(false);
   });
 });
+
+describe('inertia bounds compatibility', () => {
+  it('preserves unzoomed offsets and falls back for invalid dimensions', () => {
+    const input = { width: 400, height: 800, translateX: 900, translateY: -900 };
+    expect(clampTranslationToBounds({ ...input, scale: 1 })).toEqual({
+      translateX: 900,
+      translateY: -900,
+    });
+    for (const dimension of [undefined, 0, -1, NaN, Infinity]) {
+      expect(
+        clampTranslationToBounds({
+          ...input,
+          scale: 2,
+          contentWidth: dimension,
+          contentHeight: dimension,
+        }),
+      ).toEqual({ translateX: 200, translateY: -400 });
+    }
+    expect(
+      clampTranslationToBounds({ ...input, scale: 2, contentWidth: 400, contentHeight: 400 }),
+    ).toEqual({ translateX: 200, translateY: 0 });
+  });
+});
