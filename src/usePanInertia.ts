@@ -116,7 +116,6 @@ export function usePanInertia({
 
   const stop = useCallback(() => {
     'worklet';
-    // Touch takeover freezes the exact visual position, including any overshoot.
     stopAxis(translateX, ownerX);
     stopAxis(translateY, ownerY);
   }, [ownerX, ownerY, translateX, translateY]);
@@ -193,7 +192,6 @@ export function usePanInertia({
 
   useEffect(() => {
     stopOnUnmount.current = stopAndConstrain;
-    // Invalidation runs on the UI thread, atomically with animation ownership.
     scheduleOnUI(stopAndConstrain);
   }, [enabled, width, height, stopAndConstrain]);
 

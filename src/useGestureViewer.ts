@@ -978,7 +978,6 @@ export const useGestureViewer = <ItemT>({
         }
       })
       .onStart(() => {
-        // A touch alone must leave tap zoom running; only an active drag takes over.
         finishPendingZoomOut();
         suppressNativeTap.set(true);
       })
@@ -1440,8 +1439,6 @@ export const useGestureViewer = <ItemT>({
           ) {
             return;
           }
-          // Holding and releasing without a drag never reaches onEnd.
-          // Resume the return to bounds only after the touch has finished.
           const bounded = constrainTranslation({
             scale: scale.get(),
             translateX: translateX.get(),
