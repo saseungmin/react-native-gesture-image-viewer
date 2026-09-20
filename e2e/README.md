@@ -102,8 +102,17 @@ each test relaunches the app to reset its in-memory state. Tests and spec files
 have zero automatic retries.
 
 On CI, iOS uses a headless simulator so Appium does not restart the already-booted
-device to open a Simulator window. Its connection timeout is five minutes to cover
-cold session setup; test timeouts and zero-retry behavior remain unchanged.
+device to open a Simulator window. A separate `prepare:ios` step downloads the
+official simulator WebDriverAgent release matching the locked XCUITest driver's
+bundled WDA version and the host architecture. Appium uses that prebuilt agent with
+`usePreinstalledWDA` / `prebuiltWDAPath`, avoiding compilation inside session
+creation. Its connection timeout is five minutes to cover cold installation and
+startup; test timeouts and zero-retry behavior remain unchanged.
+
+Local runs can opt into the same prebuilt path with `npm --prefix e2e run prepare:ios`
+and `E2E_WDA_PATH` pointing to `e2e/build/wda/WebDriverAgentRunner-Runner.app`.
+Preparing WDA replaces only the generated `e2e/build/wda/` directory. The default
+local configuration still lets Appium build WDA normally.
 
 | Environment variable   | Purpose                                                         |
 | ---------------------- | --------------------------------------------------------------- |
@@ -192,4 +201,5 @@ without adding an appropriate always-running gate.
 - [WebdriverIO assertions and waiting](https://webdriver.io/docs/bestpractices/)
 - [Android gestures](https://github.com/appium/appium-uiautomator2-driver/blob/master/docs/android-mobile-gestures.md)
 - [iOS gestures](https://appium.github.io/appium-xcuitest-driver/latest/guides/gestures/)
+- [Prebuilt WebDriverAgent](https://appium.github.io/appium-xcuitest-driver/latest/guides/run-prebuilt-wda/)
 - [Expo local native builds](https://docs.expo.dev/guides/local-app-development/)

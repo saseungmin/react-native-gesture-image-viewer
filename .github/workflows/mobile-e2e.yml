@@ -20,6 +20,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 concurrency:
   group: mobile-e2e-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -87,6 +91,8 @@ jobs:
           mkdir -p e2e/artifacts
       - name: Check native toolchain
         run: npm --prefix e2e run doctor:ios
+      - name: Prepare WebDriverAgent
+        run: npm --prefix e2e run prepare:ios 2>&1 | tee e2e/artifacts/prepare-wda.log
       - name: Build standalone simulator app
         run: npm --prefix e2e run build:ios 2>&1 | tee e2e/artifacts/build-ios.log
       - name: Create test simulator

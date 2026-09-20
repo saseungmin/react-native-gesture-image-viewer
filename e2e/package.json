@@ -8,6 +8,7 @@
     "build:ios": "node scripts/build-ios.mjs",
     "doctor:android": "node scripts/doctor.mjs android",
     "doctor:ios": "node scripts/doctor.mjs ios",
+    "prepare:ios": "node scripts/prepare-ios.mjs",
     "test:android": "wdio run wdio.android.conf.ts",
     "test:ios": "wdio run wdio.ios.conf.ts",
     "test:repeat:android": "node scripts/repeat.mjs android",
