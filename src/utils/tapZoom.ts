@@ -118,7 +118,9 @@ export function finishTapZoomOut({
   translateY: SharedValue<number>;
 }) {
   'worklet';
-  if (tapZoomTarget.get() !== 1) return;
+  if (tapZoomTarget.get() !== 1) {
+    return;
+  }
   cancelAnimation(scale);
   tapZoomTarget.set(null);
   scale.set(1);
