@@ -375,7 +375,25 @@ export interface GestureViewerProps<ItemT, LC> {
    * @defaultValue true
    */
   enablePanWhenZoomed?: boolean;
-  panInertia?: boolean | { enabled: boolean; deceleration?: number };
+  /**
+   * Adds momentum after releasing a zoomed pan.
+   * @remarks Requires `enablePanWhenZoomed`. Pass `true` for defaults or an object with `enabled: true` to customize. Respects content bounds and the system reduced-motion setting.
+   * @defaultValue false
+   */
+  panInertia?:
+    | boolean
+    | {
+        /**
+         * Explicitly enables or disables inertia when using a configuration object.
+         */
+        enabled: boolean;
+        /**
+         * Controls how quickly the release velocity decays. Values closer to `1` glide longer.
+         * @remarks Accepts finite values strictly between `0` and `1`. Invalid values fall back to the default.
+         * @defaultValue 0.998
+         */
+        deceleration?: number;
+      };
   /**
    * Controls two-finger pinch gestures.
    * @remarks When `false`, two-finger zoom gestures are disabled.
