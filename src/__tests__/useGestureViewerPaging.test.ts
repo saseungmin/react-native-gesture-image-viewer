@@ -41,6 +41,7 @@ const createPagingOptions = ({
   isTriggerOpening: false,
   isZoomed: false,
   pageStride: 320,
+  resetTransformImmediately: jest.fn(),
   suppressNativeTap: {
     get: () => false,
     set: jest.fn(),
@@ -337,5 +338,35 @@ describe('useGestureViewerPaging horizontal gesture thresholds', () => {
     const gestureConfig = result.current.horizontalPagingGesture.config;
 
     expect(gestureConfig.enabled).toBe(false);
+  });
+
+  it('resets the outgoing zoom before an edge handoff commits the next page', async () => {
+    jest.useFakeTimers();
+    const commitVirtualIndexOnly = jest.fn();
+    const resetTransformImmediately = jest.fn();
+    const { result } = await renderHook(() =>
+      useGestureViewerPaging({
+        ...createPagingOptions({ commitVirtualIndexOnly }),
+        resetTransformImmediately,
+      }),
+    );
+
+    await act(async () => {
+      result.current.updateEdgeHandoff(-160, true);
+    });
+    expect(result.current.visualPage.get()).toBe(0.5);
+
+    await act(async () => {
+      expect(result.current.releaseEdgeHandoff(0, 0)).toBe(0);
+    });
+    expect(result.current.pageTransitionLocked.get()).toBe(true);
+    await advancePageTransition();
+
+    expect(commitVirtualIndexOnly).toHaveBeenCalledWith(1);
+    expect(resetTransformImmediately).toHaveBeenCalledTimes(1);
+    expect(resetTransformImmediately.mock.invocationCallOrder[0]).toBeLessThan(
+      commitVirtualIndexOnly.mock.invocationCallOrder[0]!,
+    );
+    expect(result.current.pageTransitionLocked.get()).toBe(false);
   });
 });

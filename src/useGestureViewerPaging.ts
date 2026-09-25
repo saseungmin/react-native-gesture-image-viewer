@@ -36,6 +36,7 @@ type UseGestureViewerPagingOptions = {
   isTriggerOpening: boolean;
   isZoomed: boolean;
   pageStride: number;
+  resetTransformImmediately: () => void;
   suppressNativeTap: SharedValue<boolean>;
   width: number;
 };
@@ -59,6 +60,7 @@ export function useGestureViewerPaging({
   isTriggerOpening,
   isZoomed,
   pageStride,
+  resetTransformImmediately,
   suppressNativeTap,
   width,
 }: UseGestureViewerPagingOptions) {
@@ -67,6 +69,9 @@ export function useGestureViewerPaging({
   const pagingAnimationActive = useSharedValue(false);
   const pagingGestureActive = useSharedValue(false);
   const pageTransitionLocked = useSharedValue(false);
+  const edgeHandoffActive = useSharedValue(false);
+  const edgeHandoffDistance = useSharedValue(0);
+  const edgeHandoffOffset = useSharedValue(0);
   const isPageTransitioningRef = useRef(false);
 
   const setPageTransitioning = useCallback(
@@ -84,7 +89,9 @@ export function useGestureViewerPaging({
   const clearPagingFlags = useCallback(() => {
     pagingAnimationActive.set(false);
     pagingGestureActive.set(false);
-  }, [pagingAnimationActive, pagingGestureActive]);
+    edgeHandoffActive.set(false);
+    edgeHandoffDistance.set(0);
+  }, [edgeHandoffActive, edgeHandoffDistance, pagingAnimationActive, pagingGestureActive]);
 
   const cancelPagingInteraction = useCallback(() => {
     clearPendingWebSingleTap();
@@ -152,6 +159,196 @@ export function useGestureViewerPaging({
     ],
   );
 
+  const completeEdgeHandoffPage = useCallback(
+    (targetVirtualIndex: number) => {
+      // The zoomed item is off screen by now. Reset it before the incoming item
+      // becomes active so that item never inherits the outgoing zoom.
+      resetTransformImmediately();
+      completeAnimatedVirtualPage(targetVirtualIndex);
+    },
+    [completeAnimatedVirtualPage, resetTransformImmediately],
+  );
+
+  const settleToCenter = useCallback(() => {
+    'worklet';
+    pagingAnimationActive.set(true);
+    visualPage.set(
+      withSpring(centerVirtualIndex, PAGE_SPRING_CONFIG, (finished) => {
+        pagingAnimationActive.set(false);
+
+        if (finished) {
+          scheduleOnRN(setPageTransitioning, false);
+        }
+      }),
+    );
+  }, [centerVirtualIndex, pagingAnimationActive, setPageTransitioning, visualPage]);
+
+  const canHandOffFromEdge = horizontalSwipeEnabled && dataLength > 1 && pageStride > 0;
+
+  /**
+   * Moves the page by the part of a zoomed drag that the item's bounds clamp away.
+   * @param distance Signed drag travel past the edge threshold, positive toward the previous item.
+   * @param horizontal Whether the drag so far is more horizontal than vertical; a handoff only starts on one.
+   */
+  const updateEdgeHandoff = useCallback(
+    (distance: number, horizontal: boolean) => {
+      'worklet';
+      if (!canHandOffFromEdge || pageTransitionLocked.get()) {
+        return;
+      }
+
+      if (!edgeHandoffActive.get()) {
+        if (distance === 0 || !horizontal) {
+          return;
+        }
+
+        // Keep whatever a still-running settle has not yet returned, so the page does not jump.
+        cancelAnimation(visualPage);
+        pagingAnimationActive.set(false);
+        edgeHandoffOffset.set(visualPage.get() - centerVirtualIndex);
+        edgeHandoffActive.set(true);
+      }
+
+      if (distance === 0) {
+        // Back inside the item: the pan owns the drag again.
+        edgeHandoffActive.set(false);
+        edgeHandoffDistance.set(0);
+        if (Math.abs(edgeHandoffOffset.get()) > 0.001) {
+          settleToCenter();
+          return;
+        }
+        visualPage.set(centerVirtualIndex);
+        return;
+      }
+
+      edgeHandoffDistance.set(distance);
+      visualPage.set(
+        applyHorizontalEdgeResistance(
+          centerVirtualIndex - distance / pageStride + edgeHandoffOffset.get(),
+          currentIndex,
+          dataLength,
+          centerVirtualIndex,
+          enableLoop,
+          EDGE_RESISTANCE,
+        ),
+      );
+    },
+    [
+      canHandOffFromEdge,
+      centerVirtualIndex,
+      currentIndex,
+      dataLength,
+      edgeHandoffActive,
+      edgeHandoffDistance,
+      edgeHandoffOffset,
+      enableLoop,
+      pageStride,
+      pageTransitionLocked,
+      pagingAnimationActive,
+      settleToCenter,
+      visualPage,
+    ],
+  );
+
+  /**
+   * Settles or commits an edge handoff with the horizontal swipe thresholds.
+   * @returns `null` when no handoff was in progress. Otherwise the horizontal velocity the item
+   * may still use for momentum: `0` toward the edge or on a page turn, the release velocity when
+   * flicked back into the item.
+   */
+  const releaseEdgeHandoff = useCallback(
+    (velocityX: number, velocityY: number): number | null => {
+      'worklet';
+      if (!edgeHandoffActive.get()) {
+        return null;
+      }
+
+      const distance = edgeHandoffDistance.get();
+      edgeHandoffActive.set(false);
+      edgeHandoffDistance.set(0);
+
+      // A mostly vertical flick is a pan of the item, not a page turn.
+      const pagingVelocityX = Math.abs(velocityX) > Math.abs(velocityY) ? velocityX : 0;
+      const direction = resolveHorizontalSwipeDirection(
+        distance,
+        pagingVelocityX,
+        width,
+        horizontalSwipeDistanceThresholdRatio,
+        horizontalSwipeVelocityThreshold,
+      );
+      // A flick back toward the item must not page the other way.
+      const towardHandoff = distance > 0 ? -1 : 1;
+
+      if (direction !== towardHandoff) {
+        settleToCenter();
+        // Momentum back into the item is the item's; momentum toward the edge has nowhere to go.
+        return Math.sign(velocityX) === Math.sign(distance) ? 0 : velocityX;
+      }
+
+      const pagingTarget = resolveHorizontalPagingTarget(
+        centerVirtualIndex,
+        currentIndex,
+        dataLength,
+        direction,
+        enableLoop,
+      );
+
+      if (pagingTarget.kind === 'settle') {
+        settleToCenter();
+        return 0;
+      }
+
+      const targetVirtualIndex = pagingTarget.targetVirtualIndex;
+
+      pageTransitionLocked.set(true);
+      scheduleOnRN(setPageTransitioning, true);
+      pagingAnimationActive.set(true);
+      visualPage.set(
+        withTiming(targetVirtualIndex, PAGE_TRANSITION_CONFIG, (finished) => {
+          pagingAnimationActive.set(false);
+
+          if (finished) {
+            scheduleOnRN(completeEdgeHandoffPage, targetVirtualIndex);
+            return;
+          }
+
+          scheduleOnRN(cancelAnimatedVirtualPage);
+        }),
+      );
+
+      return 0;
+    },
+    [
+      cancelAnimatedVirtualPage,
+      centerVirtualIndex,
+      completeEdgeHandoffPage,
+      currentIndex,
+      dataLength,
+      edgeHandoffActive,
+      edgeHandoffDistance,
+      enableLoop,
+      horizontalSwipeDistanceThresholdRatio,
+      horizontalSwipeVelocityThreshold,
+      pageTransitionLocked,
+      pagingAnimationActive,
+      setPageTransitioning,
+      settleToCenter,
+      visualPage,
+      width,
+    ],
+  );
+
+  const cancelEdgeHandoff = useCallback(() => {
+    'worklet';
+    if (!edgeHandoffActive.get()) {
+      return;
+    }
+
+    edgeHandoffActive.set(false);
+    edgeHandoffDistance.set(0);
+    settleToCenter();
+  }, [edgeHandoffActive, edgeHandoffDistance, settleToCenter]);
+
   const horizontalPagingGesture = useMemo(() => {
     const canSwipe =
       horizontalSwipeEnabled &&
@@ -161,19 +358,6 @@ export function useGestureViewerPaging({
       !isRotated &&
       !isPinching &&
       pageStride > 0;
-    const settleToCenter = () => {
-      'worklet';
-      pagingAnimationActive.set(true);
-      visualPage.set(
-        withSpring(centerVirtualIndex, PAGE_SPRING_CONFIG, (finished) => {
-          pagingAnimationActive.set(false);
-
-          if (finished) {
-            scheduleOnRN(setPageTransitioning, false);
-          }
-        }),
-      );
-    };
     const releasePagingForPinch = () => {
       'worklet';
       if (!pagingGestureActive.get()) {
@@ -321,6 +505,7 @@ export function useGestureViewerPaging({
     pagingGestureActive,
     pagingStartPage,
     setPageTransitioning,
+    settleToCenter,
     suppressNativeTap,
     visualPage,
     width,
@@ -328,11 +513,14 @@ export function useGestureViewerPaging({
 
   return {
     animateToVirtualPage,
+    cancelEdgeHandoff,
     cancelPagingInteraction,
     horizontalPagingGesture,
     isPageTransitioningRef,
     pageTransitionLocked,
+    releaseEdgeHandoff,
     snapToVirtualPage,
+    updateEdgeHandoff,
     visualPage,
   };
 }
