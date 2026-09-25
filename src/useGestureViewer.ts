@@ -47,6 +47,7 @@ import { type EmitSingleTap, useWebClickHandler } from './useWebClickHandler';
 import { useWebSingleTapTimer } from './useWebSingleTapTimer';
 import { clampTranslationToBounds, resolveGeometrySyncTranslationMode } from './utils';
 import { getDismissDistance, shouldDismissByDirection } from './utils/dismiss';
+import { getEdgeHandoffDistance, resolveEdgeHandoffPaging } from './utils/edgeHandoffPaging';
 import { applyTapZoomAtPoint, finishTapZoomOut } from './utils/tapZoom';
 import { calculateFocalPointTranslation, shouldAcceptFocalPoint } from './utils/zoom';
 
@@ -90,6 +91,7 @@ export const useGestureViewer = <ItemT>({
   horizontalSwipe,
   enablePanWhenZoomed = true,
   panInertia,
+  edgeHandoffPaging,
   enableLoop = false,
   maxZoomScale = 2,
   pageSpacing = 0,
@@ -175,6 +177,10 @@ export const useGestureViewer = <ItemT>({
   const rotation = useSharedValue(0);
   const contentWidth = useSharedValue(width);
   const contentHeight = useSharedValue(height);
+
+  const edgeHandoff = resolveEdgeHandoffPaging(edgeHandoffPaging);
+  const edgeHandoffEnabled = edgeHandoff.enabled && enablePanWhenZoomed;
+  const edgeHandoffThreshold = edgeHandoff.threshold;
 
   const { startPanInertia, stopPanInertia } = usePanInertia({
     panInertia,
@@ -432,10 +438,13 @@ export const useGestureViewer = <ItemT>({
 
   const {
     animateToVirtualPage,
+    cancelEdgeHandoff,
     horizontalPagingGesture,
     isPageTransitioningRef,
     pageTransitionLocked,
+    releaseEdgeHandoff,
     snapToVirtualPage,
+    updateEdgeHandoff,
     visualPage,
   } = useGestureViewerPaging({
     centerVirtualIndex,
@@ -453,6 +462,7 @@ export const useGestureViewer = <ItemT>({
     isTriggerOpening,
     isZoomed,
     pageStride,
+    resetTransformImmediately: resetTransformStateImmediately,
     suppressNativeTap,
     width,
   });
@@ -1360,6 +1370,7 @@ export const useGestureViewer = <ItemT>({
         .onTouchesDown((event, stateManager) => {
           stopPanInertia();
           if (event.numberOfTouches > 1) {
+            cancelEdgeHandoff();
             nativeInteractionHadMultipleTouches.set(true);
             suppressNativeTap.set(true);
             stateManager.fail();
@@ -1415,15 +1426,27 @@ export const useGestureViewer = <ItemT>({
 
             translateX.set(constrainedTranslateX);
             translateY.set(constrainedTranslateY);
+
+            if (edgeHandoffEnabled && rotation.get() % 360 === 0) {
+              updateEdgeHandoff(
+                getEdgeHandoffDistance(newTranslateX - constrainedTranslateX, edgeHandoffThreshold),
+              );
+            }
           }
         })
         .onEnd((event, success) => {
           if (!success || nativeInteractionHadMultipleTouches.get() || pageTransitionLocked.get()) {
             return;
           }
+          if (releaseEdgeHandoff(event.velocityX)) {
+            // The page owns the horizontal release; the item stays at its edge.
+            startPanInertia(0, event.velocityY);
+            return;
+          }
           startPanInertia(event.velocityX, event.velocityY);
         })
         .onFinalize((_event, success) => {
+          cancelEdgeHandoff();
           // A tap zoom owns the translations once it starts; a late pan failure
           // must not replace that animation with an overscroll return.
           if (
@@ -1445,6 +1468,12 @@ export const useGestureViewer = <ItemT>({
         }),
     [
       tapZoomTarget,
+      cancelEdgeHandoff,
+      edgeHandoffEnabled,
+      edgeHandoffThreshold,
+      releaseEdgeHandoff,
+      rotation,
+      updateEdgeHandoff,
       startPanInertia,
       stopPanInertia,
       translateX,

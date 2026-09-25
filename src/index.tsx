@@ -3,6 +3,7 @@ export { GestureTrigger } from './GestureTrigger';
 export { GestureViewer } from './GestureViewer';
 export type {
   GestureViewerController,
+  GestureViewerEdgeHandoffPagingConfig,
   GestureViewerEventCallback,
   GestureViewerEventData,
   GestureViewerEventType,
