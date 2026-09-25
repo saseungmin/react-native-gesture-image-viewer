@@ -179,7 +179,7 @@ export const useGestureViewer = <ItemT>({
   const contentHeight = useSharedValue(height);
 
   const edgeHandoff = resolveEdgeHandoffPaging(edgeHandoffPaging);
-  const edgeHandoffEnabled = edgeHandoff.enabled && enablePanWhenZoomed;
+  const edgeHandoffEnabled = edgeHandoff.enabled;
   const edgeHandoffThreshold = edgeHandoff.threshold;
 
   const { startPanInertia, stopPanInertia } = usePanInertia({
@@ -1430,6 +1430,7 @@ export const useGestureViewer = <ItemT>({
             if (edgeHandoffEnabled && rotation.get() % 360 === 0) {
               updateEdgeHandoff(
                 getEdgeHandoffDistance(newTranslateX - constrainedTranslateX, edgeHandoffThreshold),
+                Math.abs(event.translationX) > Math.abs(event.translationY),
               );
             }
           }
@@ -1438,12 +1439,8 @@ export const useGestureViewer = <ItemT>({
           if (!success || nativeInteractionHadMultipleTouches.get() || pageTransitionLocked.get()) {
             return;
           }
-          if (releaseEdgeHandoff(event.velocityX)) {
-            // The page owns the horizontal release; the item stays at its edge.
-            startPanInertia(0, event.velocityY);
-            return;
-          }
-          startPanInertia(event.velocityX, event.velocityY);
+          const itemVelocityX = releaseEdgeHandoff(event.velocityX, event.velocityY);
+          startPanInertia(itemVelocityX ?? event.velocityX, event.velocityY);
         })
         .onFinalize((_event, success) => {
           cancelEdgeHandoff();

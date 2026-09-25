@@ -71,6 +71,7 @@ export function useGestureViewerPaging({
   const pageTransitionLocked = useSharedValue(false);
   const edgeHandoffActive = useSharedValue(false);
   const edgeHandoffDistance = useSharedValue(0);
+  const edgeHandoffOffset = useSharedValue(0);
   const isPageTransitioningRef = useRef(false);
 
   const setPageTransitioning = useCallback(
@@ -187,28 +188,43 @@ export function useGestureViewerPaging({
   /**
    * Moves the page by the part of a zoomed drag that the item's bounds clamp away.
    * @param distance Signed drag travel past the edge threshold, positive toward the previous item.
+   * @param horizontal Whether the drag so far is more horizontal than vertical; a handoff only starts on one.
    */
   const updateEdgeHandoff = useCallback(
-    (distance: number) => {
+    (distance: number, horizontal: boolean) => {
       'worklet';
       if (!canHandOffFromEdge || pageTransitionLocked.get()) {
         return;
       }
 
       if (!edgeHandoffActive.get()) {
-        if (distance === 0) {
+        if (distance === 0 || !horizontal) {
           return;
         }
 
+        // Keep whatever a still-running settle has not yet returned, so the page does not jump.
         cancelAnimation(visualPage);
         pagingAnimationActive.set(false);
+        edgeHandoffOffset.set(visualPage.get() - centerVirtualIndex);
         edgeHandoffActive.set(true);
+      }
+
+      if (distance === 0) {
+        // Back inside the item: the pan owns the drag again.
+        edgeHandoffActive.set(false);
+        edgeHandoffDistance.set(0);
+        if (Math.abs(edgeHandoffOffset.get()) > 0.001) {
+          settleToCenter();
+          return;
+        }
+        visualPage.set(centerVirtualIndex);
+        return;
       }
 
       edgeHandoffDistance.set(distance);
       visualPage.set(
         applyHorizontalEdgeResistance(
-          centerVirtualIndex - distance / pageStride,
+          centerVirtualIndex - distance / pageStride + edgeHandoffOffset.get(),
           currentIndex,
           dataLength,
           centerVirtualIndex,
@@ -224,32 +240,38 @@ export function useGestureViewerPaging({
       dataLength,
       edgeHandoffActive,
       edgeHandoffDistance,
+      edgeHandoffOffset,
       enableLoop,
       pageStride,
       pageTransitionLocked,
       pagingAnimationActive,
+      settleToCenter,
       visualPage,
     ],
   );
 
   /**
    * Settles or commits an edge handoff with the horizontal swipe thresholds.
-   * @returns Whether a handoff was in progress, so the caller can skip horizontal momentum.
+   * @returns `null` when no handoff was in progress. Otherwise the horizontal velocity the item
+   * may still use for momentum: `0` toward the edge or on a page turn, the release velocity when
+   * flicked back into the item.
    */
   const releaseEdgeHandoff = useCallback(
-    (velocityX: number) => {
+    (velocityX: number, velocityY: number): number | null => {
       'worklet';
       if (!edgeHandoffActive.get()) {
-        return false;
+        return null;
       }
 
       const distance = edgeHandoffDistance.get();
       edgeHandoffActive.set(false);
       edgeHandoffDistance.set(0);
 
+      // A mostly vertical flick is a pan of the item, not a page turn.
+      const pagingVelocityX = Math.abs(velocityX) > Math.abs(velocityY) ? velocityX : 0;
       const direction = resolveHorizontalSwipeDirection(
         distance,
-        velocityX,
+        pagingVelocityX,
         width,
         horizontalSwipeDistanceThresholdRatio,
         horizontalSwipeVelocityThreshold,
@@ -257,9 +279,10 @@ export function useGestureViewerPaging({
       // A flick back toward the item must not page the other way.
       const towardHandoff = distance > 0 ? -1 : 1;
 
-      if (distance === 0 || direction !== towardHandoff) {
+      if (direction !== towardHandoff) {
         settleToCenter();
-        return true;
+        // Momentum back into the item is the item's; momentum toward the edge has nowhere to go.
+        return Math.sign(velocityX) === Math.sign(distance) ? 0 : velocityX;
       }
 
       const pagingTarget = resolveHorizontalPagingTarget(
@@ -272,7 +295,7 @@ export function useGestureViewerPaging({
 
       if (pagingTarget.kind === 'settle') {
         settleToCenter();
-        return true;
+        return 0;
       }
 
       const targetVirtualIndex = pagingTarget.targetVirtualIndex;
@@ -293,7 +316,7 @@ export function useGestureViewerPaging({
         }),
       );
 
-      return true;
+      return 0;
     },
     [
       cancelAnimatedVirtualPage,
