@@ -38,6 +38,17 @@ export type GestureViewerPanInertiaConfig = {
   rubberBandFactor?: DecayConfigField<'rubberBandFactor'>;
 };
 
+export type GestureViewerEdgeHandoffPagingConfig = {
+  /** Explicitly enables edge-handoff paging when passing a configuration object. */
+  enabled: boolean;
+  /**
+   * Drag distance in points past the zoomed item's edge before the page starts to follow the finger.
+   * @remarks Must be finite and non-negative; otherwise uses the default.
+   * @defaultValue 0
+   */
+  threshold?: number;
+};
+
 export type TriggerRect = {
   x: number;
   y: number;
@@ -279,6 +290,15 @@ export interface GestureViewerProps<ItemT> {
    * @defaultValue false
    */
   panInertia?: boolean | GestureViewerPanInertiaConfig;
+  /**
+   * Continues a zoomed pan into paging once the item reaches its horizontal edge.
+   * Requires enablePanWhenZoomed and horizontalSwipe.enabled.
+   * Pass true for defaults, or an object with enabled: true to customize.
+   * The drag past the edge moves the page, horizontalSwipe thresholds decide the release,
+   * and the incoming item arrives at its fitted scale.
+   * @defaultValue false
+   */
+  edgeHandoffPaging?: boolean | GestureViewerEdgeHandoffPagingConfig;
   /**
    * Controls two-finger pinch gestures.
    * @remarks When `false`, two-finger zoom gestures are disabled.

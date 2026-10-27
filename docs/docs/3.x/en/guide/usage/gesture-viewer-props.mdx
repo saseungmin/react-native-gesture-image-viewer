@@ -58,6 +58,41 @@ Customize only the values you need; omitted fields use these defaults:
 
 Rubber-banding applies to release momentum. Movement settles within the fitted content bounds and does not change pages. Supply `getItemDimensions` or `setItemDimensions` for content-aware bounds; otherwise the viewer dimensions are used. A new touch holds the image at its current position, including any overshoot; releasing it returns it to the bounds. Pinch, zoom, rotation, geometry, navigation, and dismissal also interrupt inertia. The viewer manages release velocity, bounds, and system reduced-motion behavior internally; these are not configurable through `panInertia`.
 
+### `edgeHandoffPaging` (default: `false`)
+
+Lets a zoomed pan continue into paging, as in the iOS Photos app. Once the zoomed item's horizontal edge reaches the viewer's edge, the rest of the same drag moves the page instead of being discarded. Pass `true` for defaults, or a configuration object with an explicit `enabled` field:
+
+```tsx
+<GestureViewer
+  data={data}
+  renderItem={renderItem}
+  edgeHandoffPaging // [!code highlight]
+/>
+<GestureViewer
+  data={data}
+  renderItem={renderItem}
+  edgeHandoffPaging={{ enabled: true, threshold: 40 }} // [!code highlight]
+/>
+```
+
+```ts
+type GestureViewerEdgeHandoffPagingConfig = {
+  enabled: boolean;
+  threshold?: number;
+};
+// edgeHandoffPaging?: boolean | GestureViewerEdgeHandoffPagingConfig
+```
+
+Omitting the prop, passing `false`, or setting `enabled: false` keeps the current behavior: a zoomed pan stops at the edge. `enablePanWhenZoomed` and `horizontalSwipe.enabled` must also be enabled.
+
+| Option      | Default | Behavior                                                                           |
+| ----------- | ------- | ---------------------------------------------------------------------------------- |
+| `threshold` | `0`     | Drag distance in points past the edge before the page starts to follow the finger. |
+
+`threshold` must be finite and non-negative; invalid values fall back to the default.
+
+A handoff starts only on a drag that is more horizontal than vertical, so a vertical pan with some sideways drift keeps panning the item. Dragging back inside the item ends the handoff. On release, the `horizontalSwipe` thresholds decide whether the page turns: the distance threshold is compared with the drag beyond the edge and `threshold`, and the velocity threshold with the release velocity, which counts only when the flick is more horizontal than vertical. A flick back toward the item never turns the page the other way. When the page turns, the outgoing item is reset once it is off screen and the incoming item arrives at its fitted scale; otherwise the page settles back and the item stays zoomed at its edge. The first and last items resist without `enableLoop`. A second finger or a cancelled pan settles the page back. With `panInertia`, a flick back into the item still glides it while the page settles; otherwise the item keeps no horizontal momentum when released past its edge. Handoff is not available while the item is rotated. Supply `getItemDimensions` or `setItemDimensions` so the edge is the content's own; otherwise the viewer dimensions are used.
+
 ### `getItemDimensions`
 
 `getItemDimensions(item, index)` returns natural dimensions when they are already known. See the [item dimensions guide](/guide/usage/item-dimensions.html) for precedence and fallback behavior.
@@ -440,6 +475,23 @@ export interface GestureViewerProps<ItemT> {
          * @defaultValue 1
          */
         rubberBandFactor?: number;
+      };
+  /**
+   * Continues a zoomed pan into paging once the item reaches its horizontal edge.
+   * @remarks Requires `enablePanWhenZoomed` and `horizontalSwipe.enabled`. Pass `true` for defaults or an object with `enabled: true` to customize. The `horizontalSwipe` thresholds decide the release; the incoming item arrives at its fitted scale.
+   * @defaultValue false
+   */
+  edgeHandoffPaging?:
+    | boolean
+    | {
+        /** Explicitly enables or disables edge-handoff paging when using a configuration object. */
+        enabled: boolean;
+        /**
+         * Drag distance in points past the edge before the page starts to follow the finger.
+         * @remarks Finite non-negative values; invalid values use the default.
+         * @defaultValue 0
+         */
+        threshold?: number;
       };
   /**
    * Controls two-finger pinch gestures.

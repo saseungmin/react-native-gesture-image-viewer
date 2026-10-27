@@ -6,6 +6,7 @@ import {
   GestureTrigger,
   GestureViewer,
   type GestureViewerProps,
+  type GestureViewerEdgeHandoffPagingConfig,
   type GestureViewerPanInertiaConfig,
   type GestureViewerRenderItemInfo,
   useGestureViewerController,
@@ -121,8 +122,15 @@ const inertiaPresets = [
   },
 ] satisfies { label: string; options: boolean | GestureViewerPanInertiaConfig }[];
 
+const edgeHandoffPresets = [
+  { label: 'OFF', options: false },
+  { label: 'Default', options: true },
+  { label: '40pt threshold', options: { enabled: true, threshold: 40 } },
+] satisfies { label: string; options: boolean | GestureViewerEdgeHandoffPagingConfig }[];
+
 function Example() {
   const [inertiaPreset, setInertiaPreset] = useState(0);
+  const [edgeHandoffPreset, setEdgeHandoffPreset] = useState(0);
   const [visible, setVisible] = useState(false);
   const [enableLoop, setEnableLoop] = useState(false);
   const [showExternalUI, setShowExternalUI] = useState(true);
@@ -181,6 +189,10 @@ function Example() {
           onPress={() => setInertiaPreset((value) => (value + 1) % inertiaPresets.length)}
         />
         <Button
+          title={`Edge handoff: ${edgeHandoffPresets[edgeHandoffPreset]!.label}`}
+          onPress={() => setEdgeHandoffPreset((value) => (value + 1) % edgeHandoffPresets.length)}
+        />
+        <Button
           title={`Loop: ${enableLoop ? 'ON' : 'OFF'}`}
           onPress={() => setEnableLoop(!enableLoop)}
         />
@@ -231,6 +243,7 @@ function Example() {
         <View style={{ flex: 1 }}>
           <GestureViewer
             panInertia={inertiaPresets[inertiaPreset]!.options}
+            edgeHandoffPaging={edgeHandoffPresets[edgeHandoffPreset]!.options}
             data={photoUris}
             initialIndex={selectedIndex}
             onDismiss={() => setVisible(false)}
