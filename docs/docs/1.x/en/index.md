@@ -1,4 +1,5 @@
 ---
+description: Browse the v1 documentation for React Native Gesture Image Viewer, with Reanimated-powered pinch zoom and swipe gestures for iOS, Android, and Web.
 pageType: home
 
 hero:

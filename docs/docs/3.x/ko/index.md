@@ -1,4 +1,5 @@
 ---
+description: Reanimated 기반 줌과 스와이프 제스처로 React Native 이미지 뷰어를 구현하세요. iOS, Android, Web용 v3 설치와 뷰어 설정 방법을 안내합니다.
 pageType: home
 
 hero:

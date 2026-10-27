@@ -1,4 +1,5 @@
 ---
+description: React Native Gesture Image Viewer v1 문서입니다. Reanimated 기반 핀치 줌과 스와이프 제스처를 iOS, Android, Web에 적용하는 방법을 안내합니다.
 pageType: home
 
 hero:

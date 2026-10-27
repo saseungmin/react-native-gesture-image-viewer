@@ -1,4 +1,5 @@
 ---
+description: Maintain v2 integrations of React Native Gesture Image Viewer with Reanimated-powered zoom, swipe navigation, and customization for iOS, Android, and Web.
 pageType: home
 
 hero:
