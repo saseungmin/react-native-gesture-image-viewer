@@ -15,6 +15,7 @@ import {
   Layout as BasicLayout,
   PackageManagerTabs,
 } from '@rspress/core/theme-original';
+import type { ComponentProps } from 'react';
 
 import type { AlternateLink } from '../seo';
 
@@ -62,7 +63,7 @@ function HomeLayout() {
   );
 }
 
-function Layout() {
+function Layout({ beforeNav, ...props }: ComponentProps<typeof BasicLayout>) {
   const { page } = usePage();
   const lang = useLang();
   const content = lang === 'ko' ? STABLE_RELEASE_CONTENT.ko : STABLE_RELEASE_CONTENT.en;
@@ -83,12 +84,16 @@ function Layout() {
 
   return (
     <BasicLayout
+      {...props}
       beforeNav={
-        <Banner
-          href={content.href}
-          message={content.message}
-          storageKey={STABLE_RELEASE_STORAGE_KEY}
-        />
+        <>
+          <Banner
+            href={content.href}
+            message={content.message}
+            storageKey={STABLE_RELEASE_STORAGE_KEY}
+          />
+          {beforeNav}
+        </>
       }
     />
   );

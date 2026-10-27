@@ -5,11 +5,9 @@ import { transformerNotationDiff, transformerNotationHighlight } from '@shikijs/
 
 import { seoPlugin } from './seo';
 
-const siteOrigin = 'https://react-native-gesture-image-viewer.pages.dev';
-
 export default defineConfig({
   root: path.join(__dirname, 'docs'),
-  siteOrigin,
+  siteOrigin: 'https://react-native-gesture-image-viewer.pages.dev',
   lang: 'en',
   title: 'React Native Gesture Image Viewer',
   icon: '/logo.png',
@@ -26,7 +24,7 @@ export default defineConfig({
   route: {
     cleanUrls: true,
   },
-  plugins: [seoPlugin(siteOrigin)],
+  plugins: [seoPlugin()],
   ssg: true,
   markdown: {
     showLineNumbers: true,

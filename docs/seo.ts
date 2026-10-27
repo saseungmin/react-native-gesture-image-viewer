@@ -1,7 +1,14 @@
 import { writeFile } from 'node:fs/promises';
 import * as path from 'node:path';
 
-import { normalizeHref, withSiteOrigin, type RouteMeta, type RspressPlugin } from '@rspress/core';
+import {
+  normalizeHref,
+  withBase,
+  withSiteOrigin,
+  type RouteMeta,
+  type RspressPlugin,
+  type UserConfig,
+} from '@rspress/core';
 
 export type AlternateLink = {
   rel: 'alternate';
@@ -9,16 +16,28 @@ export type AlternateLink = {
   href: string;
 };
 
-export function seoPlugin(siteOrigin: string): RspressPlugin {
-  const pageUrl = (routePath: string) => withSiteOrigin(normalizeHref(routePath, true), siteOrigin);
-  let urls: string[] = [];
+export function seoPlugin(): RspressPlugin {
+  let siteConfig: UserConfig = {};
   let routeList: RouteMeta[] = [];
+  const pageUrl = (routePath: string) =>
+    withSiteOrigin(
+      withBase(
+        normalizeHref(routePath, siteConfig.route?.cleanUrls ?? false),
+        siteConfig.base ?? '/',
+      ),
+      siteConfig.siteOrigin,
+    );
 
   return {
     name: 'docs-seo',
     routeGenerated(routes) {
       routeList = routes;
-      urls = routes.map(({ routePath }) => pageUrl(routePath));
+    },
+    beforeBuild(config) {
+      if (!config.siteOrigin) {
+        throw new Error('A siteOrigin is required to generate SEO URLs.');
+      }
+      siteConfig = config;
     },
     extendPageData(page) {
       const current = routeList.find(({ routePath }) => routePath === page.routePath);
@@ -44,7 +63,7 @@ export function seoPlugin(siteOrigin: string): RspressPlugin {
     async afterBuild(config, isProd) {
       if (!isProd) return;
 
-      const entries = [...new Set(urls)]
+      const entries = [...new Set(routeList.map(({ routePath }) => pageUrl(routePath)))]
         .sort()
         .map((url) => `  <url><loc>${url.replace(/&/g, '&amp;')}</loc></url>`);
       const sitemap = [
