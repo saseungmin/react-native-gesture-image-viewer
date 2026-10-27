@@ -3,8 +3,13 @@ import * as path from 'node:path';
 import { defineConfig } from '@rspress/core';
 import { transformerNotationDiff, transformerNotationHighlight } from '@shikijs/transformers';
 
+import { seoPlugin } from './seo';
+
+const siteOrigin = 'https://react-native-gesture-image-viewer.pages.dev';
+
 export default defineConfig({
   root: path.join(__dirname, 'docs'),
+  siteOrigin,
   lang: 'en',
   title: 'React Native Gesture Image Viewer',
   icon: '/logo.png',
@@ -18,6 +23,10 @@ export default defineConfig({
   search: {
     versioned: true,
   },
+  route: {
+    cleanUrls: true,
+  },
+  plugins: [seoPlugin(siteOrigin)],
   ssg: true,
   markdown: {
     showLineNumbers: true,

@@ -1,4 +1,5 @@
 ---
+description: React Native Gesture Image Viewer v2 문서입니다. iOS, Android, Web에서 Reanimated 기반 줌, 스와이프 탐색과 뷰어를 설정하는 방법을 확인하세요.
 pageType: home
 
 hero:

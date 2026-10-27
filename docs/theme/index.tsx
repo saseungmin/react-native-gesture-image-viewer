@@ -1,12 +1,22 @@
 import './index.css';
 
-import { useLang, useVersion } from '@rspress/core/runtime';
+import {
+  normalizeHrefInRuntime,
+  useHead,
+  useLang,
+  usePage,
+  useVersion,
+  withBase,
+  withSiteOrigin,
+} from '@rspress/core/runtime';
 import {
   Banner,
   HomeLayout as BasicHomeLayout,
   Layout as BasicLayout,
   PackageManagerTabs,
 } from '@rspress/core/theme-original';
+
+import type { AlternateLink } from '../seo';
 
 const PACKAGE_NAME = 'react-native-gesture-image-viewer';
 const STABLE_RELEASE_STORAGE_KEY = `${PACKAGE_NAME}-v3-stable-release`;
@@ -53,8 +63,23 @@ function HomeLayout() {
 }
 
 function Layout() {
+  const { page } = usePage();
   const lang = useLang();
   const content = lang === 'ko' ? STABLE_RELEASE_CONTENT.ko : STABLE_RELEASE_CONTENT.en;
+  const alternatives = (page.seoAlternates ?? []) as AlternateLink[];
+
+  useHead({
+    link:
+      page.pageType === '404'
+        ? []
+        : [
+            {
+              rel: 'canonical',
+              href: withSiteOrigin(withBase(normalizeHrefInRuntime(page.routePath))),
+            },
+            ...alternatives,
+          ],
+  });
 
   return (
     <BasicLayout

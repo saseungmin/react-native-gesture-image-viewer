@@ -1,0 +1,1 @@
+Sitemap: https://react-native-gesture-image-viewer.pages.dev/sitemap.xml

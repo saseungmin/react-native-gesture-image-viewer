@@ -1,4 +1,5 @@
 ---
+description: Build React Native image viewers with Reanimated-powered zoom and swipe gestures. Explore v3 setup and customization for iOS, Android, and Web.
 pageType: home
 
 hero:
